@@ -99,7 +99,7 @@ async def get_random_animal() -> Animal:
         c_names = [c_name.strip("-") for c_name in c_names]
         animal_name = random.choice(c_names)
         rarity = random.choices(
-            population=["_rare", "_epic", "_mythical", "_legendary"],
+            population=["_rare", "_epic", "_mythical", "_leg"],
             weights=await get_weights(),
         )
         animal = await session.scalar(
