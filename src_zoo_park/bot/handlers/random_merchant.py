@@ -202,7 +202,7 @@ async def choise_qtity_to_buy(
                     "you_got_this_rarity_animal", an=animal.name, aq=part_animals
                 )
             )
-    await query.answer(await get_text_message("you_lucky"), show_alert=True)
+    await query.answer(text=await get_text_message("you_lucky"), show_alert=True)
     await session.commit()
 
 

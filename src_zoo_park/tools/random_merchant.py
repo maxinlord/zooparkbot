@@ -81,7 +81,7 @@ async def get_weights() -> list:
 async def get_animal_with_random_rarity(animal: str) -> Animal:
     async with _sessionmaker_for_func() as session:
         rarity = random.choices(
-            population=["_rare", "_epic", "_mythical", "_legendary"],
+            population=["_rare", "_epic", "_mythical", "_leg"],
             weights=await get_weights(),
         )
         animal = await session.scalar(
