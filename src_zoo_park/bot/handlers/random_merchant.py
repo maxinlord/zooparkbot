@@ -183,7 +183,6 @@ async def choise_qtity_to_buy(
     user.usd -= finite_price
     user.amount_expenses_usd += finite_price
     await query.message.delete_reply_markup()
-    await query.answer(cache_time=1)
     while quantity > 0:
         animal = await get_animal_with_random_rarity(animal=animal_str)
         part_animals = random.randint(1, quantity)
