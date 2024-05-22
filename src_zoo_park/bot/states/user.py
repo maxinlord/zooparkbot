@@ -1,11 +1,11 @@
 from aiogram.fsm.state import StatesGroup, State
 
 
-class User(StatesGroup):
+class UserState(StatesGroup):
     main = State()
+    start_reg = State()
+    enter_custom_quantity_animals = State()
 
-class Admin(StatesGroup):
+class AdminState(StatesGroup):
     main = State()
-    get_discount = State()
-    get_days_sub = State()
-    get_num_enable_triggers = State()
+    

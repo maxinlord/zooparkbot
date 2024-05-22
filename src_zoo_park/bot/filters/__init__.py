@@ -1,1 +1,1 @@
-from .text import GetTextButton, FilterByTag
+from .text import GetTextButton

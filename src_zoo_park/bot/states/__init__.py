@@ -1,1 +1,1 @@
-from .user import User, Admin
+from .user import UserState, AdminState

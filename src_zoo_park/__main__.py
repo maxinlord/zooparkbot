@@ -10,9 +10,9 @@ from aiogram.types import BotCommand
 from init_db import _sessionmaker, _engine
 from bot.handlers import setup_message_routers
 from aiogram.fsm.storage.redis import RedisStorage
-from bot.middlewares import DBSessionMiddleware, CheckUser
+from bot.middlewares import DBSessionMiddleware, CheckUser, RegMove
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
-
+from jobs import verification_referrals, test_job
 bot: Bot = Bot(
     config.BOT_TOKEN, parse_mode=ParseMode.HTML, disable_web_page_preview=True
 )
@@ -28,8 +28,8 @@ async def on_shutdown(session: AsyncSession) -> None:
 
 
 async def scheduler() -> None:
-    # aioschedule.every(1).seconds.do(job_sec, bot=bot)
-    # aioschedule.every().day.at("8:00").do(update_last_idpk_form)
+    # aioschedule.every(1).seconds.do(test_job)
+    aioschedule.every().day.at("20:00").do(verification_referrals, bot=bot)
     while True:
         await aioschedule.run_pending()
         await asyncio.sleep(1)
@@ -39,13 +39,13 @@ async def set_default_commands(bot: Bot):
     await bot.set_my_commands(
         [
             BotCommand(
-                command="start", description=await get_text_button("command_start")
+                command="start", description='-'
             ),
             BotCommand(command="reset", description='-'),
         ]
     )
 
-
+    
 async def main() -> None:
 
     dp = Dispatcher(_engine=_engine, storage=RedisStorage(redis=redis))
@@ -58,6 +58,8 @@ async def main() -> None:
 
     dp.message.middleware(CheckUser())
     dp.callback_query.middleware(CheckUser())
+
+    dp.message.middleware(RegMove())
 
     message_routers = setup_message_routers()
     asyncio.create_task(scheduler())

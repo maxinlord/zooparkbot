@@ -152,3 +152,7 @@ cython_debug/
 #.idea/
 testing.py
 src_zoo_park/config.py
+tempCodeRunnerFile.py
+alembic.ini
+.vscode/
+alembic/

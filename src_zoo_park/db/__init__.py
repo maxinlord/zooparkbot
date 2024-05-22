@@ -1,2 +1,2 @@
 from .base import Base
-from .models import User, Text, Button, BlackList, Value
+from .models import User, Text, Button, BlackList, Value, Photo, RandomMerchant, Animal

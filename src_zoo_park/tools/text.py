@@ -10,7 +10,7 @@ async def get_text_message(name: str, **kw) -> str:
             session.add(Text(name=name))
             await session.commit()
             return f'[{name}]\nтекст не задан'
-        debug_text = await session.scalar(select(Value.value_int).where(Value.name == 'debug_text'))
+        debug_text = await session.scalar(select(Value.value_int).where(Value.name == 'DEBUG_TEXT'))
         match debug_text:
             case 0:
                 return text_obj.text.format(**kw) if kw else text_obj.text
@@ -25,7 +25,7 @@ async def get_text_button(name: str, **kw) -> str:
             session.add(Button(name=name))
             await session.commit()
             return f'[{name}]\nкнопка'
-        debug_button = await session.scalar(select(Value.value_int).where(Value.name == 'debug_button'))
+        debug_button = await session.scalar(select(Value.value_int).where(Value.name == 'DEBUG_BUTTON'))
         match debug_button:
             case 0:
                 return bttn_obj.text.format(**kw) if kw else bttn_obj.text
@@ -35,3 +35,4 @@ async def get_text_button(name: str, **kw) -> str:
 
 def mention_html(id_user: int, name: str) -> str:
     return f'<a href="tg://user?id={id_user}">{name}</a>'
+
