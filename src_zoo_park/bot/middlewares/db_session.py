@@ -17,7 +17,7 @@ class DBSessionMiddleware(BaseMiddleware):
         event: Message,
         data: dict[str, Any],
     ) -> Any:
-        if event.chat.id in [CHAT_ID, CHANNEL_ID]:
+        if isinstance(event, Message) and event.chat.id in [CHAT_ID, CHANNEL_ID]:
             return
         async with self._session_pool() as session:
             data["session"] = session
