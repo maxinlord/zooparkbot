@@ -29,10 +29,7 @@ class CheckUser(BaseMiddleware):
         )
         data["user"] = user
         if isinstance(event, Message) and not user:
-            if (
-                event.text == "/start"
-                or data.get("raw_state") == "UserState:start_reg"
-            ):
+            if event.text == "/start" or data.get("raw_state") == "UserState:start_reg_step":
                 return await handler(event, data)
             return await event.answer(
                 text=await get_text_message("press_start_to_play"),
