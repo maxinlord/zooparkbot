@@ -65,7 +65,7 @@ async def process_turn_unity_members(
         )
 
 
-@router.callback_query(UserState.unity_menu, CompareDataByIndex("tap"))
+@router.callback_query(UserState.unity_menu, CompareDataByIndex("tap_member"))
 async def process_viewing_member_bio(
     query: CallbackQuery,
     state: FSMContext,

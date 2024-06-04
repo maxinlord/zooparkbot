@@ -221,7 +221,7 @@ async def process_back_to_menu_all_unity(
             )
 
 
-@router.callback_query(UserState.main_menu, CompareDataByIndex("tap"))
+@router.callback_query(UserState.main_menu, CompareDataByIndex("tap_unity"))
 async def process_viewing_unity_bio(
     query: CallbackQuery,
     state: FSMContext,

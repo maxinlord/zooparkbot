@@ -248,7 +248,7 @@ async def ik_menu_items(
             text=await get_text_button(
                 name="pattern_button_name_item", n=name, ej=emoji
             ),
-            callback_data=f"{code_name}:tap",
+            callback_data=f"{code_name}:tap_item",
         )
         count_items += 1
 
@@ -332,7 +332,7 @@ async def ik_menu_unity_to_join(
                 name="pattern_button_name_unity",
                 n=name,
             ),
-            callback_data=f"{idpk_owner}:tap",
+            callback_data=f"{idpk_owner}:tap_unity",
         )
         counter += 1
     whole_pairs = counter // row_keyboard
@@ -406,7 +406,7 @@ async def ik_menu_unity_members(
                 name="pattern_name_unity_member",
                 n=name,
             ),
-            callback_data=f"{idpk}:tap",
+            callback_data=f"{idpk}:tap_member",
         )
         counter += 1
     whole_pairs = counter // row_keyboard

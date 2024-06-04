@@ -120,7 +120,7 @@ async def process_back_to_menu(
             )
 
 
-@router.callback_query(UserState.main_menu, CompareDataByIndex("tap"))
+@router.callback_query(UserState.main_menu, CompareDataByIndex("tap_item"))
 async def process_viewing_item(
     query: CallbackQuery,
     state: FSMContext,
