@@ -10,11 +10,19 @@ from aiogram.types import BotCommand
 from init_db import _sessionmaker, _engine
 from bot.handlers import setup_message_routers
 from aiogram.fsm.storage.redis import RedisStorage
-from bot.middlewares import DBSessionMiddleware, CheckUser, RegMove
+from bot.middlewares import (
+    DBSessionMiddleware,
+    CheckUser,
+    CheckUnity,
+    RegMove,
+    ThrottlingMiddleware,
+)
+from aiogram.client.default import DefaultBotProperties
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
-from jobs import verification_referrals, test_job
+from jobs import verification_referrals, reset_first_offer_bought, job_minute
+
 bot: Bot = Bot(
-    config.BOT_TOKEN, parse_mode=ParseMode.HTML, disable_web_page_preview=True
+    config.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML)
 )
 
 
@@ -28,7 +36,8 @@ async def on_shutdown(session: AsyncSession) -> None:
 
 
 async def scheduler() -> None:
-    # aioschedule.every(1).seconds.do(test_job)
+    aioschedule.every(1).seconds.do(job_minute)
+    aioschedule.every().day.at("11:00").do(reset_first_offer_bought)
     aioschedule.every().day.at("20:00").do(verification_referrals, bot=bot)
     while True:
         await aioschedule.run_pending()
@@ -38,14 +47,12 @@ async def scheduler() -> None:
 async def set_default_commands(bot: Bot):
     await bot.set_my_commands(
         [
-            BotCommand(
-                command="start", description='-'
-            ),
-            BotCommand(command="reset", description='-'),
+            BotCommand(command="start", description="-"),
+            BotCommand(command="reset", description="-"),
         ]
     )
 
-    
+
 async def main() -> None:
 
     dp = Dispatcher(_engine=_engine, storage=RedisStorage(redis=redis))
@@ -56,8 +63,13 @@ async def main() -> None:
     dp.message.middleware(DBSessionMiddleware(session_pool=_sessionmaker))
     dp.callback_query.middleware(DBSessionMiddleware(session_pool=_sessionmaker))
 
+    dp.message.middleware(ThrottlingMiddleware())
+
     dp.message.middleware(CheckUser())
     dp.callback_query.middleware(CheckUser())
+
+    dp.message.middleware(CheckUnity())
+    dp.callback_query.middleware(CheckUnity())
 
     dp.message.middleware(RegMove())
 

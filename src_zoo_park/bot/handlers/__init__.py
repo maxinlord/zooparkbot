@@ -7,7 +7,18 @@ def setup_message_routers() -> Router:
         referrals,
         commands,
         zoomarket,
+        unity,
+        unity_level,
+        unity_members,
+        unity_top,
+        bank,
+        top,
+        bonus,
         random_merchant,
+        rarity_shop,
+        workshop_items,
+        aviaries,
+        account,
         any_unknown_message,
         errors,
     )
@@ -17,7 +28,18 @@ def setup_message_routers() -> Router:
     router.include_router(commands.router)
     router.include_router(referrals.router)
     router.include_router(zoomarket.router)
+    router.include_router(unity.router)
+    router.include_router(unity_level.router)
+    router.include_router(unity_members.router)
+    router.include_router(unity_top.router)
+    router.include_router(bank.router)
+    router.include_router(top.router)
+    router.include_router(bonus.router)
+    router.include_router(account.router)
     router.include_router(random_merchant.router)
+    router.include_router(rarity_shop.router)
+    router.include_router(workshop_items.router)
+    router.include_router(aviaries.router)
 
     router.include_router(any_unknown_message.router)
 

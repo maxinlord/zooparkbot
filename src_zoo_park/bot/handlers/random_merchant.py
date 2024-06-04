@@ -1,50 +1,44 @@
-from datetime import datetime
-from aiogram.filters import CommandStart, CommandObject
-from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
+from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove, ReactionTypeEmoji
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from db import User, Value, Photo, RandomMerchant, Animal
-from aiogram.filters import StateFilter
+from db import User, Photo, RandomMerchant, Animal, Value
 from aiogram.utils.chat_action import ChatActionSender
-from aiogram.fsm.state import default_state
 from tools import (
     get_text_message,
-    has_special_characters_nickname,
-    is_unique_nickname,
-    shorten_whitespace_nickname,
-    validate_command_arg,
     create_random_merchant,
-    calculate_price_with_discount,
-    add_animal,
     gen_quantity_animals,
     gen_price,
     get_random_animal,
     get_animal_with_random_rarity,
+    disable_not_main_window,
+    get_remain_seats,
 )
 from bot.states import UserState
 from bot.keyboards import (
     rk_zoomarket_menu,
     ik_merchant_menu,
-    ik_choise_animal,
-    ik_choise_quantity_animals,
+    ik_choice_animal_rmerchant,
+    ik_choice_quantity_animals_rmerchant,
     rk_back,
 )
-from bot.filters import GetTextButton
+from bot.filters import GetTextButton, CompareDataByIndex
 import random
 import asyncio
 
+flags = {"throttling_key": "default"}
 router = Router()
 
 
-@router.message(GetTextButton("random_merchant"))
+@router.message(UserState.zoomarket_menu, GetTextButton("random_merchant"), flags=flags)
 async def random_merchant_menu(
     message: Message,
     session: AsyncSession,
     state: FSMContext,
     user: User,
 ):
+    await disable_not_main_window(data=await state.get_data(), message=message)
     merchant: RandomMerchant = await session.scalar(
         select(RandomMerchant).where(RandomMerchant.id_user == user.id_user)
     )
@@ -53,7 +47,7 @@ async def random_merchant_menu(
     animal_name = await session.scalar(
         select(Animal.name).where(Animal.code_name == merchant.code_name_animal)
     )
-    await message.answer_photo(
+    msg = await message.answer_photo(
         photo=await session.scalar(
             select(Photo.photo_id).where(Photo.name == "plug_photo")
         ),
@@ -67,16 +61,18 @@ async def random_merchant_menu(
             first_offer_bought=merchant.first_offer_bought,
         ),
     )
+    await state.set_data({})
+    await state.update_data(active_window=msg.message_id, animal_name=animal_name)
 
 
-@router.callback_query(F.data.split("_")[-1] == "offer")
+@router.callback_query(UserState.zoomarket_menu, CompareDataByIndex("offer"))
 async def buy_one_of_offer(
     query: CallbackQuery,
     session: AsyncSession,
     state: FSMContext,
     user: User,
 ):
-    offer = query.data.split("_")[0]
+    offer = query.data.split(":")[0]
     merchant = await session.scalar(
         select(RandomMerchant).where(RandomMerchant.id_user == user.id_user)
     )
@@ -88,8 +84,15 @@ async def buy_one_of_offer(
                     show_alert=True,
                 )
                 return
-            user.animals = await add_animal(
-                user.animals,
+            remain_seats = await get_remain_seats(
+                aviaries=user.aviaries, amount_animals=user.get_total_number_animals()
+            )
+            if remain_seats < merchant.quantity_animals:
+                await query.answer(
+                    await get_text_message("not_enough_seats"), show_alert=True
+                )
+                return
+            user.add_animal(
                 code_name_animal=merchant.code_name_animal,
                 quantity=merchant.quantity_animals,
             )
@@ -112,16 +115,28 @@ async def buy_one_of_offer(
                     await get_text_message("not_enough_money"), show_alert=True
                 )
                 return
+            remain_seats = await get_remain_seats(
+                aviaries=user.aviaries, amount_animals=user.get_total_number_animals()
+            )
+            MAX_QUANTITY_ANIMALS = await session.scalar(
+                select(Value.value_int).where(Value.name == "MAX_QUANTITY_ANIMALS")
+            )
+            if remain_seats < MAX_QUANTITY_ANIMALS:
+                await query.answer(
+                    await get_text_message("no_seats_to_full_prize"), show_alert=True
+                )
+                return
             await query.message.delete_reply_markup()
             user.usd -= merchant.price
             user.amount_expenses_usd += merchant.price
             quantity_animals = await gen_quantity_animals()
+
+            await state.set_state(UserState.for_while_shell)
             while quantity_animals > 0:
                 animal = await get_random_animal()
                 part_animals = random.randint(1, quantity_animals)
                 quantity_animals -= part_animals
-                user.animals = await add_animal(
-                    user.animals,
+                user.add_animal(
                     code_name_animal=animal.code_name,
                     quantity=part_animals,
                 )
@@ -134,78 +149,117 @@ async def buy_one_of_offer(
                             "you_got_this_animal", an=animal.name, aq=part_animals
                         )
                     )
-            await query.answer(await get_text_message("you_lucky"), show_alert=True)
+            await state.set_state(UserState.zoomarket_menu)
+
+            await query.message.answer(await get_text_message("you_lucky"))
             merchant.price = await gen_price()
             await session.commit()
 
         case "3":
             await query.message.edit_caption(
-                caption=await get_text_message("merchant_choise_animal"),
-                reply_markup=await ik_choise_animal(),
+                caption=await get_text_message("merchant_choice_animal"),
+                reply_markup=await ik_choice_animal_rmerchant(),
             )
 
 
-@router.callback_query(F.data.split("_")[-1] == "3offerAnimal")
-async def choise_animal_to_buy(
+@router.callback_query(
+    UserState.zoomarket_menu,
+    CompareDataByIndex("choice_animal_rmerchant"),
+)
+async def choice_animal_to_buy(
     query: CallbackQuery,
     session: AsyncSession,
     state: FSMContext,
     user: User,
 ):
-    animal = query.data.split("_")[0]
+    animal = query.data.split(":")[0]
     animal_price = await session.scalar(
         select(Animal.price).where(Animal.code_name == f"{animal}-")
     )
+    await state.update_data(code_name_animal=animal, animal_price=animal_price)
     await query.message.edit_caption(
         caption=await get_text_message("merchant_choise_quantity_animal"),
-        reply_markup=await ik_choise_quantity_animals(
-            animal=animal, animal_price=animal_price
+        reply_markup=await ik_choice_quantity_animals_rmerchant(
+            animal_price=animal_price
         ),
     )
 
 
-@router.callback_query(F.data.split("_")[-1] == "3offerQuantity")
-async def choise_qtity_to_buy(
+@router.callback_query(
+    UserState.zoomarket_menu, CompareDataByIndex("choice_qa_rmerchant")
+)
+async def choice_qa_to_buy(
     query: CallbackQuery,
     session: AsyncSession,
     state: FSMContext,
     user: User,
 ):
-    animal_str = query.data.split("_")[0]
-    animal_price = await session.scalar(
-        select(Animal.price).where(Animal.code_name == f"{animal_str}-")
-    )
-    quantity = int(query.data.split("_")[1])
+    data = await state.get_data()
+    animal: str = data["code_name_animal"]
+    animal_price = data["animal_price"]
+    quantity = int(query.data.split(":")[0])
     finite_price = animal_price * quantity
+
+    remain_seats = await get_remain_seats(
+        aviaries=user.aviaries, amount_animals=user.get_total_number_animals()
+    )
+    if remain_seats < quantity:
+        await query.answer(await get_text_message("not_enough_seats"), show_alert=True)
+        return
     if user.usd < finite_price:
         await query.answer(await get_text_message("not_enough_money"), show_alert=True)
         return
     user.usd -= finite_price
     user.amount_expenses_usd += finite_price
     await query.message.delete_reply_markup()
+
+    await state.set_state(UserState.for_while_shell)
     while quantity > 0:
-        animal = await get_animal_with_random_rarity(animal=animal_str)
+        animal_obj: Animal = await get_animal_with_random_rarity(
+            animal=data["code_name_animal"]
+        )
         part_animals = random.randint(1, quantity)
         quantity -= part_animals
-        user.animals = await add_animal(
-            user.animals,
-            code_name_animal=animal.code_name,
-            quantity=part_animals,
-        )
         async with ChatActionSender.typing(
             bot=query.bot, chat_id=query.message.chat.id
         ):
             await asyncio.sleep(2)
             await query.message.answer(
                 await get_text_message(
-                    "you_got_this_rarity_animal", an=animal.name, aq=part_animals
+                    "you_got_this_rarity_animal", an=animal_obj.name, aq=part_animals
                 )
             )
-    await query.answer(text=await get_text_message("you_lucky"), show_alert=True)
+        user.add_animal(
+            code_name_animal=animal_obj.code_name,
+            quantity=part_animals,
+        )
+    await state.set_state(UserState.zoomarket_menu)
+
+    await query.message.answer(text=await get_text_message("you_lucky"))
     await session.commit()
 
 
-@router.callback_query(F.data.split(":")[-1] == "back")
+@router.callback_query(UserState.for_while_shell)
+async def for_while_shell_callback(
+    query: CallbackQuery,
+    session: AsyncSession,
+    state: FSMContext,
+    user: User,
+):
+    await query.answer(text=await get_text_message("while_shell"), show_alert=False)
+
+
+@router.message(UserState.for_while_shell)
+async def random_merchant_menu(
+    message: Message,
+    session: AsyncSession,
+    state: FSMContext,
+    user: User,
+):
+    await message.react(reaction=[ReactionTypeEmoji(emoji="🗿")])
+
+
+@router.callback_query(UserState.zoomarket_menu, CompareDataByIndex("back"))
 async def back_distributor(
     query: CallbackQuery,
     session: AsyncSession,
@@ -218,9 +272,8 @@ async def back_distributor(
             merchant = await session.scalar(
                 select(RandomMerchant).where(RandomMerchant.id_user == user.id_user)
             )
-            animal_name = await session.scalar(
-                select(Animal.name).where(Animal.code_name == merchant.code_name_animal)
-            )
+            data = await state.get_data()
+            animal_name = data["animal_name"]
             await query.message.edit_caption(
                 caption=await get_text_message("random_merchant_menu"),
                 reply_markup=await ik_merchant_menu(
@@ -232,14 +285,14 @@ async def back_distributor(
                     first_offer_bought=merchant.first_offer_bought,
                 ),
             )
-        case "to_choise_animal":
+        case "to_choice_animal":
             await query.message.edit_caption(
                 caption=await get_text_message("merchant_choise_animal"),
-                reply_markup=await ik_choise_animal(),
+                reply_markup=await ik_choice_animal_rmerchant(),
             )
 
 
-@router.callback_query(F.data.split(":")[-1] == "cqa")
+@router.callback_query(UserState.zoomarket_menu, F.data == "cqa")
 async def custom_quantity_animals(
     query: CallbackQuery,
     session: AsyncSession,
@@ -247,10 +300,8 @@ async def custom_quantity_animals(
     user: User,
 ):
     await query.message.delete_reply_markup()
-    animal_str = query.data.split(":")[0]
-    animal_price = await session.scalar(
-        select(Animal.price).where(Animal.code_name == f"{animal_str}-")
-    )
+    data = await state.get_data()
+    animal_price = data["animal_price"]
     animals_are_available = user.usd // animal_price
     await query.message.answer(
         text=await get_text_message(
@@ -258,12 +309,11 @@ async def custom_quantity_animals(
         ),
         reply_markup=await rk_back(),
     )
-    await state.set_state(UserState.enter_custom_quantity_animals)
-    await state.update_data(animal_str=animal_str, animal_price=animal_price)
+    await state.set_state(UserState.rmerchant_enter_custom_qa_step)
 
 
-@router.message(UserState.enter_custom_quantity_animals, GetTextButton("back"))
-async def back_to_choise_quantity(
+@router.message(UserState.rmerchant_enter_custom_qa_step, GetTextButton("back"))
+async def back_to_choice_quantity(
     message: Message,
     session: AsyncSession,
     state: FSMContext,
@@ -273,19 +323,20 @@ async def back_to_choise_quantity(
     await message.answer(
         text=await get_text_message("backed"), reply_markup=await rk_zoomarket_menu()
     )
-    await message.answer_photo(
+    msg = await message.answer_photo(
         photo=await session.scalar(
             select(Photo.photo_id).where(Photo.name == "plug_photo")
         ),
         caption=await get_text_message("merchant_choise_quantity_animal"),
-        reply_markup=await ik_choise_quantity_animals(
-            animal_price=data["animal_price"], animal=data["animal_str"]
+        reply_markup=await ik_choice_quantity_animals_rmerchant(
+            animal_price=data["animal_price"]
         ),
     )
-    await state.clear()
+    await state.update_data(active_window=msg.message_id)
+    await state.set_state(UserState.zoomarket_menu)
 
 
-@router.message(UserState.enter_custom_quantity_animals)
+@router.message(UserState.rmerchant_enter_custom_qa_step)
 async def get_custom_quantity_animals(
     message: Message,
     session: AsyncSession,
@@ -297,6 +348,14 @@ async def get_custom_quantity_animals(
         return
     if int(message.text) < 1:
         await message.answer(text=await get_text_message("enter_digit"))
+        return
+    remain_seats = await get_remain_seats(
+        aviaries=user.aviaries, amount_animals=user.get_total_number_animals()
+    )
+    if remain_seats < int(message.text):
+        await message.answer(
+            await get_text_message("not_enough_seats"), show_alert=True
+        )
         return
     data = await state.get_data()
     finite_price = int(message.text) * data["animal_price"]
@@ -310,8 +369,9 @@ async def get_custom_quantity_animals(
         text=await get_text_message("you_paid", fp=finite_price),
         reply_markup=ReplyKeyboardRemove(),
     )
+    await state.set_state(UserState.for_while_shell)
     while quantity > 0:
-        animal = await get_animal_with_random_rarity(animal=data["animal_str"])
+        animal = await get_animal_with_random_rarity(animal=data["code_name_animal"])
         part_animals = random.randint(1, quantity)
         quantity -= part_animals
         async with ChatActionSender.typing(bot=message.bot, chat_id=message.chat.id):
@@ -321,11 +381,12 @@ async def get_custom_quantity_animals(
                     "you_got_this_rarity_animal", an=animal.name, aq=part_animals
                 )
             )
-        user.animals = await add_animal(
-            user.animals,
+        user.add_animal(
             code_name_animal=animal.code_name,
             quantity=part_animals,
         )
+    await state.set_state(UserState.zoomarket_menu)
+
     await message.answer(
         await get_text_message("you_lucky"), reply_markup=await rk_zoomarket_menu()
     )

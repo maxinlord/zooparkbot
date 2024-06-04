@@ -2,7 +2,7 @@ from typing import Callable, Awaitable, Any
 
 from aiogram import BaseMiddleware
 from aiogram.types import Message
-
+from config import CHANNEL_ID, CHAT_ID
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 
@@ -15,8 +15,10 @@ class DBSessionMiddleware(BaseMiddleware):
         self,
         handler: Callable[[Message, dict[str, Any]], Awaitable[Any]],
         event: Message,
-        data: dict[str, Any]
+        data: dict[str, Any],
     ) -> Any:
+        if event.chat.id in [CHAT_ID, CHANNEL_ID]:
+            return
         async with self._session_pool() as session:
             data["session"] = session
             return await handler(event, data)

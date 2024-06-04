@@ -6,6 +6,7 @@ from db import RandomMerchant, Animal, Value
 from faker import Faker
 import random
 from math import ceil
+from config import rarities
 
 # Создание экземпляра Faker для русского языка
 fake = Faker("ru_RU")
@@ -14,7 +15,7 @@ fake = Faker("ru_RU")
 async def create_random_merchant(id_user: int) -> RandomMerchant:
     """Создание случайного мерчанта"""
     async with _sessionmaker_for_func() as session:
-        r = await session.scalars(select(Animal).where(Animal.code_name.contains('_')))
+        r = await session.scalars(select(Animal).where(Animal.code_name.contains("_")))
         MAX_DISCOUNT = await session.scalar(
             select(Value.value_int).where(Value.name == "MAX_DISCOUNT")
         )
@@ -74,21 +75,20 @@ async def get_weights() -> list:
         w_str = await session.scalar(
             select(Value.value_str).where(Value.name == "WEIGHTS_FOR_RANDOM_MERCHANT")
         )
-        weights = [float(w.strip()) for w in w_str.split(',')]
+        weights = [float(w.strip()) for w in w_str.split(",")]
         return weights
 
 
 async def get_animal_with_random_rarity(animal: str) -> Animal:
     async with _sessionmaker_for_func() as session:
         rarity = random.choices(
-            population=["_rare", "_epic", "_mythical", "_leg"],
+            population=rarities,
             weights=await get_weights(),
         )
         animal = await session.scalar(
             select(Animal).where(Animal.code_name == animal + rarity[0])
         )
         return animal
-
 
 
 async def get_random_animal() -> Animal:
@@ -99,7 +99,7 @@ async def get_random_animal() -> Animal:
         c_names = [c_name.strip("-") for c_name in c_names]
         animal_name = random.choice(c_names)
         rarity = random.choices(
-            population=["_rare", "_epic", "_mythical", "_leg"],
+            population=rarities,
             weights=await get_weights(),
         )
         animal = await session.scalar(

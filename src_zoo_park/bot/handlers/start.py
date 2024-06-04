@@ -59,28 +59,30 @@ async def command_start_with_deep_link(
     await message.answer(text=await get_text_message("enter_nickname"))
 
 
-@router.message(CommandStart(), StateFilter(default_state))
+@router.message(CommandStart())
 async def command_start(
     message: Message,
     state: FSMContext,
     session: AsyncSession,
     user: User | None,
 ) -> None:
+    await state.clear()
     if user:
         await message.answer(
             text=await get_text_message("main_menu"), reply_markup=await rk_main_menu()
         )
+        await state.set_state(UserState.main_menu)
         return
     data_user = {
         "id_user": message.from_user.id,
         "username": message.from_user.username,
     }
-    await state.set_state(UserState.start_reg)
+    await state.set_state(UserState.start_reg_step)
     await state.update_data(data_user=data_user)
     await message.answer(text=await get_text_message("enter_nickname"))
 
 
-@router.message(UserState.start_reg)
+@router.message(UserState.start_reg_step)
 async def getting_nickname(
     message: Message, state: FSMContext, session: AsyncSession
 ) -> None:
@@ -113,4 +115,4 @@ async def getting_nickname(
     await message.answer(
         text=await get_text_message("main_menu"), reply_markup=await rk_main_menu()
     )
-    await state.clear()
+    await state.set_state(UserState.main_menu)
