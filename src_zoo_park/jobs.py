@@ -73,6 +73,10 @@ async def update_rate_bank():
             select(Value.value_int).where(Value.name == "RATE_RUB_USD")
         )
         current_rate += random.randint(-MAX_INCREASE_TO_RATE, MAX_INCREASE_TO_RATE)
+        MIN_RATE_RUB_USD = await session.scalar(
+            select(Value.value_int).where(Value.name == "MIN_RATE_RUB_USD")
+        )
+        current_rate = max(current_rate, MIN_RATE_RUB_USD)
         await session.execute(
             update(Value)
             .where(Value.name == "RATE_RUB_USD")
