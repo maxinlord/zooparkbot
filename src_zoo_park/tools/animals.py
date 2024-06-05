@@ -28,9 +28,11 @@ async def get_quantity_animals_for_rshop() -> list[int]:
         return list(quantitys)
 
 
-async def get_price_animal(animal_code_name: str, unity_idpk: int) -> int:
+async def get_price_animal(animal_code_name: str, unity_idpk: int | None) -> int:
     async with _sessionmaker_for_func() as session:
-        discount = await get_unity_data_for_price_animal(unity_idpk)
+        discount = (
+            await get_unity_data_for_price_animal(unity_idpk) if unity_idpk else 0
+        )
         price = await session.scalar(
             select(Animal.price).where(Animal.code_name == animal_code_name)
         )

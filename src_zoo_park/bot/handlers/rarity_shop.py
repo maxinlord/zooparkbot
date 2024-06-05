@@ -69,7 +69,7 @@ async def get_rarity_rshop(
 ):
     data = await state.get_data()
     rarity = query.data.split(":")[0]
-    unity_idpk = user.current_unity.split(":")[-1]
+    unity_idpk = user.current_unity.split(":")[-1] if user.current_unity else None
     animal_price = await get_price_animal(
         animal_code_name=data["animal"] + rarity, unity_idpk=unity_idpk
     )
