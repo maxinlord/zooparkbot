@@ -163,3 +163,4 @@ async def get_custom_quantity_aviary(
         text=await get_text_message("aviary_bought_successfully"),
         reply_markup=await rk_zoomarket_menu(),
     )
+    await state.set_state(UserState.zoomarket_menu)
