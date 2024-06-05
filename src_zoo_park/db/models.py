@@ -103,6 +103,10 @@ class User(Base):
         decoded_dict: dict = json.loads(self.animals)
         return list(decoded_dict.values())
 
+    def get_dict_animals(self) -> dict:
+        decoded_dict: dict = json.loads(self.animals)
+        return decoded_dict
+
 
 class Unity(Base):
     __tablename__ = "unity"

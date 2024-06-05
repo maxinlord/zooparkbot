@@ -242,3 +242,6 @@ async def count_income_unity(unity: Unity) -> int:
         ]
         total_income = sum([await income(user=user) for user in users])
         return total_income
+
+
+

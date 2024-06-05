@@ -25,6 +25,8 @@ from .animals import (
     get_quantity_animals_for_rmerchant,
     get_quantity_animals_for_rshop,
     get_price_animal,
+    get_income_animal,
+    get_top_unity_by_animal
 )
 
 from .items import (
@@ -59,6 +61,6 @@ from .unity import (
     get_size_unity_members,
     count_page_unity_members,
     get_members_name_and_idpk,
-    factory_text_unity_top,
+    factory_text_unity_top
 )
 from .top import factory_text_main_top

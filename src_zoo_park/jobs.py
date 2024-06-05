@@ -7,15 +7,15 @@ import random
 from datetime import datetime, timedelta
 
 
-async def job_sec(bot: Bot) -> None:
+async def job_sec() -> None:
     pass
-
 
 async def job_minute() -> None:
     if datetime.now().second == 59:
         await accrual_of_income()
         await update_rate_bank()
         await deleter_request_to_unity()
+        
 
 
 async def verification_referrals(bot: Bot):

@@ -3,12 +3,13 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from db import User, Animal
+from db import User, Animal, Value
 from tools import (
     get_text_message,
     disable_not_main_window,
     get_remain_seats,
     get_price_animal,
+    get_income_animal,
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -69,7 +70,7 @@ async def get_rarity_rshop(
 ):
     data = await state.get_data()
     rarity = query.data.split(":")[0]
-    unity_idpk = user.current_unity.split(":")[-1] if user.current_unity else None
+    unity_idpk = int(user.current_unity.split(":")[-1]) if user.current_unity else None
     animal_price = await get_price_animal(
         animal_code_name=data["animal"] + rarity, unity_idpk=unity_idpk
     )
@@ -79,13 +80,14 @@ async def get_rarity_rshop(
     await state.update_data(
         animal_price=animal_price, animal=data["animal"], rarity=rarity
     )
+    animal_income = await get_income_animal(animal=animal, unity_idpk=unity_idpk)
     await query.message.edit_text(
         text=await get_text_message(
             "choice_quantity_rarity_shop_menu",
             name_=animal.name,
             description=animal.description,
             price=animal_price,
-            income=animal.income,
+            income=animal_income,
         ),
         reply_markup=await ik_choice_quantity_animals_rshop(animal_price=animal_price),
     )
@@ -180,13 +182,15 @@ async def back_to_choice_quantity_rshop(
     animal = await session.scalar(
         select(Animal).where(Animal.code_name == data["animal"] + data["rarity"])
     )
+    unity_idpk = int(user.current_unity.split(":")[-1]) if user.current_unity else None
+    animal_income = await get_income_animal(animal=animal, unity_idpk=unity_idpk)
     msg = await message.answer(
         text=await get_text_message(
             "choice_quantity_rarity_shop_menu",
             name_=animal.name,
             description=animal.description,
             price=data["animal_price"],
-            income=animal.income,
+            income=animal_income,
         ),
         reply_markup=await ik_choice_quantity_animals_rshop(
             animal_price=data["animal_price"]
