@@ -11,6 +11,7 @@ from tools import (
     disable_not_main_window,
     income,
     get_total_number_seats,
+    get_remain_seats,
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -47,6 +48,10 @@ async def account(
             animals=user.animals,
             aviaries=user.aviaries,
             total_places=await get_total_number_seats(user.aviaries),
+            remain_places=await get_remain_seats(
+                aviaries=user.aviaries,
+                amount_animals=user.get_total_number_animals(),
+            ),
             items=user.items,
             income=await income(user),
         ),
