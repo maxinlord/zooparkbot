@@ -5,7 +5,13 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from db import User, Animal, Item
-from tools import get_text_message, count_page_items, disable_not_main_window, income
+from tools import (
+    get_text_message,
+    count_page_items,
+    disable_not_main_window,
+    income,
+    get_total_number_seats,
+)
 from bot.states import UserState
 from bot.keyboards import (
     rk_zoomarket_menu,
@@ -39,6 +45,8 @@ async def account(
             usd=user.usd,
             pawc=user.paw_coins,
             animals=user.animals,
+            aviaries=user.aviaries,
+            total_places=await get_total_number_seats(user.aviaries),
             items=user.items,
             income=await income(user),
         ),
