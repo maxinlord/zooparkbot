@@ -120,6 +120,12 @@ async def process_back_to_menu(
                     usd=user.usd,
                     pawc=user.paw_coins,
                     animals=user.animals,
+                    aviaries=user.aviaries,
+                    total_places=await get_total_number_seats(user.aviaries),
+                    remain_places=await get_remain_seats(
+                        aviaries=user.aviaries,
+                        amount_animals=user.get_total_number_animals(),
+                    ),
                     items=user.items,
                     income=await income(user),
                 ),
@@ -146,7 +152,11 @@ async def process_viewing_item(
         select(Item).where(Item.code_name == code_name_item)
     )
     await query.message.edit_text(
-        text=await get_text_message("description_item"),
+        text=await get_text_message(
+            "description_item",
+            name_=item.description,
+            description=item.description,
+        ),
         reply_markup=await ik_item_activate_menu(user.get_status_item(code_name_item)),
     )
 
@@ -168,8 +178,15 @@ async def process_viewing_recipes(
         case "item_deactivate":
             user.activate_item(data["code_name_item"], False)
     await session.commit()
+    item = await session.scalar(
+        select(Item).where(Item.code_name == data["code_name_item"])
+    )
     await query.message.edit_text(
-        text=await get_text_message("description_item"),
+        text=await get_text_message(
+            "description_item",
+            name_=item.description,
+            description=item.description,
+        ),
         reply_markup=await ik_item_activate_menu(
             user.get_status_item(data["code_name_item"])
         ),

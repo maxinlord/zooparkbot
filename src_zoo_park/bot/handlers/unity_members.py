@@ -8,6 +8,7 @@ from tools import (
     get_text_message,
     disable_not_main_window,
     count_page_unity_members,
+    income,
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -82,7 +83,14 @@ async def process_viewing_member_bio(
         else await ik_back_member()
     )
     await query.message.edit_text(
-        text=await get_text_message("member_bio"),
+        text=await get_text_message(
+            "member_bio",
+            nickname=member.nickname,
+            income=await income(member),
+            rub=member.rub,
+            usd=member.usd,
+            amount_animals=member.get_total_number_animals(),
+        ),
         reply_markup=keyboard,
     )
 

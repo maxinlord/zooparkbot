@@ -73,11 +73,20 @@ async def get_rarity_rshop(
     animal_price = await get_price_animal(
         animal_code_name=data["animal"] + rarity, unity_idpk=unity_idpk
     )
+    animal = await session.scalar(
+        select(Animal).where(Animal.code_name == data["animal"] + rarity)
+    )
     await state.update_data(
         animal_price=animal_price, animal=data["animal"], rarity=rarity
     )
     await query.message.edit_text(
-        text=await get_text_message("choice_quantity_rarity_shop_menu"),
+        text=await get_text_message(
+            "choice_quantity_rarity_shop_menu",
+            name_=animal.name,
+            description=animal.description,
+            price=data["animal_price"],
+            income=animal.income,
+        ),
         reply_markup=await ik_choice_quantity_animals_rshop(animal_price=animal_price),
     )
 
@@ -168,8 +177,17 @@ async def back_to_choice_quantity_rshop(
     await message.answer(
         text=await get_text_message("backed"), reply_markup=await rk_zoomarket_menu()
     )
+    animal = await session.scalar(
+        select(Animal).where(Animal.code_name == data["animal"] + data["rarity"])
+    )
     msg = await message.answer(
-        text=await get_text_message("choice_quantity_rarity_shop_menu"),
+        text=await get_text_message(
+            "choice_quantity_rarity_shop_menu",
+            name_=animal.name,
+            description=animal.description,
+            price=data["animal_price"],
+            income=animal.income,
+        ),
         reply_markup=await ik_choice_quantity_animals_rshop(
             animal_price=data["animal_price"]
         ),

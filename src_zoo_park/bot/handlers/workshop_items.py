@@ -48,10 +48,10 @@ async def witems_menu_choice_item(
     await query.message.edit_text(
         text=await get_text_message(
             "witems_menu_buy_item",
-            n=item.name,
-            d=item.description,
-            p=item.price,
-            c=dict_tr_currencys[item.currency],
+            name_=item.name,
+            description=item.description,
+            price=item.price,
+            currency=dict_tr_currencys[item.currency],
         ),
         reply_markup=await ik_buy_item(),
     )

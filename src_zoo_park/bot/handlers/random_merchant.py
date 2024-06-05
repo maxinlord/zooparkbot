@@ -51,7 +51,7 @@ async def random_merchant_menu(
         photo=await session.scalar(
             select(Photo.photo_id).where(Photo.name == "plug_photo")
         ),
-        caption=await get_text_message("random_merchant_menu"),
+        caption=await get_text_message("random_merchant_menu", n=merchant.name),
         reply_markup=await ik_merchant_menu(
             quantity_animals=merchant.quantity_animals,
             name_animal=animal_name,
@@ -275,7 +275,7 @@ async def back_distributor(
             data = await state.get_data()
             animal_name = data["animal_name"]
             await query.message.edit_caption(
-                caption=await get_text_message("random_merchant_menu"),
+                caption=await get_text_message("random_merchant_menu", n=merchant.name),
                 reply_markup=await ik_merchant_menu(
                     quantity_animals=merchant.quantity_animals,
                     name_animal=animal_name,
