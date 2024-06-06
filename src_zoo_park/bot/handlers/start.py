@@ -54,7 +54,7 @@ async def command_start_with_deep_link(
         "username": message.from_user.username,
         "id_referrer": referrer.idpk,
     }
-    await state.set_state(UserState.start_reg)
+    await state.set_state(UserState.start_reg_step)
     await state.update_data(data_user=data_user)
     await message.answer(text=await get_text_message("enter_nickname"))
 
