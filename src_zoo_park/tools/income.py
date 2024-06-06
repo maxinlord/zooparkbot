@@ -2,7 +2,7 @@ import asyncio
 from collections import defaultdict
 import random
 from sqlalchemy import select
-from db import Value, Item, Aviary, User, Animal, Unity
+from db import Value, Item, Aviary, User, Animal, Unity, Item
 from init_db import _sessionmaker_for_func
 import json
 from config import rarities
@@ -172,12 +172,14 @@ async def fetch_and_parse(session, name, parse_func):
     value_str = await session.scalar(select(Value.value_str).where(Value.name == name))
     return [parse_func(v.strip()) for v in value_str.split(",")]
 
+
 async def handle_rub_bonus(user, session):
     income = await income_(user)
     income_for_3_hours = income * 180
     rub_to_add = random.randint(income_for_3_hours // 3, income_for_3_hours)
     user.rub += rub_to_add
     return {"rub_to_add": rub_to_add}
+
 
 async def handle_usd_bonus(user, session):
     weights = await fetch_and_parse(session, "WEIGHTS_FOR_BONUS_USD", float)
@@ -186,6 +188,7 @@ async def handle_usd_bonus(user, session):
     user.usd += usd_to_add
     return {"usd_to_add": usd_to_add}
 
+
 async def handle_aviary_bonus(user, session):
     types_aviaries = list(await session.scalars(select(Aviary.code_name)))
     aviary_to_add = random.choice(types_aviaries)
@@ -193,17 +196,26 @@ async def handle_aviary_bonus(user, session):
     user.add_aviary(code_name_aviary=aviary_to_add, quantity=amount_to_add)
     return {"aviary_to_add": aviary_to_add, "amount_to_add": amount_to_add}
 
+
 async def handle_animal_bonus(user, session):
     animal = await _get_random_animal()
-    amount_to_add = random.randint(1, await _get_remain_seats(user.aviaries, user.get_total_number_animals()))
+    amount_to_add = random.randint(
+        1, await _get_remain_seats(user.aviaries, user.get_total_number_animals())
+    )
     user.add_animal(code_name_animal=animal.code_name, quantity=amount_to_add)
     return {"animal_to_add": animal.name, "amount_to_add": amount_to_add}
 
-async def handle_item_bonus(user, session):
+
+async def handle_item_bonus(user: User, session):
     items = list(await session.scalars(select(Item)))
-    item_to_add = random.choice(items)
+    item_to_add: Item = random.choice(items)
+    if item_to_add.code_name in user.items:
+        amount = item_to_add.price // 2
+        user.add_to_currency(currency=item_to_add.currency, amount=amount)
+        return {f"{item_to_add.currency}_to_add": amount}
     user.add_item(code_name_item=item_to_add.code_name)
     return {"item_to_add": item_to_add.name}
+
 
 async def bonus_(user: User):
     async with _sessionmaker_for_func() as session:
@@ -220,7 +232,6 @@ async def bonus_(user: User):
         data_about_bonus = {bonus_type: await handlers[bonus_type](user, session)}
         await session.commit()
     return data_about_bonus
-
 
 
 async def _get_random_animal() -> Animal:

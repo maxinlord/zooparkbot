@@ -109,8 +109,8 @@ async def get_bonus(
         )
         return
     user.bonus = 0
-    await session.commit()
     data_bonus = await bonus_(user=user)
+    await session.commit()
     key = list(data_bonus.keys())[0]
     text = ""
     match key:

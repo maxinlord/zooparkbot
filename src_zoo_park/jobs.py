@@ -66,7 +66,7 @@ async def reset_first_offer_bought() -> None:
 
 async def add_bonus_to_users() -> None:
     async with _sessionmaker_for_func() as session:
-        await session.execute(update(User).values(bonus=1))
+        await session.execute(update(User).where(User.bonus == False).values(bonus=1))
         await session.commit()
 
 
