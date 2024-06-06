@@ -51,10 +51,9 @@ async def income_from_animal(animals: dict, unity_idpk: int):
 
 
 async def get_unity_data_for_income(idpk_unity: int):
-    data = {}
     async with _sessionmaker_for_func() as session:
         unity = await session.get(Unity, idpk_unity)
-        data["lvl"] = unity.level
+        data = {"lvl": unity.level}
         if unity.level in [1, 2]:
             data["bonus"] = await session.scalar(
                 select(Value.value_int).where(
@@ -175,8 +174,8 @@ async def fetch_and_parse(session, name, parse_func):
 
 async def handle_rub_bonus(user, session):
     income = await income_(user)
-    income_for_3_hours = income * 180
-    rub_to_add = random.randint(income_for_3_hours // 3, income_for_3_hours)
+    income_for_3_min = income * 180
+    rub_to_add = random.randint(income_for_3_min // 3, income_for_3_min)
     user.rub += rub_to_add
     return {"rub_to_add": rub_to_add}
 
@@ -192,7 +191,7 @@ async def handle_usd_bonus(user, session):
 async def handle_aviary_bonus(user, session):
     types_aviaries = list(await session.scalars(select(Aviary.code_name)))
     aviary_to_add = random.choice(types_aviaries)
-    amount_to_add = random.randint(1, 15)
+    amount_to_add = random.randint(1, 5)
     user.add_aviary(code_name_aviary=aviary_to_add, quantity=amount_to_add)
     return {"aviary_to_add": aviary_to_add, "amount_to_add": amount_to_add}
 
@@ -299,7 +298,9 @@ async def factory_text_unity_top() -> str:
 
 async def factory_text_main_top(idpk_user: int) -> str:
     async with _sessionmaker_for_func() as session:
-        total_place_top = 10
+        total_place_top = await session.scalar(
+            select(Value.value_int).where(Value.name == "TOTAL_PLACE_TOP")
+        )
         users = await session.scalars(select(User))
         users = users.all()
         users_income = [await income_(user) for user in users]
