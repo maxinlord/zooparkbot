@@ -3,7 +3,6 @@ import re
 from sqlalchemy import desc, select
 from init_db import _sessionmaker_for_func
 from db import Unity, Value, User, Animal
-from tools import income, get_text_message
 
 
 async def shorten_whitespace_name_unity(name: str) -> str:
@@ -63,55 +62,6 @@ async def check_condition_1st_lvl(unity: Unity) -> bool:
             select(Value.value_int).where(Value.name == "AMOUNT_MEMBERS_1ST_LVL")
         )
         return unity.get_number_members() >= AMOUNT_MEMBERS_1ST_LVL
-
-
-async def check_condition_2nd_lvl(unity: Unity) -> bool:
-    async with _sessionmaker_for_func() as session:
-        AMOUNT_INCOME_2ND_LVL = await session.scalar(
-            select(Value.value_int).where(Value.name == "AMOUNT_INCOME_2ND_LVL")
-        )
-        AMOUNT_ANIMALS_2ND_LVL = await session.scalar(
-            select(Value.value_int).where(Value.name == "AMOUNT_ANIMALS_2ND_LVL")
-        )
-        total_income = 0
-        users = [
-            await session.get(User, int(idpk)) for idpk in unity.get_members_idpk()
-        ]
-        total_income = sum([await income(user=user) for user in users])
-        if total_income < AMOUNT_INCOME_2ND_LVL:
-            return False
-        return all(
-            num_animal >= AMOUNT_ANIMALS_2ND_LVL
-            for user in users
-            for num_animal in user.get_numbers_animals()
-        )
-
-
-async def check_condition_3rd_lvl(unity: Unity) -> bool:
-    async with _sessionmaker_for_func() as session:
-        AMOUNT_INCOME_3RD_LVL = await session.scalar(
-            select(Value.value_int).where(Value.name == "AMOUNT_INCOME_3RD_LVL")
-        )
-        AMOUNT_ANIMALS_3RD_LVL = await session.scalar(
-            select(Value.value_int).where(Value.name == "AMOUNT_ANIMALS_3RD_LVL")
-        )
-        AMOUNT_MEMBERS_3RD_LVL = await session.scalar(
-            select(Value.value_int).where(Value.name == "AMOUNT_MEMBERS_3RD_LVL")
-        )
-        if unity.get_number_members() < AMOUNT_MEMBERS_3RD_LVL:
-            return False
-        total_income = 0
-        users = [
-            await session.get(User, int(idpk)) for idpk in unity.get_members_idpk()
-        ]
-        total_income = sum([await income(user=user) for user in users])
-        if total_income < AMOUNT_INCOME_3RD_LVL:
-            return False
-        return all(
-            num_animal >= AMOUNT_ANIMALS_3RD_LVL
-            for user in users
-            for num_animal in user.get_numbers_animals()
-        )
 
 
 async def get_data_by_lvl_unity(lvl: int) -> dict:
@@ -214,34 +164,6 @@ async def get_members_name_and_idpk(idpk_unity: int) -> list[tuple[str, int]]:
     return data
 
 
-async def factory_text_unity_top() -> str:
-    async with _sessionmaker_for_func() as session:
-        unitys = await session.scalars(select(Unity))
-        unitys = unitys.all()
-        unitys_income = [await count_income_unity(unity=unity) for unity in unitys]
-        ls = list(zip(unitys, unitys_income))
-        ls.sort(key=lambda x: x[1], reverse=True)
-        text = ""
-        for counter, ls_obj in enumerate(ls, start=1):
-            unity = ls_obj[0]
-            i = ls_obj[1]
-            text += (
-                await get_text_message(
-                    "pattern_line_top_unity", n=unity.name, i=i, c=counter
-                )
-                + "\n"
-            )
-        return text
-
-
-async def count_income_unity(unity: Unity) -> int:
-    async with _sessionmaker_for_func() as session:
-        total_income = 0
-        users = [
-            await session.get(User, int(idpk)) for idpk in unity.get_members_idpk()
-        ]
-        total_income = sum([await income(user=user) for user in users])
-        return total_income
 
 
 

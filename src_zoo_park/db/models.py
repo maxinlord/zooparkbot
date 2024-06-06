@@ -34,6 +34,7 @@ class User(Base):
     current_unity: Mapped[str] = mapped_column(String(64), nullable=True)
     sub_on_chat: Mapped[bool] = mapped_column(default=False)
     sub_on_channel: Mapped[bool] = mapped_column(default=False)
+    bonus: Mapped[int] = mapped_column(default=1)
 
     def get_currency(self, currency: str) -> int:
         dict_currencies = {

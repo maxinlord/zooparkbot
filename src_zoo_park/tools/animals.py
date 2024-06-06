@@ -61,40 +61,7 @@ async def get_unity_data_for_price_animal(idpk_unity: int):
     return bonus
 
 
-async def get_top_unity_by_animal() -> tuple[int, dict]:
-    table_for_compare = {}
-    async with _sessionmaker_for_func() as session:
-        unitys = await session.scalars(select(Unity))
-        unitys = unitys.all()
-        for unity in unitys:
-            member_ids = unity.get_members_idpk()
-            animals = defaultdict(int)
-            for idpk in member_ids:
-                user = await session.get(User, int(idpk))
-                animals_user = user.get_dict_animals()
-                for animal_name, num_animal in animals_user.items():
-                    animals[animal_name] += num_animal
-            max_animal = max(animals, key=animals.get)
-            table_for_compare[unity.idpk] = {max_animal: animals[max_animal]}
-        top_unity = max(
-            table_for_compare, key=lambda x: next(iter(table_for_compare[x].values()))
-        )
-        return int(top_unity), table_for_compare[top_unity]
 
 
-async def get_income_animal(animal: Animal, unity_idpk: int):
-    async with _sessionmaker_for_func() as session:
-        if unity_idpk:
-            unity_idpk_top, animal_top = await get_top_unity_by_animal()
-            if (
-                unity_idpk_top == unity_idpk
-                and animal.code_name == list(animal_top.keys())[0]
-            ):
-                bonus = await session.scalar(
-                    select(Value.value_int).where(
-                        Value.name == "BONUS_FOR_AMOUNT_ANIMALS"
-                    )
-                )
-                animal_income = animal.income * (1 + (bonus / 100))
-                return int(animal_income)
-        return animal.income
+
+

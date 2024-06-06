@@ -1,4 +1,5 @@
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
+from aiogram.types import SwitchInlineQueryChosenChat
 from tools import (
     get_text_button,
     get_all_animals,
@@ -221,6 +222,9 @@ async def rk_exchange_bank():
 async def ik_account_menu():
     builder = InlineKeyboardBuilder()
     builder.button(text=await get_text_button("items"), callback_data="items")
+    builder.button(
+        text=await get_text_button("referrals_system"), callback_data="referrals_system"
+    )
     builder.adjust(1)
     return builder.as_markup()
 
@@ -464,5 +468,16 @@ async def ik_get_bonus(sub_on_chat: bool, sub_on_channel: bool):
             callback_data="get_bonus_channel",
         )
     builder.button(text=await get_text_button("get_bonus"), callback_data="get_bonus")
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+async def ik_referrals_menu(promo_text: str):
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text=await get_text_button("share_link"),
+        switch_inline_query=promo_text,
+    )
+    builder.button(text=await get_text_button("back"), callback_data="back_ref")
     builder.adjust(1)
     return builder.as_markup()

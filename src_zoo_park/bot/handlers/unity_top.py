@@ -24,7 +24,6 @@ async def unity_members(
     state: FSMContext,
     user: User,
 ):
-    await disable_not_main_window(data=await state.get_data(), message=message)
     tops = await factory_text_unity_top()
     unity_idpk, animal_dict = await get_top_unity_by_animal()
     unity = await session.get(Unity, unity_idpk)

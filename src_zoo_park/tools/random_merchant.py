@@ -1,11 +1,8 @@
-import html
-import re
 from sqlalchemy import select
 from init_db import _sessionmaker_for_func
 from db import RandomMerchant, Animal, Value
 from faker import Faker
 import random
-from math import ceil
 from config import rarities
 
 # Создание экземпляра Faker для русского языка

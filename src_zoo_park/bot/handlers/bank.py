@@ -1,3 +1,4 @@
+import contextlib
 from aiogram.types import Message, CallbackQuery
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
@@ -44,15 +45,13 @@ async def update_bank(
     await query.answer(cache_time=1)
     rate = await get_rate_bank()
     time_to_update_bank = 60 - datetime.now().second
-    try:
+    with contextlib.suppress(Exception):
         await query.message.edit_text(
             text=await get_text_message(
                 "bank", r=rate, ub=time_to_update_bank, rub=user.rub, usd=user.usd
             ),
             reply_markup=await ik_bank(),
         )
-    except:
-        pass
 
 
 @router.callback_query(UserState.main_menu, F.data == "exchange_bank")

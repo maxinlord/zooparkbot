@@ -2,20 +2,20 @@ from aiogram import Bot
 from sqlalchemy import delete, select, update, and_
 from db import User, RandomMerchant, Value, RequestToUnity
 from init_db import _sessionmaker_for_func
-from tools import referrer_bonus, referral_bonus, get_text_message, income
+from tools import referrer_bonus, referral_bonus, get_text_message, income_
 import random
 from datetime import datetime, timedelta
 
 
 async def job_sec() -> None:
-    pass
+    await add_bonus_to_users()
+
 
 async def job_minute() -> None:
     if datetime.now().second == 59:
         await accrual_of_income()
         await update_rate_bank()
         await deleter_request_to_unity()
-        
 
 
 async def verification_referrals(bot: Bot):
@@ -43,16 +43,16 @@ async def verification_referrals(bot: Bot):
                 continue
             if user.amount_expenses_usd < QUANTITY_USD_TO_PASS:
                 continue
-            await referrer_bonus()
             referrer: User = await session.get(User, user.id_referrer)
+            bonus = await referrer_bonus(referrer=referrer)
             await bot.send_message(
                 chat_id=referrer.id_user,
-                text=await get_text_message("you_got_bonus_referrer"),
+                text=await get_text_message("you_got_bonus_referrer", bonus=bonus),
             )
-            await referral_bonus()
+            bonus = await referral_bonus(referral=user)
             await bot.send_message(
                 chat_id=user.id_user,
-                text=await get_text_message("you_got_bonus_referral"),
+                text=await get_text_message("you_got_bonus_referral", bonus=bonus),
             )
             user.referral_verification = True
             await session.commit()
@@ -61,6 +61,12 @@ async def verification_referrals(bot: Bot):
 async def reset_first_offer_bought() -> None:
     async with _sessionmaker_for_func() as session:
         await session.execute(delete(RandomMerchant))
+        await session.commit()
+
+
+async def add_bonus_to_users() -> None:
+    async with _sessionmaker_for_func() as session:
+        await session.execute(update(User).values(bonus=1))
         await session.commit()
 
 
@@ -90,7 +96,7 @@ async def accrual_of_income():
         users = await session.scalars(select(User))
         users = users.all()
         for user in users:
-            user.rub += await income(user=user)
+            user.rub += await income_(user=user)
         await session.commit()
 
 

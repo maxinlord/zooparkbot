@@ -9,7 +9,7 @@ from tools import (
     get_text_message,
     count_page_items,
     disable_not_main_window,
-    income,
+    income_,
     get_total_number_seats,
     get_remain_seats,
 )
@@ -53,7 +53,7 @@ async def account(
                 amount_animals=user.get_total_number_animals(),
             ),
             items=user.items,
-            income=await income(user),
+            income=await income_(user),
         ),
         reply_markup=await ik_account_menu(),
     )
@@ -127,7 +127,7 @@ async def process_back_to_menu(
                         amount_animals=user.get_total_number_animals(),
                     ),
                     items=user.items,
-                    income=await income(user),
+                    income=await income_(user),
                 ),
                 reply_markup=await ik_account_menu(),
             )

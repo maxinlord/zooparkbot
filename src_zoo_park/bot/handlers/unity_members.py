@@ -8,7 +8,7 @@ from tools import (
     get_text_message,
     disable_not_main_window,
     count_page_unity_members,
-    income,
+    income_,
 )
 from bot.states import UserState
 from bot.keyboards import (

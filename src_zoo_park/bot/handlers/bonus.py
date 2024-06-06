@@ -10,7 +10,7 @@ from tools import (
     disable_not_main_window,
     bonus_for_sub_on_chat,
     bonus_for_sub_on_channel,
-    bonus,
+    bonus_,
 )
 from bot.keyboards import (
     ik_get_bonus,
@@ -102,4 +102,46 @@ async def get_bonus(
     state: FSMContext,
     user: User,
 ):
-    await bonus()
+    if not user.bonus:
+        await query.answer(
+            text=await get_text_message("no_bonus"),
+            show_alert=True,
+        )
+        return
+    user.bonus = 0
+    await session.commit()
+    data_bonus = await bonus_(user=user)
+    key = list(data_bonus.keys())[0]
+    text = ""
+    match key:
+        case "rub":
+            text = await get_text_message(
+                "bonus_rub", rub=data_bonus[key]["rub_to_add"]
+            )
+        case "usd":
+            text = await get_text_message(
+                "bonus_usd", usd=data_bonus[key]["usd_to_add"]
+            )
+        case "aviary":
+            text = await get_text_message(
+                "bonus_aviary",
+                aviary=data_bonus[key]["aviary_to_add"],
+                amount=data_bonus[key]["amount_to_add"],
+            )
+        case "animal":
+            text = await get_text_message(
+                "bonus_animal",
+                animal=data_bonus[key]["animal_to_add"],
+                amount=data_bonus[key]["amount_to_add"],
+            )
+        case "item":
+            text = await get_text_message(
+                "bonus_item", item=data_bonus[key]["item_to_add"]
+            )
+    await query.message.delete_reply_markup()
+    await query.message.answer(
+        text=await get_text_message(
+            "bonus_received",
+            text=text,
+        ),
+    )
