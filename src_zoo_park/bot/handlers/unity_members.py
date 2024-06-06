@@ -86,7 +86,7 @@ async def process_viewing_member_bio(
         text=await get_text_message(
             "member_bio",
             nickname=member.nickname,
-            income=await income(member),
+            income=await income_(member),
             rub=member.rub,
             usd=member.usd,
             amount_animals=member.get_total_number_animals(),
