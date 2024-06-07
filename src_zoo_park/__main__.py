@@ -19,7 +19,13 @@ from bot.middlewares import (
 )
 from aiogram.client.default import DefaultBotProperties
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
-from jobs import verification_referrals, reset_first_offer_bought, job_minute, job_sec, add_bonus_to_users
+from jobs import (
+    verification_referrals,
+    reset_first_offer_bought,
+    job_minute,
+    job_sec,
+    add_bonus_to_users,
+)
 
 bot: Bot = Bot(
     config.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML)
@@ -36,7 +42,7 @@ async def on_shutdown(session: AsyncSession) -> None:
 
 
 async def scheduler() -> None:
-    aioschedule.every(1).seconds.do(job_sec)
+    aioschedule.every(1).seconds.do(job_sec, bot=bot)
     aioschedule.every(1).seconds.do(job_minute)
     aioschedule.every().day.at("11:00").do(reset_first_offer_bought)
     aioschedule.every().day.at("11:00").do(add_bonus_to_users)
@@ -64,6 +70,7 @@ async def main() -> None:
     dp.message.middleware(DBSessionMiddleware(session_pool=_sessionmaker))
     dp.callback_query.middleware(DBSessionMiddleware(session_pool=_sessionmaker))
     dp.inline_query.middleware(DBSessionMiddleware(session_pool=_sessionmaker))
+    dp.update.middleware(DBSessionMiddleware(session_pool=_sessionmaker))
 
     dp.message.middleware(ThrottlingMiddleware())
 

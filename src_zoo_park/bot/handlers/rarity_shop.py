@@ -10,6 +10,8 @@ from tools import (
     get_remain_seats,
     get_price_animal,
     get_income_animal,
+    add_animal,
+    get_total_number_animals
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -125,7 +127,7 @@ async def get_quantity_rshop(
 ):
     quantity_animal = int(query.data.split(":")[0])
     remain_seats = await get_remain_seats(
-        aviaries=user.aviaries, amount_animals=user.get_total_number_animals()
+        aviaries=user.aviaries, amount_animals=await get_total_number_animals(self=user)
     )
     if remain_seats < quantity_animal:
         await query.answer(await get_text_message("not_enough_seats"), show_alert=True)
@@ -139,7 +141,8 @@ async def get_quantity_rshop(
         )
     user.usd -= finite_price
     user.amount_expenses_usd += finite_price
-    user.add_animal(
+    await add_animal(
+        self=user,
         code_name_animal=data["animal"] + data["rarity"],
         quantity=quantity_animal,
     )
@@ -215,7 +218,7 @@ async def get_custom_quantity_animals_rshop(
         return
     quantity_animal = int(message.text)
     remain_seats = await get_remain_seats(
-        aviaries=user.aviaries, amount_animals=user.get_total_number_animals()
+        aviaries=user.aviaries, amount_animals=await get_total_number_animals(self=user)
     )
     if remain_seats < quantity_animal:
         await message.answer(await get_text_message("not_enough_seats"))
@@ -227,7 +230,8 @@ async def get_custom_quantity_animals_rshop(
         return
     user.usd -= finite_price
     user.amount_expenses_usd += finite_price
-    user.add_animal(
+    await add_animal(
+        self=user,
         code_name_animal=data["animal"] + data["rarity"],
         quantity=quantity_animal,
     )

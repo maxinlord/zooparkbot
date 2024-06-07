@@ -10,6 +10,7 @@ from tools import (
     get_total_number_seats,
     get_remain_seats,
     income_,
+    get_total_number_animals
 )
 from bot.filters import GetTextButton
 from bot.states import UserState
@@ -59,7 +60,7 @@ async def back_to_account_menu_r(
             total_places=await get_total_number_seats(user.aviaries),
             remain_places=await get_remain_seats(
                 aviaries=user.aviaries,
-                amount_animals=user.get_total_number_animals(),
+                amount_animals=await get_total_number_animals(self=user),
             ),
             items=user.items,
             income=await income_(user),

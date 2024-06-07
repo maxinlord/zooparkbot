@@ -79,7 +79,7 @@ async def get_top_unity_by_animal() -> tuple[int, dict]:
             animals = defaultdict(int)
             for idpk in member_ids:
                 user = await session.get(User, int(idpk))
-                animals_user = user.get_dict_animals()
+                animals_user = await get_dict_animals()
                 for animal_name, num_animal in animals_user.items():
                     animals[animal_name] += num_animal
             max_animal = max(animals, key=animals.get)
@@ -88,6 +88,11 @@ async def get_top_unity_by_animal() -> tuple[int, dict]:
             table_for_compare, key=lambda x: next(iter(table_for_compare[x].values()))
         )
         return int(top_unity), table_for_compare[top_unity]
+
+
+def get_dict_animals(self: User) -> dict:
+    decoded_dict: dict = json.loads(self.animals)
+    return decoded_dict
 
 
 async def get_income_animal(animal: Animal, unity_idpk: int):
@@ -126,7 +131,7 @@ async def check_condition_2nd_lvl(unity: Unity) -> bool:
         return all(
             num_animal >= AMOUNT_ANIMALS_2ND_LVL
             for user in users
-            for num_animal in user.get_numbers_animals()
+            for num_animal in await get_numbers_animals(user)
         )
 
 
@@ -153,8 +158,13 @@ async def check_condition_3rd_lvl(unity: Unity) -> bool:
         return all(
             num_animal >= AMOUNT_ANIMALS_3RD_LVL
             for user in users
-            for num_animal in user.get_numbers_animals()
+            for num_animal in await get_numbers_animals(user)
         )
+
+
+def get_numbers_animals(self: User) -> list[int]:
+    decoded_dict: dict = json.loads(self.animals)
+    return list(decoded_dict.values())
 
 
 async def count_income_unity(unity: Unity) -> int:
@@ -192,17 +202,51 @@ async def handle_aviary_bonus(user, session):
     types_aviaries = list(await session.scalars(select(Aviary.code_name)))
     aviary_to_add = random.choice(types_aviaries)
     amount_to_add = random.randint(1, 5)
-    user.add_aviary(code_name_aviary=aviary_to_add, quantity=amount_to_add)
+    await add_aviary(self=user, code_name_aviary=aviary_to_add, quantity=amount_to_add)
     return {"aviary_to_add": aviary_to_add, "amount_to_add": amount_to_add}
+
+
+async def add_aviary(self: User, code_name_aviary: str, quantity: int) -> None:
+    async with _sessionmaker_for_func() as session:
+        decoded_dict: dict = json.loads(self.aviaries)
+        if code_name_aviary in decoded_dict:
+            decoded_dict[code_name_aviary] += quantity
+        else:
+            decoded_dict[code_name_aviary] = quantity
+        self.aviaries = json.dumps(decoded_dict, ensure_ascii=False)
+        await session.commit()
 
 
 async def handle_animal_bonus(user, session):
     animal = await _get_random_animal()
     amount_to_add = random.randint(
-        1, await _get_remain_seats(user.aviaries, user.get_total_number_animals())
+        1,
+        await _get_remain_seats(
+            user.aviaries, await get_total_number_animals(self=user)
+        ),
     )
-    user.add_animal(code_name_animal=animal.code_name, quantity=amount_to_add)
+    await add_animal(
+        self=user,
+        code_name_animal=animal.code_name,
+        quantity=amount_to_add,
+    )
     return {"animal_to_add": animal.name, "amount_to_add": amount_to_add}
+
+
+async def add_animal(self: User, code_name_animal: str, quantity: int) -> None:
+    async with _sessionmaker_for_func() as session:
+        decoded_dict: dict = json.loads(self.animals)
+        if code_name_animal in decoded_dict:
+            decoded_dict[code_name_animal] += quantity
+        else:
+            decoded_dict[code_name_animal] = quantity
+        self.animals = json.dumps(decoded_dict, ensure_ascii=False)
+        await session.commit()
+
+
+async def get_total_number_animals(self: User) -> int:
+    decoded_dict: dict = json.loads(self.animals)
+    return sum(decoded_dict.values())
 
 
 async def handle_item_bonus(user: User, session):
@@ -210,10 +254,23 @@ async def handle_item_bonus(user: User, session):
     item_to_add: Item = random.choice(items)
     if item_to_add.code_name in user.items:
         amount = item_to_add.price // 2
-        user.add_to_currency(currency=item_to_add.currency, amount=amount)
+        dict_currencies = {
+            "paw_coins": user.paw_coins,
+            "rub": user.rub,
+            "usd": user.usd,
+        }
+        dict_currencies[item_to_add.currency] += amount
         return {f"{item_to_add.currency}_to_add": amount}
-    user.add_item(code_name_item=item_to_add.code_name)
+    await add_item(self=user, code_name_item=item_to_add.code_name)
     return {"item_to_add": item_to_add.name}
+
+
+async def add_item(self: User, code_name_item: str, is_activate: bool = False) -> None:
+    async with _sessionmaker_for_func() as session:
+        decoded_dict: dict = json.loads(self.items)
+        decoded_dict[code_name_item] = is_activate
+        self.items = json.dumps(decoded_dict, ensure_ascii=False)
+        await session.commit()
 
 
 async def bonus_(user: User):

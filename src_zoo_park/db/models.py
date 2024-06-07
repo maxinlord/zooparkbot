@@ -36,77 +36,7 @@ class User(Base):
     sub_on_channel: Mapped[bool] = mapped_column(default=False)
     bonus: Mapped[int] = mapped_column(default=1)
 
-    def get_currency(self, currency: str) -> int:
-        dict_currencies = {
-            "paw_coins": self.paw_coins,
-            "rub": self.rub,
-            "usd": self.usd,
-        }
-        return dict_currencies[currency]
-
-    def add_to_amount_expenses_currency(self, currency: str, amount: int) -> None:
-        dict_currencies = {
-            "paw_coins": self.amount_expenses_paw_coins,
-            "rub": self.amount_expenses_rub,
-            "usd": self.amount_expenses_usd,
-        }
-        dict_currencies[currency] += amount
-
-    def add_to_currency(self, currency: str, amount: int) -> None:
-        dict_currencies = {
-            "paw_coins": self.paw_coins,
-            "rub": self.rub,
-            "usd": self.usd,
-        }
-        dict_currencies[currency] += amount
-
-    def add_animal(self, code_name_animal: str, quantity: int) -> None:
-        decoded_dict: dict = json.loads(self.animals)
-        if code_name_animal in decoded_dict:
-            decoded_dict[code_name_animal] += quantity
-        else:
-            decoded_dict[code_name_animal] = quantity
-        self.animals = json.dumps(decoded_dict, ensure_ascii=False)
-
-    def add_item(self, code_name_item: str, is_activate: bool = False) -> None:
-        decoded_dict: dict = json.loads(self.items)
-        decoded_dict[code_name_item] = is_activate
-        self.items = json.dumps(decoded_dict, ensure_ascii=False)
-
-    def activate_item(self, code_name_item: str, is_active: bool = True) -> None:
-        decoded_dict: dict = json.loads(self.items)
-        decoded_dict[code_name_item] = is_active
-        self.items = json.dumps(decoded_dict, ensure_ascii=False)
-
-    def deactivate_all_items(self) -> None:
-        decoded_dict: dict = json.loads(self.items)
-        for key in decoded_dict:
-            decoded_dict[key] = False
-        self.items = json.dumps(decoded_dict, ensure_ascii=False)
-
-    def get_status_item(self, code_name_item: str):
-        decoded_dict: dict = json.loads(self.items)
-        return decoded_dict[code_name_item]
-
-    def add_aviary(self, code_name_aviary: str, quantity: int) -> None:
-        decoded_dict: dict = json.loads(self.aviaries)
-        if code_name_aviary in decoded_dict:
-            decoded_dict[code_name_aviary] += quantity
-        else:
-            decoded_dict[code_name_aviary] = quantity
-        self.aviaries = json.dumps(decoded_dict, ensure_ascii=False)
-
-    def get_total_number_animals(self) -> int:
-        decoded_dict: dict = json.loads(self.animals)
-        return sum(decoded_dict.values())
-
-    def get_numbers_animals(self) -> list[int]:
-        decoded_dict: dict = json.loads(self.animals)
-        return list(decoded_dict.values())
-
-    def get_dict_animals(self) -> dict:
-        decoded_dict: dict = json.loads(self.animals)
-        return decoded_dict
+    
 
 
 class Unity(Base):
@@ -198,6 +128,21 @@ class RandomMerchant(Base):
     quantity_animals: Mapped[int] = mapped_column()
     price: Mapped[int] = mapped_column()
     first_offer_bought: Mapped[bool] = mapped_column(default=False)
+
+
+class TransferMoney(Base):
+    __tablename__ = "transfer_money"
+
+    id_transfer: Mapped[str] = mapped_column(String(length=10))
+    idpk_user: Mapped[int] = mapped_column()
+    currency: Mapped[str] = mapped_column(String(length=10))
+    one_piece_sum: Mapped[int] = mapped_column(BigInteger)
+    pieces: Mapped[int] = mapped_column()
+    used: Mapped[str] = mapped_column(Text, nullable=True)
+    status: Mapped[bool] = mapped_column(default=False)
+
+    
+
 
 
 class Text(Base):

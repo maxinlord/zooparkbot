@@ -25,5 +25,7 @@ from .options_menu import (
     ik_member_menu,
     ik_back_member,
     ik_get_bonus,
-    ik_referrals_menu
+    ik_referrals_menu,
+    ik_get_money,
+    ik_get_money_one_piece
 )

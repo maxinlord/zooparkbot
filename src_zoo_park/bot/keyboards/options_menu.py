@@ -481,3 +481,26 @@ async def ik_referrals_menu(promo_text: str):
     builder.button(text=await get_text_button("back"), callback_data="back_ref")
     builder.adjust(1)
     return builder.as_markup()
+
+
+async def ik_get_money(one_piece: int, remain_pieces: int, idpk_tr: int):
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text=await get_text_button(
+            "get_money", remain_pieces=remain_pieces, one_piece=one_piece
+        ),
+        callback_data=f"{idpk_tr}:activate_tr",
+    )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+async def ik_get_money_one_piece(idpk_tr: int):
+    builder = InlineKeyboardBuilder()
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text=await get_text_button("get_money_one_piece"),
+        callback_data=f"{idpk_tr}:activate_tr",
+    )
+    builder.adjust(1)
+    return builder.as_markup()

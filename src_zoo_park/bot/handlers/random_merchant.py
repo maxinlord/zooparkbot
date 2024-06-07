@@ -14,6 +14,8 @@ from tools import (
     get_animal_with_random_rarity,
     disable_not_main_window,
     get_remain_seats,
+    add_animal,
+    get_total_number_animals
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -85,14 +87,15 @@ async def buy_one_of_offer(
                 )
                 return
             remain_seats = await get_remain_seats(
-                aviaries=user.aviaries, amount_animals=user.get_total_number_animals()
+                aviaries=user.aviaries, amount_animals=await get_total_number_animals(self=user)
             )
             if remain_seats < merchant.quantity_animals:
                 await query.answer(
                     await get_text_message("not_enough_seats"), show_alert=True
                 )
                 return
-            user.add_animal(
+            await add_animal(
+                self=user,
                 code_name_animal=merchant.code_name_animal,
                 quantity=merchant.quantity_animals,
             )
@@ -116,7 +119,7 @@ async def buy_one_of_offer(
                 )
                 return
             remain_seats = await get_remain_seats(
-                aviaries=user.aviaries, amount_animals=user.get_total_number_animals()
+                aviaries=user.aviaries, amount_animals=await get_total_number_animals(self=user)
             )
             MAX_QUANTITY_ANIMALS = await session.scalar(
                 select(Value.value_int).where(Value.name == "MAX_QUANTITY_ANIMALS")
@@ -136,7 +139,8 @@ async def buy_one_of_offer(
                 animal = await get_random_animal()
                 part_animals = random.randint(1, quantity_animals)
                 quantity_animals -= part_animals
-                user.add_animal(
+                await add_animal(
+                    self=user,
                     code_name_animal=animal.code_name,
                     quantity=part_animals,
                 )
@@ -201,7 +205,7 @@ async def choice_qa_to_buy(
     finite_price = animal_price * quantity
 
     remain_seats = await get_remain_seats(
-        aviaries=user.aviaries, amount_animals=user.get_total_number_animals()
+        aviaries=user.aviaries, amount_animals=await get_total_number_animals(self=user)
     )
     if remain_seats < quantity:
         await query.answer(await get_text_message("not_enough_seats"), show_alert=True)
@@ -229,7 +233,9 @@ async def choice_qa_to_buy(
                     "you_got_this_rarity_animal", an=animal_obj.name, aq=part_animals
                 )
             )
-        user.add_animal(
+
+        await add_animal(
+            self=user,
             code_name_animal=animal_obj.code_name,
             quantity=part_animals,
         )
@@ -350,7 +356,7 @@ async def get_custom_quantity_animals(
         await message.answer(text=await get_text_message("enter_digit"))
         return
     remain_seats = await get_remain_seats(
-        aviaries=user.aviaries, amount_animals=user.get_total_number_animals()
+        aviaries=user.aviaries, amount_animals=await get_total_number_animals(self=user)
     )
     if remain_seats < int(message.text):
         await message.answer(
@@ -381,7 +387,8 @@ async def get_custom_quantity_animals(
                     "you_got_this_rarity_animal", an=animal.name, aq=part_animals
                 )
             )
-        user.add_animal(
+        await add_animal(
+            self=user,
             code_name_animal=animal.code_name,
             quantity=part_animals,
         )

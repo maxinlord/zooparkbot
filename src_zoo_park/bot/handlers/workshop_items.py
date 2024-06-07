@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from db import User, Item
-from tools import get_text_message, disable_not_main_window
+from tools import get_text_message, disable_not_main_window, add_to_currency, add_to_amount_expenses_currency, add_item
 from bot.states import UserState
 from bot.keyboards import (
     ik_choice_item,
@@ -93,9 +93,10 @@ async def buy_item(
             show_alert=True,
         )
         return
-    user.add_to_currency(currency=item.currency, amount=-item.price)
-    user.add_to_amount_expenses_currency(currency=item.currency, amount=item.price)
-    user.add_item(code_name_item=item.code_name)
+    await add_to_currency(self=user, currency=item.currency, amount=-item.price)
+    await add_to_amount_expenses_currency(self=user, currency=item.currency, amount=item.price)
+    await add_item(self=user, code_name_item=item)
+
     await session.commit()
     await query.answer(
         text=await get_text_message("item_bought_successful"), show_alert=True

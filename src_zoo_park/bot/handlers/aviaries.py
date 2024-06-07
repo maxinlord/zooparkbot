@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from db import User, Aviary
-from tools import get_text_message, disable_not_main_window
+from tools import get_text_message, disable_not_main_window, add_aviary
 from bot.states import UserState
 from bot.keyboards import (
     ik_choice_aviary,
@@ -50,7 +50,9 @@ async def choice_quantity_avi(
     )
     await state.update_data(code_name_aviary=aviary, aviary_price=aviary_price)
     await query.message.edit_text(
-        text=await get_text_message("choice_quantity_aviaries", price_one_aviary=aviary_price),
+        text=await get_text_message(
+            "choice_quantity_aviaries", price_one_aviary=aviary_price
+        ),
         reply_markup=await ik_choice_quantity_aviary_avi(aviary_price),
     )
 
@@ -74,7 +76,9 @@ async def get_qa_to_buy_avi(
         )
     user.usd -= finite_price
     user.amount_expenses_usd += finite_price
-    user.add_aviary(code_name_aviary=data["code_name_aviary"], quantity=quantity)
+    await add_aviary(
+        self=user, code_name_aviary=data["code_name_aviary"], quantity=quantity
+    )
     await session.commit()
     await query.answer(
         await get_text_message("aviary_bought_successfully"), show_alert=True
@@ -128,7 +132,9 @@ async def back_to_choice_quantity_avi(
         text=await get_text_message("backed"), reply_markup=await rk_zoomarket_menu()
     )
     msg = await message.answer(
-        text=await get_text_message("choice_quantity_aviaries", price_one_aviary=data["aviary_price"]),
+        text=await get_text_message(
+            "choice_quantity_aviaries", price_one_aviary=data["aviary_price"]
+        ),
         reply_markup=await ik_choice_quantity_aviary_avi(data["aviary_price"]),
     )
     await state.update_data(active_window=msg.message_id)
@@ -155,8 +161,8 @@ async def get_custom_quantity_aviary(
         return
     user.usd -= finite_price
     user.amount_expenses_usd += finite_price
-    user.add_aviary(
-        code_name_aviary=data["code_name_aviary"], quantity=int(message.text)
+    await add_aviary(
+        self=user, code_name_aviary=data["code_name_aviary"], quantity=int(message.text)
     )
     await session.commit()
     await message.answer(

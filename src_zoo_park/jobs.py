@@ -1,14 +1,15 @@
 from aiogram import Bot
 from sqlalchemy import delete, select, update, and_
-from db import User, RandomMerchant, Value, RequestToUnity
+from db import User, RandomMerchant, Value, RequestToUnity, TransferMoney
 from init_db import _sessionmaker_for_func
 from tools import referrer_bonus, referral_bonus, get_text_message, income_
 import random
 from datetime import datetime, timedelta
 
 
-async def job_sec() -> None:
+async def job_sec(bot) -> None:
     await add_bonus_to_users()
+    await verification_referrals(bot=bot)
 
 
 async def job_minute() -> None:

@@ -13,6 +13,7 @@ async def referral_bonus(referral: User):
         )
         referral.usd += bonus
         await session.commit()
+        return bonus
 
 
 async def referrer_bonus(referrer: User):
@@ -22,6 +23,7 @@ async def referrer_bonus(referrer: User):
         )
         referrer.usd += bonus
         await session.commit()
+        return bonus
 
 
 async def bonus_for_sub_on_chat(user: User):

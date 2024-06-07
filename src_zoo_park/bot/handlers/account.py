@@ -12,6 +12,10 @@ from tools import (
     income_,
     get_total_number_seats,
     get_remain_seats,
+    activate_item,
+    deactivate_all_items,
+    get_status_item,
+    get_total_number_animals
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -50,7 +54,7 @@ async def account(
             total_places=await get_total_number_seats(user.aviaries),
             remain_places=await get_remain_seats(
                 aviaries=user.aviaries,
-                amount_animals=user.get_total_number_animals(),
+                amount_animals=await get_total_number_animals(self=user),
             ),
             items=user.items,
             income=await income_(user),
@@ -124,7 +128,7 @@ async def process_back_to_menu(
                     total_places=await get_total_number_seats(user.aviaries),
                     remain_places=await get_remain_seats(
                         aviaries=user.aviaries,
-                        amount_animals=user.get_total_number_animals(),
+                        amount_animals=await get_total_number_animals(self=user),
                     ),
                     items=user.items,
                     income=await income_(user),
@@ -157,7 +161,7 @@ async def process_viewing_item(
             name_=item.description,
             description=item.description,
         ),
-        reply_markup=await ik_item_activate_menu(user.get_status_item(code_name_item)),
+        reply_markup=await ik_item_activate_menu(await get_status_item(User, code_name_item)),
     )
 
 
@@ -173,10 +177,10 @@ async def process_viewing_recipes(
     data = await state.get_data()
     match query.data:
         case "item_activate":
-            user.deactivate_all_items()
-            user.activate_item(data["code_name_item"])
+            await deactivate_all_items(user)
+            await activate_item(user, data["code_name_item"])
         case "item_deactivate":
-            user.activate_item(data["code_name_item"], False)
+            await activate_item(user, data["code_name_item"], False)
     await session.commit()
     item = await session.scalar(
         select(Item).where(Item.code_name == data["code_name_item"])
@@ -188,6 +192,6 @@ async def process_viewing_recipes(
             description=item.description,
         ),
         reply_markup=await ik_item_activate_menu(
-            user.get_status_item(data["code_name_item"])
+            await get_status_item(User, data["code_name_item"])
         ),
     )
