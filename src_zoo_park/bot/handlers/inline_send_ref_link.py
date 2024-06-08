@@ -27,7 +27,7 @@ async def share_referral_link(
 ):
     link = await create_start_link(bot=inline_query.bot, payload=user.idpk)
     r = InlineQueryResultArticle(
-        id=str(random.randint(1, 100000)),
+        id='ref',
         title=await get_text_message("title_inline_mess"),
         description=await get_text_message("description_inline_mess"),
         thumbnail_url="https://wepik.com/api/vector/9c37cdfd-1eed-4e23-a779-094960429bc4/preview",
@@ -40,11 +40,8 @@ async def share_referral_link(
 
 
 
-# @router.chosen_inline_result()
-# async def pagination_demo(
-#     chosen_result: ChosenInlineResult,
-# ):
-#     await asyncio.sleep(5)
-#     id_mess = chosen_result.inline_message_id
-#     await chosen_result.bot.edit_message_text(inline_message_id=id_mess, text="Паблик бот"
-#     )
+@router.chosen_inline_result(F.result_id == "ref")
+async def ref(
+    chosen_result: ChosenInlineResult,
+):
+    return
