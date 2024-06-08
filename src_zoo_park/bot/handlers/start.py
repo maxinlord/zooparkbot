@@ -47,6 +47,9 @@ async def command_start_game(
     id_game = command.args
     game = await session.scalar(select(Game).where(Game.id_game == id_game))
     data = await state.get_data()
+    if not game:
+        await message.answer(text=await get_text_message("game_not_found"))
+        return
     if await session.scalar(
         select(Gamer).where(
             and_(Gamer.id_game == id_game, Gamer.idpk_gamer == user.idpk)
