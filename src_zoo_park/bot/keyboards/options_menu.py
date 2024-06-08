@@ -512,7 +512,7 @@ async def ik_button_play(game_type: str, total_moves: int, remain_moves: int):
         case "🎯":
             builder.button(
                 text=await get_text_button(
-                    "dice",
+                    "dart",
                     total_moves=total_moves,
                     remain_moves=remain_moves,
                 ),
@@ -530,7 +530,7 @@ async def ik_button_play(game_type: str, total_moves: int, remain_moves: int):
         case "🎲":
             builder.button(
                 text=await get_text_button(
-                    "slot",
+                    "dice",
                     total_moves=total_moves,
                     remain_moves=remain_moves,
                 ),

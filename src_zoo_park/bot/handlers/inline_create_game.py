@@ -119,8 +119,8 @@ async def inline_game_three_pm(
     if amount_params == 3:
         r = await create_inline_query_result(
             title_key="point_3_",
-            description_key="enter_prise_for_win",
-            message_text_key="error_enter_prise_for_win",
+            description_key="enter_currency_to_price",
+            message_text_key="error_enter_currency_to_price",
             photo_url="https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Paris_transit_icons_-_Métro_3.svg/1200px-Paris_transit_icons_-_Métro_3.svg.png"
         )
         return await inline_query.answer(results=[r], cache_time=0)
