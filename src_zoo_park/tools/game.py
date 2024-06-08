@@ -19,7 +19,7 @@ async def get_total_moves(session: AsyncSession, game: Game):
 async def get_user_where_max_score(session: AsyncSession, game: Game):
     gamers = await session.scalars(select(Gamer).where(Gamer.id_game == game.id_game))
     gamers_sorted = sorted(gamers, key=lambda gamer: gamer.score, reverse=True)
-    return gamers_sorted[0].idpk_gamer
+    return gamers_sorted[0].idpk_gamer if gamers_sorted else None
 
 
 async def factory_text_top_mini_game(session: AsyncSession, game: Game):

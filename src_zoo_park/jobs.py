@@ -22,6 +22,7 @@ from config import dict_tr_currencys
 
 async def job_sec(bot) -> None:
     await add_bonus_to_users()
+    # await ender_games(bot)
 
 
 async def job_minute(bot) -> None:
@@ -142,6 +143,29 @@ async def end_game(session: AsyncSession, game: Game):
 
 async def award_winner(bot: Bot, session: AsyncSession, game: Game):
     idpk_gamer = await get_user_where_max_score(session=session, game=game)
+    owner_game = await session.get(User, game.idpk_user)
+    nickname = (
+        mention_html_by_username(username=owner_game.username, name=owner_game.nickname)
+        if owner_game.nickname
+        else owner_game.nickname
+    )
+    if not idpk_gamer:
+        t = await factory_text_top_mini_game(session=session, game=game)
+        await bot.edit_message_text(
+            text=await get_text_message(
+                "game_start",
+                t=t,
+                nickname=nickname,
+                game_type=game.type_game,
+                amount_gamers=game.amount_gamers,
+                amount_moves=game.amount_moves,
+                award=f"{game.amount_award:,d}{dict_tr_currencys[game.currency_award]}",
+            ) + await get_text_message('no_result_game'),
+            inline_message_id=game.id_mess,
+            reply_markup=None,
+            disable_web_page_preview=True,
+        )
+        return
     winner = await session.get(User, idpk_gamer)
     await add_to_currency(
         self=winner,
@@ -155,19 +179,13 @@ async def award_winner(bot: Bot, session: AsyncSession, game: Game):
         text=await get_text_message(
             "game_winer_message",
             award=award,
-
         ),
-        reply_markup=await rk_main_menu()
+        reply_markup=await rk_main_menu(),
     )
     additional_text = (
         f"\n\n{await get_text_message('game_winer', nickname=winner.nickname)}"
     )
-    owner_game = await session.get(User, game.idpk_user)
-    nickname = (
-        mention_html_by_username(username=owner_game.username, name=owner_game.nickname)
-        if owner_game.nickname
-        else owner_game.nickname
-    )
+
     with contextlib.suppress(Exception):
         t = await factory_text_top_mini_game(session=session, game=game)
         await bot.edit_message_text(
