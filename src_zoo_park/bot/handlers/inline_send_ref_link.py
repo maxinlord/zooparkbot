@@ -19,7 +19,7 @@ from tools import get_text_message
 router = Router()
 
 
-@router.inline_query(F.query.in_(["Начни"]))
+@router.inline_query()
 async def share_referral_link(
     inline_query: InlineQuery,
     session: AsyncSession,

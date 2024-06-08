@@ -10,7 +10,7 @@ async def ik_back():
 
 async def ik_start_game(link: str):
     builder = InlineKeyboardBuilder()
-    builder.button(text=await get_text_button("start_game_by_link"), url=link)
+    builder.button(text=await get_text_button("start_zoopark_by_link"), url=link)
     return builder.as_markup()
 
 
