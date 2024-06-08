@@ -28,7 +28,10 @@ router = Router()
 
 
 async def create_inline_query_result(
-    title_key: str, description_key: str, message_text_key: str, photo_url: str = None, **d
+    title_key: str,
+    description_key: str,
+    message_text_key: str,
+    photo_url: str = None,
 ):
     return InlineQueryResultArticle(
         id=str(random.randint(1, 100000)),
@@ -36,7 +39,7 @@ async def create_inline_query_result(
         description=await get_text_message(description_key),
         thumbnail_url=photo_url,
         input_message_content=InputTextMessageContent(
-            message_text=await get_text_message(message_text_key, **d)
+            message_text=await get_text_message(message_text_key)
         ),
     )
 
@@ -55,7 +58,7 @@ async def inline_game_three_pm(
             title_key="point_1",
             description_key="enter_amount_gamers",
             message_text_key="error_enter_amount_gamers",
-            photo_url="https://www.clipartmax.com/png/full/219-2197586_organization-training-business-learning-technology-no-1-icon-png.png"
+            photo_url="https://www.clipartmax.com/png/full/219-2197586_organization-training-business-learning-technology-no-1-icon-png.png",
         )
         return await inline_query.answer(results=[r], cache_time=0)
 
@@ -74,7 +77,7 @@ async def inline_game_three_pm(
             title_key="attention",
             description_key=description_key,
             message_text_key=message_text_key,
-            photo_url=attention_photo
+            photo_url=attention_photo,
         )
         return await inline_query.answer(results=[r], cache_time=0)
 
@@ -84,7 +87,7 @@ async def inline_game_three_pm(
             title_key="attention",
             description_key="amount_gamers_too_big",
             message_text_key="error_amount_gamers_too_big",
-            photo_url=attention_photo
+            photo_url=attention_photo,
         )
         return await inline_query.answer(results=[r], cache_time=0)
 
@@ -93,15 +96,13 @@ async def inline_game_three_pm(
             title_key="point_2",
             description_key="enter_prise_for_win",
             message_text_key="error_enter_prise_for_win",
-            photo_url = "https://cdn-ru.bitrix24.ru/b9251457/landing/7b7/7b7c7b41a9e0c33f1867fea82a8d5c08/Resurs_20_s_1x.png"
+            photo_url="https://cdn-ru.bitrix24.ru/b9251457/landing/7b7/7b7c7b41a9e0c33f1867fea82a8d5c08/Resurs_20_s_1x.png",
         )
         return await inline_query.answer(results=[r], cache_time=0)
 
     if not split_query[2].isdigit() or int(split_query[2]) < 1:
         description_key = (
-            "enter_prise_small"
-            if split_query[2].isdigit()
-            else "enter_prise_for_win"
+            "enter_prise_small" if split_query[2].isdigit() else "enter_prise_for_win"
         )
         message_text_key = (
             "error_enter_prise_small"
@@ -112,7 +113,7 @@ async def inline_game_three_pm(
             title_key="attention",
             description_key=description_key,
             message_text_key=message_text_key,
-            photo_url=attention_photo
+            photo_url=attention_photo,
         )
         return await inline_query.answer(results=[r], cache_time=0)
 
@@ -121,7 +122,7 @@ async def inline_game_three_pm(
             title_key="point_3_",
             description_key="enter_currency_to_price",
             message_text_key="error_enter_currency_to_price",
-            photo_url="https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Paris_transit_icons_-_Métro_3.svg/1200px-Paris_transit_icons_-_Métro_3.svg.png"
+            photo_url="https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Paris_transit_icons_-_Métro_3.svg/1200px-Paris_transit_icons_-_Métro_3.svg.png",
         )
         return await inline_query.answer(results=[r], cache_time=0)
 
@@ -130,18 +131,22 @@ async def inline_game_three_pm(
             title_key="attention",
             description_key="enter_currency_to_price",
             message_text_key="error_enter_currency_to_price",
-            photo_url=attention_photo
+            photo_url=attention_photo,
         )
         return await inline_query.answer(results=[r], cache_time=0)
 
     currency = await get_currency(self=user, currency=split_query[3])
     if currency < int(split_query[2]):
-        r = await create_inline_query_result(
-            title_key="attention",
-            description_key="not_money_to_create_game",
-            message_text_key="error_not_money_to_create_game",
-            photo_url=attention_photo,
-            money=currency
+        r = InlineQueryResultArticle(
+            id=str(random.randint(1, 100000)),
+            title=await get_text_message("attention"),
+            description=await get_text_message("not_money_to_create_game"),
+            thumbnail_url=attention_photo,
+            input_message_content=InputTextMessageContent(
+                message_text=await get_text_message(
+                    "error_not_money_to_create_game", money=currency
+                )
+            ),
         )
         return await inline_query.answer(results=[r], cache_time=0)
 
@@ -171,7 +176,7 @@ async def inline_game_three_pm(
         id=f"{game.idpk}:game",
         title=await get_text_message("point_4"),
         description=await get_text_message("create_game"),
-        thumbnail_url='https://chrleader.com/wp-content/uploads/2019/05/press-start.jpg',
+        thumbnail_url="https://chrleader.com/wp-content/uploads/2019/05/press-start.jpg",
         input_message_content=InputTextMessageContent(
             message_text=await get_text_message(
                 "info_game",
