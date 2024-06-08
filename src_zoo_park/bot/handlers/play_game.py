@@ -82,6 +82,9 @@ async def buy_one_of_offer(
         await handle_game_end(query, state, session)
     else:
         await query.message.answer(
+            text=await get_text_message("you_got", value_dice=value_dice)
+        )
+        await query.message.answer(
             text=await get_text_message(
                 "play_game",
                 score=gamer.score,
