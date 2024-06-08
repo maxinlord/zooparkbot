@@ -29,10 +29,13 @@ import asyncio
 router = Router()
 
 
-async def handle_game_end(query: CallbackQuery, state, session):
+async def handle_game_end(
+    query: CallbackQuery, state: FSMContext, session: AsyncSession
+):
     await query.message.answer(
         text=await get_text_message("game_end"), reply_markup=await rk_main_menu()
     )
+    await state.clear()
     await state.set_state(UserState.main_menu)
 
 

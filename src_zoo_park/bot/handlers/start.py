@@ -6,7 +6,7 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from aiogram.utils.deep_linking import create_start_link
-from sqlalchemy import select
+from sqlalchemy import and_, select
 from db import User, Value, Game, Gamer
 from tools import (
     get_text_message,
@@ -46,8 +46,19 @@ async def command_start_game(
     user.username = message.from_user.username
     id_game = command.args
     game = await session.scalar(select(Game).where(Game.id_game == id_game))
+    data = await state.get_data()
+    if await session.scalar(
+        select(Gamer).where(
+            and_(Gamer.id_game == id_game, Gamer.idpk_gamer == user.idpk)
+        )
+    ):
+        await message.answer(text=await get_text_message("game_already_started"))
+        return
+    if data.get("idpk_game"):
+        await message.answer(text=await get_text_message("finished_active_game"))
+        return
     if game.end:
-        await message.answer(text=await get_text_message("game_end"))
+        await message.answer(text=await get_text_message("game_expired"))
         return
     if game.amount_gamers == await get_amount_gamers(session=session, game=game):
         await message.answer(text=await get_text_message("game_full"))
@@ -58,7 +69,7 @@ async def command_start_game(
         moves=game.amount_moves,
     )
     session.add(gamer)
-    await session.commit() 
+    await session.commit()
     owner_game = await session.get(User, game.idpk_user)
     nickname = (
         mention_html_by_username(username=owner_game.username, name=owner_game.nickname)
@@ -96,7 +107,9 @@ async def command_start_game(
         amount_gamers=game.amount_gamers,
         amount_moves=game.amount_moves,
     )
-    await message.answer(text=await get_text_message("begin_game"), reply_markup=ReplyKeyboardRemove())
+    await message.answer(
+        text=await get_text_message("begin_game"), reply_markup=ReplyKeyboardRemove()
+    )
     await message.answer(
         text=await get_text_message("play_game", score=gamer.score),
         reply_markup=await ik_button_play(
