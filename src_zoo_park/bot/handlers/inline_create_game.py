@@ -28,7 +28,7 @@ router = Router()
 
 
 async def create_inline_query_result(
-    title_key: str, description_key: str, message_text_key: str, photo_url: str = None
+    title_key: str, description_key: str, message_text_key: str, photo_url: str = None, **d
 ):
     return InlineQueryResultArticle(
         id=str(random.randint(1, 100000)),
@@ -36,7 +36,7 @@ async def create_inline_query_result(
         description=await get_text_message(description_key),
         thumbnail_url=photo_url,
         input_message_content=InputTextMessageContent(
-            message_text=await get_text_message(message_text_key)
+            message_text=await get_text_message(message_text_key, **d)
         ),
     )
 
@@ -140,7 +140,8 @@ async def inline_game_three_pm(
             title_key="attention",
             description_key="not_money_to_create_game",
             message_text_key="error_not_money_to_create_game",
-            photo_url=attention_photo
+            photo_url=attention_photo,
+            money=currency
         )
         return await inline_query.answer(results=[r], cache_time=0)
 
