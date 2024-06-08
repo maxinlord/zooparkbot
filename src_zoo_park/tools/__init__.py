@@ -1,4 +1,4 @@
-from .text import get_text_message, get_text_button, mention_html
+from .text import get_text_message, get_text_button, mention_html, mention_html_by_username
 from .nickname import (
     has_special_characters_nickname,
     is_unique_nickname,
@@ -72,3 +72,4 @@ from .unity import (
 from .base import gen_key 
 from .transfer import in_used, add_user_to_used
 from .user import *
+from .game import *

@@ -2,6 +2,7 @@ from sqlalchemy import select
 from db import Text, Button, Value, Unity, User
 from init_db import _sessionmaker_for_func
 
+
 async def get_text_message(name: str, **kw) -> str:
     async with _sessionmaker_for_func() as session:
         text_obj = await get_or_create_text(session, name)
@@ -75,3 +76,5 @@ def mention_html(id_user: int, name: str) -> str:
     return f'<a href="tg://user?id={id_user}">{name}</a>'
 
 
+def mention_html_by_username(username: str, name: str) -> str:
+    return f'<a href="http://t.me/{username}">{name}</a>'

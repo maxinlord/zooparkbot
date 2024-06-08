@@ -3,13 +3,13 @@ from sqlalchemy import select
 from db import Text, Button, Value, Unity, User
 from init_db import _sessionmaker_for_func
 
+from sqlalchemy.ext.asyncio import AsyncSession
 
-async def add_to_currency(self: User, currency: str, amount: int) -> None:
-    async with _sessionmaker_for_func() as session:
-        if hasattr(self, currency):
-            setattr(self, currency, getattr(self, currency) + amount)
-        await session.commit()
 
+async def add_to_currency(self: User, currency: str, amount: int
+) -> None:
+    if hasattr(self, currency):
+        setattr(self, currency, getattr(self, currency) + amount)
 
 
 async def get_currency(self: User, currency: str) -> int:
@@ -33,7 +33,6 @@ async def add_to_amount_expenses_currency(
                 self.amount_expenses_usd += amount
             case "paw_coins":
                 self.amount_expenses_paw_coins += amount
-        await session.commit()
 
 
 async def add_animal(self: User, code_name_animal: str, quantity: int) -> None:

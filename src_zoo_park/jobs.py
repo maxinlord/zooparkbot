@@ -1,22 +1,35 @@
+import contextlib
 from aiogram import Bot
 from sqlalchemy import delete, select, update, and_
-from db import User, RandomMerchant, Value, RequestToUnity, TransferMoney
+from db import User, RandomMerchant, Value, RequestToUnity, Game
+from sqlalchemy.ext.asyncio import AsyncSession
 from init_db import _sessionmaker_for_func
-from tools import referrer_bonus, referral_bonus, get_text_message, income_
+from tools import (
+    referrer_bonus,
+    referral_bonus,
+    get_text_message,
+    income_,
+    get_user_where_max_score,
+    add_to_currency,
+    factory_text_top_mini_game,
+    mention_html_by_username,
+)
+from bot.keyboards import rk_main_menu
 import random
-from datetime import datetime, timedelta
+from datetime import datetime
+from config import dict_tr_currencys
 
 
 async def job_sec(bot) -> None:
     await add_bonus_to_users()
-    await verification_referrals(bot=bot)
 
 
-async def job_minute() -> None:
+async def job_minute(bot) -> None:
     if datetime.now().second == 59:
         await accrual_of_income()
         await update_rate_bank()
         await deleter_request_to_unity()
+        await ender_games(bot)
 
 
 async def verification_referrals(bot: Bot):
@@ -109,6 +122,69 @@ async def deleter_request_to_unity():
             )
         )
         await session.commit()
+
+
+async def ender_games(bot: Bot):
+    async with _sessionmaker_for_func() as session:
+        games = await session.scalars(
+            select(Game).where(and_(Game.end == False, Game.end_date < datetime.now()))
+        )
+
+        for game in games:
+            await end_game(session, game)
+            await award_winner(bot, session, game)
+
+
+async def end_game(session: AsyncSession, game: Game):
+    game.end = True
+    await session.commit()
+
+
+async def award_winner(bot: Bot, session: AsyncSession, game: Game):
+    idpk_gamer = await get_user_where_max_score(session=session, game=game)
+    winner = await session.get(User, idpk_gamer)
+    await add_to_currency(
+        self=winner,
+        currency=game.currency_award,
+        amount=game.amount_award,
+    )
+    c = dict_tr_currencys[game.currency_award]
+    award = f"{game.amount_award:,d}{c}"
+    await bot.send_message(
+        chat_id=winner.id_user,
+        text=await get_text_message(
+            "game_winer_message",
+            award=award,
+
+        ),
+        reply_markup=await rk_main_menu()
+    )
+    additional_text = (
+        f"\n\n{await get_text_message('game_winer', nickname=winner.nickname)}"
+    )
+    owner_game = await session.get(User, game.idpk_user)
+    nickname = (
+        mention_html_by_username(username=owner_game.username, name=owner_game.nickname)
+        if owner_game.nickname
+        else owner_game.nickname
+    )
+    with contextlib.suppress(Exception):
+        t = await factory_text_top_mini_game(session=session, game=game)
+        await bot.edit_message_text(
+            text=await get_text_message(
+                "game_start",
+                t=t,
+                nickname=nickname,
+                game_type=game.type_game,
+                amount_gamers=game.amount_gamers,
+                amount_moves=game.amount_moves,
+                award=f"{game.amount_award:,d}{dict_tr_currencys[game.currency_award]}",
+            )
+            + additional_text,
+            inline_message_id=game.id_mess,
+            reply_markup=None,
+            disable_web_page_preview=True,
+        )
 
 
 # async def test_job() -> None:

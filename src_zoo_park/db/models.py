@@ -36,8 +36,6 @@ class User(Base):
     sub_on_channel: Mapped[bool] = mapped_column(default=False)
     bonus: Mapped[int] = mapped_column(default=1)
 
-    
-
 
 class Unity(Base):
     __tablename__ = "unity"
@@ -141,8 +139,30 @@ class TransferMoney(Base):
     used: Mapped[str] = mapped_column(Text, nullable=True)
     status: Mapped[bool] = mapped_column(default=False)
 
-    
 
+class Game(Base):
+    __tablename__ = "games"
+
+    id_game: Mapped[str] = mapped_column(String(length=20))
+    idpk_user: Mapped[int] = mapped_column()
+    type_game: Mapped[str] = mapped_column(String(length=64))
+    amount_gamers: Mapped[int] = mapped_column()
+    amount_award: Mapped[int] = mapped_column()
+    currency_award: Mapped[str] = mapped_column(String(length=10))
+    amount_moves: Mapped[int] = mapped_column(default=7)
+    id_mess: Mapped[str] = mapped_column(String(length=64), nullable=True)
+    activate: Mapped[bool] = mapped_column(default=False)
+    end: Mapped[bool] = mapped_column(default=False)
+    end_date: Mapped[str] = mapped_column(DateTime)
+
+
+class Gamer(Base):
+    __tablename__ = "gamers"
+
+    id_game: Mapped[str] = mapped_column(String(length=20))
+    idpk_gamer: Mapped[int] = mapped_column()
+    moves: Mapped[int] = mapped_column()
+    score: Mapped[int] = mapped_column(default=0)
 
 
 class Text(Base):

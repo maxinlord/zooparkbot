@@ -1,20 +1,16 @@
-import asyncio
 from aiogram.types import (
     InlineQuery,
     InlineQueryResultArticle,
     InputTextMessageContent,
-    InlineQueryResultCachedPhoto,
-    InlineQueryResultPhoto,
     LinkPreviewOptions,
 )
 from aiogram.types import ChosenInlineResult, CallbackQuery
 from aiogram import F, Router
-from aiogram.utils.deep_linking import create_start_link
 import random
 from sqlalchemy.ext.asyncio import AsyncSession
-from db import User, Photo, TransferMoney
-from sqlalchemy import and_, delete, select
-from bot.keyboards import ik_start_game, ik_get_money, ik_get_money_one_piece
+from db import User, TransferMoney
+from sqlalchemy import delete, select
+from bot.keyboards import ik_get_money, ik_get_money_one_piece
 from tools import (
     get_text_message,
     gen_key,
@@ -92,8 +88,12 @@ async def inline_send_money_two_pm(
     await inline_query.answer(results=[r], cache_time=0)
 
 
-@router.inline_query(F.query.split()[0].isdigit(), F.query.split().len() == 3)
-async def inline_send_money(
+@router.inline_query(
+    F.query.split()[0].isdigit(),
+    F.query.split()[2].isdigit(),
+    F.query.split().len() == 3,
+)
+async def inline_send_money_three_pm(
     inline_query: InlineQuery,
     session: AsyncSession,
     user: User | None,
@@ -189,10 +189,8 @@ async def inline_send_money(
     r = InlineQueryResultArticle(
         id=f"{tr.idpk}:activate_tr",
         title=await get_text_message("point_3"),
-        description=await get_text_message(
-            "for_send_money_tap_on_bttn"
-        ),
-        thumbnail_url="https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Paris_transit_icons_-_Métro_3.svg/1200px-Paris_transit_icons_-_Métro_3.svg.png",
+        description=await get_text_message("for_send_money_tap_on_bttn"),
+        thumbnail_url="https://blog.4d.com/wp-content/uploads/2017/08/UX2.png",
         input_message_content=InputTextMessageContent(
             message_text=text,
             link_preview_options=LinkPreviewOptions(show_above_text=True),
@@ -203,7 +201,7 @@ async def inline_send_money(
     await inline_query.answer(results=[r], cache_time=0)
 
 
-@router.chosen_inline_result()
+@router.chosen_inline_result(F.result_id.split(":")[-1] == "activate_tr")
 async def pagination_demo(chosen_result: ChosenInlineResult, session: AsyncSession):
     idpk_tr = int(chosen_result.result_id.split(":")[0])
     tr = await session.get(TransferMoney, idpk_tr)
@@ -262,7 +260,8 @@ async def activate_tr(
         )
         return
     await add_user_to_used(idpk_tr=tr.idpk, idpk_user=user.idpk)
-    await add_to_currency(self=user, currency=tr.currency, amount=tr.one_piece_sum)
+    await add_to_currency(self=user, currency=tr.currency, amount=tr.one_piece_sum
+    )
     tr.pieces -= 1
     await session.commit()
     c = dict_tr_currencys[tr.currency]

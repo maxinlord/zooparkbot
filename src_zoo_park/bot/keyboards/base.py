@@ -14,6 +14,19 @@ async def ik_start_game(link: str):
     return builder.as_markup()
 
 
+async def ik_start_created_game(link: str, current_gamers: int, total_gamers: int):
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text=await get_text_button(
+            "start_game_by_link",
+            current_gamers=current_gamers,
+            total_gamers=total_gamers,
+        ),
+        url=link,
+    )
+    return builder.as_markup()
+
+
 async def rk_back():
     builder = ReplyKeyboardBuilder()
     builder.button(text=await get_text_button("back"))

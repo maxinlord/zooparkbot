@@ -16,6 +16,8 @@ def setup_message_routers() -> Router:
         bonus,
         inline_send_money,
         inline_send_ref_link,
+        inline_create_game,
+        play_game,
         random_merchant,
         rarity_shop,
         workshop_items,
@@ -38,6 +40,8 @@ def setup_message_routers() -> Router:
     router.include_router(top.router)
     router.include_router(bonus.router)
     router.include_router(inline_send_money.router)
+    router.include_router(inline_create_game.router)
+    router.include_router(play_game.router)
     router.include_router(inline_send_ref_link.router)
     router.include_router(account.router)
     router.include_router(random_merchant.router)

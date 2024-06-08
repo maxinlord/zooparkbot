@@ -13,6 +13,7 @@ class UserState(StatesGroup):
     for_while_shell = State()
     avi_enter_custom_qa_step = State()
     exchange_bank_step = State()
+    game = State()
 
 class AdminState(StatesGroup):
     main = State()

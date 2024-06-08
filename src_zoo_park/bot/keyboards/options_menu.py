@@ -504,3 +504,62 @@ async def ik_get_money_one_piece(idpk_tr: int):
     )
     builder.adjust(1)
     return builder.as_markup()
+
+
+async def ik_button_play(game_type: str, total_moves: int, remain_moves: int):
+    builder = InlineKeyboardBuilder()
+    match game_type:
+        case "🎯":
+            builder.button(
+                text=await get_text_button(
+                    "dice",
+                    total_moves=total_moves,
+                    remain_moves=remain_moves,
+                ),
+                callback_data="dice",
+            )
+        case "🎳":
+            builder.button(
+                text=await get_text_button(
+                    "bowling",
+                    total_moves=total_moves,
+                    remain_moves=remain_moves,
+                ),
+                callback_data="dice",
+            )
+        case "🎲":
+            builder.button(
+                text=await get_text_button(
+                    "slot",
+                    total_moves=total_moves,
+                    remain_moves=remain_moves,
+                ),
+                callback_data="dice",
+            )
+        case "⚽️":
+            builder.button(
+                text=await get_text_button(
+                    "football",
+                    total_moves=total_moves,
+                    remain_moves=remain_moves,
+                ),
+                callback_data="dice",
+            )
+        case "🏀":
+            builder.button(
+                text=await get_text_button(
+                    "basketball",
+                    total_moves=total_moves,
+                    remain_moves=remain_moves,
+                ),
+                callback_data="dice",
+            )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+async def ik_watch_results_game(link_on_message: str):
+    builder = InlineKeyboardBuilder()
+    builder.button(text=await get_text_button("watch_result"), url=link_on_message)
+    builder.adjust(1)
+    return builder.as_markup()

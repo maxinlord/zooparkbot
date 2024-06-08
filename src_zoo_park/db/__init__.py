@@ -12,5 +12,7 @@ from .models import (
     Aviary,
     Unity, 
     RequestToUnity,
-    TransferMoney
+    TransferMoney,
+    Game,
+    Gamer
 )
