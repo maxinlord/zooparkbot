@@ -295,6 +295,7 @@ async def back_distributor(
                     price_with_discount=merchant.price_with_discount,
                     price=merchant.price,
                     first_offer_bought=merchant.first_offer_bought,
+                    usd=user.usd
                 ),
             )
         case "to_choice_animal":
