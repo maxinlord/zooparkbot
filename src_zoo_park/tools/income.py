@@ -92,7 +92,7 @@ async def get_top_unity_by_animal() -> tuple[int, dict]:
         return int(top_unity), table_for_compare[top_unity]
 
 
-def get_dict_animals(self: User) -> dict:
+async def get_dict_animals(self: User) -> dict:
     decoded_dict: dict = json.loads(self.animals)
     return decoded_dict
 
