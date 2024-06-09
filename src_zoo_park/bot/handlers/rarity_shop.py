@@ -90,6 +90,7 @@ async def get_rarity_rshop(
             description=animal.description,
             price=animal_price,
             income=animal_income,
+            usd=user.usd,
         ),
         reply_markup=await ik_choice_quantity_animals_rshop(animal_price=animal_price),
     )

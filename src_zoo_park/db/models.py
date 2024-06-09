@@ -15,7 +15,7 @@ class User(Base):
     __tablename__ = "users"
 
     id_user: Mapped[int] = mapped_column(BigInteger, unique=True)
-    username: Mapped[str] = mapped_column(String(length=64))
+    username: Mapped[str] = mapped_column(String(length=64), nullable=True)
     nickname: Mapped[str] = mapped_column(String(length=64), nullable=True)
     date_reg: Mapped[str] = mapped_column(DateTime)
     id_referrer: Mapped[int] = mapped_column(BigInteger, nullable=True)
@@ -154,6 +154,7 @@ class Game(Base):
     activate: Mapped[bool] = mapped_column(default=False)
     end: Mapped[bool] = mapped_column(default=False)
     end_date: Mapped[str] = mapped_column(DateTime)
+    last_update_mess: Mapped[bool] = mapped_column(default=False)
 
 
 class Gamer(Base):

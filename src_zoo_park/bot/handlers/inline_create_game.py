@@ -140,12 +140,12 @@ async def inline_game_three_pm(
         r = InlineQueryResultArticle(
             id=str(random.randint(1, 100000)),
             title=await get_text_message("attention"),
-            description=await get_text_message("not_money_to_create_game", money=currency),
+            description=await get_text_message(
+                "not_money_to_create_game", money=currency
+            ),
             thumbnail_url=attention_photo,
             input_message_content=InputTextMessageContent(
-                message_text=await get_text_message(
-                    "error_not_money_to_create_game"
-                )
+                message_text=await get_text_message("error_not_money_to_create_game")
             ),
         )
         return await inline_query.answer(results=[r], cache_time=0)

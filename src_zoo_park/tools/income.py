@@ -367,34 +367,31 @@ async def factory_text_main_top(idpk_user: int) -> str:
         )
         users = await session.scalars(select(User))
         users = users.all()
-        users_income = [await income_(user) for user in users]
-        ls = list(zip(users, users_income))
-        ls.sort(key=lambda x: x[1], reverse=True)
-        # формирование текста
+        users_income = [(user, await income_(user)) for user in users]
+        users_income.sort(key=lambda x: x[1], reverse=True)
+
+        async def format_text(user, income, counter, unity_name):
+            pattern = "pattern_line_top_self_place" if user.idpk == idpk_user else "pattern_line_top_user"
+            return await get_text_message(
+                pattern,
+                n=user.nickname,
+                i=income,
+                c=counter,
+                u=unity_name or '',
+            )
+
         text = ""
-        for counter, (user, i) in enumerate(ls, start=1):
+        for counter, (user, income) in enumerate(users_income, start=1):
+            unity = user.current_unity.split(':')[-1]
+            unity = await session.get(Unity, unity)
             if counter > total_place_top:
                 break
-            if user.idpk == idpk_user:
-                text += await get_text_message(
-                    "pattern_line_top_self_place",
-                    n=user.nickname,
-                    i=i,
-                    c=counter,
-                )
-                continue
-            text += await get_text_message(
-                "pattern_line_top_user",
-                n=user.nickname,
-                i=i,
-                c=counter,
-            )
-        # получение собственного места в топе
-        self_place, user_data = [
-            [place, user_data]
-            for place, user_data in enumerate(ls, start=1)
+            text += await format_text(user, income, counter, unity.name if unity else '')
+
+        self_place, user_data = next(
+            (place, user_data) for place, user_data in enumerate(users_income, start=1)
             if user_data[0].idpk == idpk_user
-        ][0]
+        )
         if self_place > total_place_top:
             text += await get_text_message(
                 "pattern_line_not_in_top",
@@ -403,3 +400,4 @@ async def factory_text_main_top(idpk_user: int) -> str:
                 c=self_place,
             )
         return text
+

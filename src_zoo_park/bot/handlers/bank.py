@@ -135,11 +135,15 @@ async def get_amount(
     if amount > user.rub:
         await message.answer(await get_text_message("no_money"))
         return
-    user.usd += amount // rate
-    user.rub -= amount - (amount % rate)
+    you_change = amount - (amount % rate)
+    you_got = amount // rate
+    user.usd += you_got
+    user.rub -= you_change
     await session.commit()
     await message.answer(
-        await get_text_message("exchange_bank_success"),
+        await get_text_message(
+            "exchange_bank_success", you_change=you_change, you_got=you_got, rate=rate
+        ),
         reply_markup=await rk_main_menu(),
     )
     await state.set_state(UserState.main_menu)

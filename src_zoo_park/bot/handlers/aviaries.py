@@ -51,7 +51,7 @@ async def choice_quantity_avi(
     await state.update_data(code_name_aviary=aviary, aviary_price=aviary_price)
     await query.message.edit_text(
         text=await get_text_message(
-            "choice_quantity_aviaries", price_one_aviary=aviary_price
+            "choice_quantity_aviaries", price_one_aviary=aviary_price, usd=user.usd
         ),
         reply_markup=await ik_choice_quantity_aviary_avi(aviary_price),
     )

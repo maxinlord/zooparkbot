@@ -35,7 +35,7 @@ from .items import (
 )
 from .message import disable_not_main_window
 from .aviaries import (
-    get_all_name_aviaries,
+    get_all_name_and_size_aviaries,
     get_quantity_animals_for_avi,
     get_total_number_seats,
     get_remain_seats,

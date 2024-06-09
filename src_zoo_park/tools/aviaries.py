@@ -4,9 +4,9 @@ from init_db import _sessionmaker_for_func
 import json
 
 
-async def get_all_name_aviaries():
+async def get_all_name_and_size_aviaries():
     async with _sessionmaker_for_func() as session:
-        name_items = await session.execute(select(Aviary.name, Aviary.code_name))
+        name_items = await session.execute(select(Aviary.name, Aviary.code_name, Aviary.size))
     return name_items.all()
 
 

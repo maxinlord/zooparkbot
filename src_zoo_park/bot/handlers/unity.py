@@ -51,9 +51,13 @@ async def unity_menu(
             reply_markup=await rk_unity_menu(),
         )
         return
+    PRICE_FOR_CREATE_UNITY = await session.scalar(
+        select(Value.value_int).where(Value.name == "PRICE_FOR_CREATE_UNITY")
+    )
+    await state.update_data(price_fcu=PRICE_FOR_CREATE_UNITY)
     msg = await message.answer(
         text=await get_text_message("unity_options"),
-        reply_markup=await ik_unity_options(),
+        reply_markup=await ik_unity_options(price_create=PRICE_FOR_CREATE_UNITY),
     )
     await state.update_data(active_window=msg.message_id)
 
@@ -79,17 +83,13 @@ async def create_unity(
     state: FSMContext,
     user: User,
 ):
-
-    PRICE_FOR_CREATE_UNITY = await session.scalar(
-        select(Value.value_int).where(Value.name == "PRICE_FOR_CREATE_UNITY")
-    )
-    if user.usd < PRICE_FOR_CREATE_UNITY:
+    data = await state.get_data()
+    if user.usd < data["price_fcu"]:
         await query.answer(
             await get_text_message("not_enough_money_to_create"),
             show_alert=True,
         )
         return
-    await state.update_data(price_fcu=PRICE_FOR_CREATE_UNITY)
     await state.set_state(UserState.enter_name_unity_step)
     await query.message.delete()
     await query.message.answer(

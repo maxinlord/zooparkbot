@@ -6,7 +6,7 @@ from tools import (
     get_quantity_animals_for_rmerchant,
     get_quantity_animals_for_rshop,
     get_all_name_items,
-    get_all_name_aviaries,
+    get_all_name_and_size_aviaries,
     get_quantity_animals_for_avi,
     get_row_items_for_kb,
     get_size_items_for_kb,
@@ -172,9 +172,12 @@ async def ik_choice_item():
 
 async def ik_choice_aviary():
     builder = InlineKeyboardBuilder()
-    all_aviaries = await get_all_name_aviaries()
-    for name, code_name in all_aviaries:
-        builder.button(text=name, callback_data=f"{code_name}:choice_aviary_aviaries")
+    all_aviaries = await get_all_name_and_size_aviaries()
+    for name, code_name, size in all_aviaries:
+        builder.button(
+            text=f"{name} [{size}]",
+            callback_data=f"{code_name}:choice_aviary_aviaries",
+        )
     builder.adjust(1)
     return builder.as_markup()
 
@@ -298,10 +301,11 @@ async def ik_item_activate_menu(is_activate: bool):
     return builder.as_markup()
 
 
-async def ik_unity_options():
+async def ik_unity_options(price_create: int):
     builder = InlineKeyboardBuilder()
     builder.button(
-        text=await get_text_button("create_unity"), callback_data="create_unity"
+        text=await get_text_button("create_unity", price_create=price_create),
+        callback_data="create_unity",
     )
     builder.button(
         text=await get_text_button("join_to_unity"), callback_data="join_to_unity"

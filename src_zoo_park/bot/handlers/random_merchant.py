@@ -15,7 +15,7 @@ from tools import (
     disable_not_main_window,
     get_remain_seats,
     add_animal,
-    get_total_number_animals
+    get_total_number_animals,
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -53,7 +53,9 @@ async def random_merchant_menu(
         photo=await session.scalar(
             select(Photo.photo_id).where(Photo.name == "plug_photo")
         ),
-        caption=await get_text_message("random_merchant_menu", n=merchant.name),
+        caption=await get_text_message(
+            "random_merchant_menu", n=merchant.name, usd=user.usd
+        ),
         reply_markup=await ik_merchant_menu(
             quantity_animals=merchant.quantity_animals,
             name_animal=animal_name,
@@ -87,7 +89,8 @@ async def buy_one_of_offer(
                 )
                 return
             remain_seats = await get_remain_seats(
-                aviaries=user.aviaries, amount_animals=await get_total_number_animals(self=user)
+                aviaries=user.aviaries,
+                amount_animals=await get_total_number_animals(self=user),
             )
             if remain_seats < merchant.quantity_animals:
                 await query.answer(
@@ -119,7 +122,8 @@ async def buy_one_of_offer(
                 )
                 return
             remain_seats = await get_remain_seats(
-                aviaries=user.aviaries, amount_animals=await get_total_number_animals(self=user)
+                aviaries=user.aviaries,
+                amount_animals=await get_total_number_animals(self=user),
             )
             MAX_QUANTITY_ANIMALS = await session.scalar(
                 select(Value.value_int).where(Value.name == "MAX_QUANTITY_ANIMALS")
@@ -136,7 +140,9 @@ async def buy_one_of_offer(
 
             await state.set_state(UserState.for_while_shell)
             while quantity_animals > 0:
-                animal = await get_random_animal(session=session, user_animals=user.animals)
+                animal = await get_random_animal(
+                    session=session, user_animals=user.animals
+                )
                 part_animals = random.randint(1, quantity_animals)
                 quantity_animals -= part_animals
                 await add_animal(

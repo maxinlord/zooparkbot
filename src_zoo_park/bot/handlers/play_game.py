@@ -100,12 +100,14 @@ async def buy_one_of_offer(
         )
 
     additional_text = ""
+    flag_end_game = False
     if (
         await get_amount_gamers(session=session, game=game) == game.amount_gamers
         and await get_total_moves(session=session, game=game) == 0
     ):
         additional_text = await handle_game_winner(query, session, game, data)
         game.end = True
+        flag_end_game = True
     with contextlib.suppress(Exception):
         t = await factory_text_top_mini_game(session=session, game=game)
         await query.message.bot.edit_message_text(
@@ -127,4 +129,6 @@ async def buy_one_of_offer(
             ),
             disable_web_page_preview=True,
         )
+        if flag_end_game:
+            game.last_update_mess = flag_end_game
     await session.commit()
