@@ -103,7 +103,7 @@ async def ik_choice_animal_rshop():
             text=animal.name,
             callback_data=f"{animal.code_name.strip('-')}:rshop_choice_animal",
         )
-    builder.adjust(3)
+    builder.adjust(2)
     return builder.as_markup()
 
 
@@ -150,9 +150,10 @@ async def ik_choice_item():
     return builder.as_markup()
 
 
-async def ik_buy_item():
+async def ik_buy_item(bought: bool):
     builder = InlineKeyboardBuilder()
-    builder.button(text=await get_text_button("buy_item"), callback_data="buy_item")
+    if not bought:
+        builder.button(text=await get_text_button("buy_item"), callback_data="buy_item")
     builder.button(
         text=await get_text_button("back"), callback_data="to_witems_menu:back_witems"
     )

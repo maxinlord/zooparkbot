@@ -21,13 +21,14 @@ from config import dict_tr_currencys
 
 
 async def job_sec(bot) -> None:
-    await add_bonus_to_users()
+    await accrual_of_income()
+    # await add_bonus_to_users()
     # await ender_games(bot)
 
 
 async def job_minute(bot) -> None:
     if datetime.now().second == 59:
-        await accrual_of_income()
+        
         await update_rate_bank()
         await deleter_request_to_unity()
         await ender_games(bot)

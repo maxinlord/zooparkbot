@@ -8,6 +8,8 @@ import json
 from config import rarities
 from tools import get_text_message
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 
 async def income_(user: User):
     unity_idpk = int(user.current_unity.split(":")[-1]) if user.current_unity else None
@@ -184,6 +186,8 @@ async def fetch_and_parse(session, name, parse_func):
 
 async def handle_rub_bonus(user, session):
     income = await income_(user)
+    if income == 0:
+        income = 12
     income_for_3_min = income * 180
     rub_to_add = random.randint(income_for_3_min // 3, income_for_3_min)
     user.rub += rub_to_add
@@ -217,8 +221,8 @@ async def add_aviary(self: User, code_name_aviary: str, quantity: int) -> None:
         await session.commit()
 
 
-async def handle_animal_bonus(user, session):
-    animal = await _get_random_animal()
+async def handle_animal_bonus(user: User, session):
+    animal = await _get_random_animal(session=session, user_animals=user.animals)
     amount_to_add = random.randint(
         1,
         await _get_remain_seats(
@@ -290,21 +294,24 @@ async def bonus_(user: User):
     return data_about_bonus
 
 
-async def _get_random_animal() -> Animal:
-    async with _sessionmaker_for_func() as session:
-        c_names = await session.scalars(
-            select(Animal.code_name).where(Animal.code_name.contains("-"))
+async def _get_random_animal(session: AsyncSession, user_animals: str) -> Animal:
+    dict_animals: dict = json.loads(user_animals)
+    if not dict_animals:
+        r = await session.scalar(
+            select(Value.value_str).where(Value.name == "START_ANIMALS_FOR_RMERCHANT")
         )
-        c_names = [c_name.strip("-") for c_name in c_names]
-        animal_name = random.choice(c_names)
-        rarity = random.choices(
-            population=rarities,
-            weights=await _get_weights(),
-        )
-        animal = await session.scalar(
-            select(Animal).where(Animal.code_name == animal_name + rarity[0])
-        )
-        return animal
+        c_names = [c_name.strip() for c_name in r.split(",")]
+    else:
+        c_names = [c_name.split("_")[0] for c_name in dict_animals]
+    animal_name = random.choice(c_names)
+    rarity = random.choices(
+        population=rarities,
+        weights=await _get_weights(),
+    )
+    animal = await session.scalar(
+        select(Animal).where(Animal.code_name == animal_name + rarity[0])
+    )
+    return animal
 
 
 async def _get_weights() -> list:

@@ -5,6 +5,9 @@ from faker import Faker
 import random
 from config import rarities
 
+from sqlalchemy.ext.asyncio import AsyncSession
+import json
+
 # Создание экземпляра Faker для русского языка
 fake = Faker("ru_RU")
 
@@ -88,18 +91,21 @@ async def get_animal_with_random_rarity(animal: str) -> Animal:
         return animal
 
 
-async def get_random_animal() -> Animal:
-    async with _sessionmaker_for_func() as session:
-        c_names = await session.scalars(
-            select(Animal.code_name).where(Animal.code_name.contains("-"))
+async def get_random_animal(session: AsyncSession, user_animals: str) -> Animal:
+    dict_animals: dict = json.loads(user_animals)
+    if not dict_animals:
+        r = await session.scalar(
+            select(Value.value_str).where(Value.name == "START_ANIMALS_FOR_RMERCHANT")
         )
-        c_names = [c_name.strip("-") for c_name in c_names]
-        animal_name = random.choice(c_names)
-        rarity = random.choices(
-            population=rarities,
-            weights=await get_weights(),
-        )
-        animal = await session.scalar(
-            select(Animal).where(Animal.code_name == animal_name + rarity[0])
-        )
-        return animal
+        c_names = [c_name.strip() for c_name in r.split(",")]
+    else:
+        c_names = [c_name.split("_")[0] for c_name in dict_animals]
+    animal_name = random.choice(c_names)
+    rarity = random.choices(
+        population=rarities,
+        weights=await get_weights(),
+    )
+    animal = await session.scalar(
+        select(Animal).where(Animal.code_name == animal_name + rarity[0])
+    )
+    return animal

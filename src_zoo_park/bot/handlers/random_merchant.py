@@ -136,7 +136,7 @@ async def buy_one_of_offer(
 
             await state.set_state(UserState.for_while_shell)
             while quantity_animals > 0:
-                animal = await get_random_animal()
+                animal = await get_random_animal(session=session, user_animals=user.animals)
                 part_animals = random.randint(1, quantity_animals)
                 quantity_animals -= part_animals
                 await add_animal(

@@ -60,8 +60,9 @@ async def get_bonus_chat(
         )
         return
     user.sub_on_chat = True
-    await bonus_for_sub_on_chat()
+    b = await bonus_for_sub_on_chat(user=user)
     await session.commit()
+    await query.message.answer(await get_text_message("subscribed_to_4at", bonus=b))
     await query.message.edit_reply_markup(
         reply_markup=await ik_get_bonus(
             sub_on_channel=user.sub_on_channel,
@@ -85,8 +86,9 @@ async def get_bonus_channel(
         )
         return
     user.sub_on_channel = True
-    await bonus_for_sub_on_channel()
+    b = await bonus_for_sub_on_channel(user=user)
     await session.commit()
+    await query.message.answer(await get_text_message("subscribed_to_channel", bonus=b))
     await query.message.edit_reply_markup(
         reply_markup=await ik_get_bonus(
             sub_on_channel=user.sub_on_chat,

@@ -4,7 +4,14 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from db import User, Item
-from tools import get_text_message, disable_not_main_window, add_to_currency, add_to_amount_expenses_currency, add_item
+from tools import (
+    get_text_message,
+    disable_not_main_window,
+    add_to_currency,
+    add_to_amount_expenses_currency,
+    add_item,
+    get_currency,
+)
 from bot.states import UserState
 from bot.keyboards import (
     ik_choice_item,
@@ -45,6 +52,7 @@ async def witems_menu_choice_item(
     item: str = query.data.split(":")[0]
     await state.update_data(code_name_item=item)
     item: Item = await session.scalar(select(Item).where(Item.code_name == item))
+    bought = item.code_name in user.items
     await query.message.edit_text(
         text=await get_text_message(
             "witems_menu_buy_item",
@@ -53,7 +61,7 @@ async def witems_menu_choice_item(
             price=item.price,
             currency=dict_tr_currencys[item.currency],
         ),
-        reply_markup=await ik_buy_item(),
+        reply_markup=await ik_buy_item(bought=bought),
     )
 
 
@@ -87,15 +95,17 @@ async def buy_item(
     if item.code_name in user.items:
         await query.answer(await get_text_message("item_already_have"), show_alert=True)
         return
-    if user.get_currency(item.currency) < item.price:
+    if await get_currency(self=user, currency=item.currency) < item.price:
         await query.answer(
             await get_text_message("not_enough_money"),
             show_alert=True,
         )
         return
     await add_to_currency(self=user, currency=item.currency, amount=-item.price)
-    await add_to_amount_expenses_currency(self=user, currency=item.currency, amount=item.price)
-    await add_item(self=user, code_name_item=item)
+    await add_to_amount_expenses_currency(
+        self=user, currency=item.currency, amount=item.price
+    )
+    await add_item(self=user, code_name_item=item.code_name)
 
     await session.commit()
     await query.answer(

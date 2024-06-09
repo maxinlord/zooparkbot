@@ -33,6 +33,7 @@ async def bonus_for_sub_on_chat(user: User):
         )
         user.usd += bonus
         await session.commit()
+        return bonus
 
 
 async def bonus_for_sub_on_channel(user: User):
