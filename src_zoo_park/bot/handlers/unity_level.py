@@ -56,6 +56,7 @@ async def update_unity_level(
                     text=await get_text_message("conditions_are_not_met"),
                     show_alert=True,
                 )
+                return
             unity.level = 1
         case 1:
             pass_to_up = await check_condition_2nd_lvl(unity=unity)
@@ -64,6 +65,7 @@ async def update_unity_level(
                     text=await get_text_message("conditions_are_not_met"),
                     show_alert=True,
                 )
+                return
             unity.level = 2
         case 2:
             pass_to_up = await check_condition_3rd_lvl(unity=unity)
@@ -72,6 +74,7 @@ async def update_unity_level(
                     text=await get_text_message("conditions_are_not_met"),
                     show_alert=True,
                 )
+                return
 
             unity.level = 3
         case 3:
