@@ -167,7 +167,6 @@ async def command_start(
     session: AsyncSession,
     user: User | None,
 ) -> None:
-    await state.clear()
     if user:
         await message.answer(
             text=await get_text_message("main_menu"), reply_markup=await rk_main_menu()
