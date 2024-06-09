@@ -146,6 +146,7 @@ async def updater_mess_minigame(bot: Bot):
         for game in games:
             game.last_update_mess = True
             await gen_text_winner(bot, session, game)
+        await session.commit()
 
 
 async def end_game(session: AsyncSession, game: Game):
