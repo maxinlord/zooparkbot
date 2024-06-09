@@ -85,11 +85,13 @@ async def exchange_all_amount(
     if user.rub < data["rate"]:
         await message.answer(await get_text_message("no_money"))
         return
-    user.usd += user.rub // data["rate"]
-    user.rub = user.rub % data["rate"]
+    you_change = user.rub % data["rate"]
+    you_got = user.rub // data["rate"]
+    user.usd += you_got
+    user.rub = you_change
     await session.commit()
     await message.answer(
-        await get_text_message("exchange_bank_success"),
+        await get_text_message("exchange_bank_success", you_change=you_change, you_got=you_got, rate=data['rate']),
         reply_markup=await rk_main_menu(),
     )
     await state.set_state(UserState.main_menu)
