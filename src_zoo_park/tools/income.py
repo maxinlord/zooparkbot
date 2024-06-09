@@ -81,7 +81,7 @@ async def get_top_unity_by_animal() -> tuple[int, dict]:
             animals = defaultdict(int)
             for idpk in member_ids:
                 user = await session.get(User, int(idpk))
-                animals_user = await get_dict_animals()
+                animals_user = await get_dict_animals(self=user)
                 for animal_name, num_animal in animals_user.items():
                     animals[animal_name] += num_animal
             max_animal = max(animals, key=animals.get)
