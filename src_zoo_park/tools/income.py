@@ -382,7 +382,7 @@ async def factory_text_main_top(idpk_user: int) -> str:
 
         text = ""
         for counter, (user, income) in enumerate(users_income, start=1):
-            unity = user.current_unity.split(':')[-1]
+            unity = user.current_unity.split(':')[-1] if user.current_unity else None
             unity = await session.get(Unity, unity)
             if counter > total_place_top:
                 break
