@@ -287,7 +287,7 @@ async def back_distributor(
             data = await state.get_data()
             animal_name = data["animal_name"]
             await query.message.edit_caption(
-                caption=await get_text_message("random_merchant_menu", n=merchant.name),
+                caption=await get_text_message("random_merchant_menu", n=merchant.name, usd=user.usd),
                 reply_markup=await ik_merchant_menu(
                     quantity_animals=merchant.quantity_animals,
                     name_animal=animal_name,
@@ -295,7 +295,6 @@ async def back_distributor(
                     price_with_discount=merchant.price_with_discount,
                     price=merchant.price,
                     first_offer_bought=merchant.first_offer_bought,
-                    usd=user.usd
                 ),
             )
         case "to_choice_animal":
