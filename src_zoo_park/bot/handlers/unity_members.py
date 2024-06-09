@@ -9,6 +9,7 @@ from tools import (
     disable_not_main_window,
     count_page_unity_members,
     income_,
+    get_total_number_animals
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -89,7 +90,7 @@ async def process_viewing_member_bio(
             income=await income_(member),
             rub=member.rub,
             usd=member.usd,
-            amount_animals=member.get_total_number_animals(self=user)(),
+            amount_animals=await get_total_number_animals(self=user),
         ),
         reply_markup=keyboard,
     )
