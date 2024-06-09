@@ -63,9 +63,10 @@ async def ik_choice_animal_rmerchant():
         text=await get_text_button("back"), callback_data="to_all_offers:back"
     )
     quantity_names = len(all_animals)
-    if quantity_names >= 3:
-        adjust = [3 for _ in range(quantity_names // 3)]
-        remains = quantity_names % 3
+    aj = 2
+    if quantity_names >= aj:
+        adjust = [aj for _ in range(quantity_names // aj)]
+        remains = quantity_names % aj
         adjust = adjust + [remains] if remains > 0 else adjust
     else:
         adjust = [quantity_names]
