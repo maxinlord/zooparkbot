@@ -292,7 +292,8 @@ async def process_accept_to_unity(
     r = await session.scalar(
         select(RequestToUnity).where(RequestToUnity.idpk_user == member.idpk)
     )
-    await session.delete(r)
+    if r:
+        await session.delete(r)
     unity.add_member(idpk_member=member.idpk)
     await session.commit()
     await query.message.edit_text(

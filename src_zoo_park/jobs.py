@@ -1,7 +1,7 @@
 import contextlib
 from aiogram import Bot
 from sqlalchemy import delete, select, update, and_
-from db import User, RandomMerchant, Value, RequestToUnity, Game
+from db import User, RandomMerchant, Value, RequestToUnity, Game, Animal
 from sqlalchemy.ext.asyncio import AsyncSession
 from init_db import _sessionmaker_for_func
 from tools import (
@@ -21,6 +21,7 @@ from config import dict_tr_currencys
 
 
 async def job_sec(bot) -> None:
+    # await test()
     await accrual_of_income()
     await updater_mess_minigame(bot=bot)
     # await add_bonus_to_users()
@@ -146,6 +147,16 @@ async def updater_mess_minigame(bot: Bot):
         for game in games:
             game.last_update_mess = True
             await gen_text_winner(bot, session, game)
+            await session.commit()
+
+
+async def test():
+    async with _sessionmaker_for_func() as session:
+        r = await session.scalars(select(Animal))
+        for i in r.all():
+            i.code_name = i.code_name.strip()
+            i.name = i.name.strip()
+            i.description = i.description.strip()
             await session.commit()
 
 

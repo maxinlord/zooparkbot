@@ -90,7 +90,7 @@ async def process_viewing_member_bio(
             income=await income_(member),
             rub=member.rub,
             usd=member.usd,
-            amount_animals=await get_total_number_animals(self=user),
+            amount_animals=await get_total_number_animals(self=member),
         ),
         reply_markup=keyboard,
     )
