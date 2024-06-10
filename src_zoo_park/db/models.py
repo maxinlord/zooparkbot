@@ -26,7 +26,7 @@ class User(Base):
     amount_expenses_paw_coins: Mapped[int] = mapped_column(default=0)
     rub: Mapped[int] = mapped_column(BigInteger, default=0)
     amount_expenses_rub: Mapped[int] = mapped_column(BigInteger, default=0)
-    usd: Mapped[int] = mapped_column(BigInteger, default=0)
+    usd: Mapped[int] = mapped_column(BigInteger, default=4000)
     amount_expenses_usd: Mapped[int] = mapped_column(BigInteger, default=0)
     animals: Mapped[str] = mapped_column(Text, default="{}")
     items: Mapped[str] = mapped_column(Text, default="{}")
