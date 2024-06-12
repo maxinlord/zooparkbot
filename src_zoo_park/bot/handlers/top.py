@@ -21,6 +21,6 @@ async def main_top(
 ):
     text = await factory_text_main_top(session=session, idpk_user=user.idpk)
     await message.answer_photo(
-        photo=await get_photo(session=session, photo_name="new_photo_196"),
+        photo=await get_photo(session=session, photo_name=""),
         caption=await get_text_message("top_info", t=text),
     )
