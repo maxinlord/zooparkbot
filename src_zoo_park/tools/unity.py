@@ -154,7 +154,6 @@ async def get_top_unity_by_animal(session: AsyncSession) -> tuple[int, dict]:
                 animals[animal_name] += num_animal
         max_animal = max(animals, key=animals.get)
         table_for_compare[unity.idpk] = {max_animal: animals[max_animal]}
-
     top_unity = max(
         table_for_compare, key=lambda x: next(iter(table_for_compare[x].values()))
     )

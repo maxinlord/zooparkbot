@@ -249,7 +249,7 @@ async def activate_tr(
             inline_message_id=query.inline_message_id, reply_markup=None
         )
         return
-    if await in_used(idpk_tr=tr.idpk, idpk_user=user.idpk):
+    if await in_used(session=session, idpk_tr=tr.idpk, idpk_user=user.idpk):
         await query.answer(
             text=await get_text_message("error_tr_already_used"), show_alert=True
         )
@@ -259,7 +259,7 @@ async def activate_tr(
             text=await get_text_message("error_tr_self"), show_alert=True
         )
         return
-    await add_user_to_used(idpk_tr=tr.idpk, idpk_user=user.idpk)
+    await add_user_to_used(session=session, idpk_tr=tr.idpk, idpk_user=user.idpk)
     await add_to_currency(self=user, currency=tr.currency, amount=tr.one_piece_sum
     )
     tr.pieces -= 1
