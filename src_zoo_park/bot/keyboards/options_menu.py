@@ -128,14 +128,6 @@ async def ik_choice_quantity_animals_rshop(session: AsyncSession, animal_price: 
     return builder.as_markup()
 
 
-async def ik_choice_item():
-    builder = InlineKeyboardBuilder()
-    all_items = await tools.get_all_name_items()
-    for name, code_name in all_items:
-        builder.button(text=name, callback_data=f"{code_name}:choice_item_witems")
-    builder.adjust(1)
-    return builder.as_markup()
-
 
 async def ik_buy_item(bought: bool):
     builder = InlineKeyboardBuilder()
@@ -148,9 +140,9 @@ async def ik_buy_item(bought: bool):
     return builder.as_markup()
 
 
-async def ik_choice_item():
+async def ik_choice_item(session: AsyncSession):
     builder = InlineKeyboardBuilder()
-    all_items = await tools.get_all_name_items()
+    all_items = await tools.get_all_name_items(session=session)
     for name, code_name in all_items:
         builder.button(text=name, callback_data=f"{code_name}:choice_item_witems")
     builder.adjust(1)

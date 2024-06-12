@@ -56,7 +56,7 @@ async def account(
         income_(session=session, user=user),
         ik_account_menu(),
     )
-    
+
     text_message = await get_text_message(
         "account_info",
         nn=user.nickname,
@@ -87,11 +87,12 @@ async def account_items(
     state: FSMContext,
     user: User,
 ):
-    q_page = await count_page_items(user.items)
+    q_page = await count_page_items(session=session, items=user.items)
     await state.update_data(page=1, q_page=q_page)
     await query.message.edit_text(
         text=await get_text_message("menu_items"),
-        reply_markup=await ik_menu_items(session=session,
+        reply_markup=await ik_menu_items(
+            session=session,
             items=user.items,
         ),
     )
@@ -113,7 +114,8 @@ async def process_turn_right(
     await state.update_data(page=page)
     with contextlib.suppress(Exception):
         await query.message.edit_reply_markup(
-            reply_markup=await ik_menu_items(session=session,
+            reply_markup=await ik_menu_items(
+                session=session,
                 items=user.items,
                 page=page,
             ),
@@ -156,7 +158,9 @@ async def process_back_to_menu(
             data = await state.get_data()
             await query.message.edit_text(
                 text=await get_text_message("menu_items"),
-                reply_markup=await ik_menu_items(session=session, items=user.items, page=data["page"]),
+                reply_markup=await ik_menu_items(
+                    session=session, items=user.items, page=data["page"]
+                ),
             )
 
 

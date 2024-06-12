@@ -86,7 +86,7 @@ async def get_bonus_channel(
         )
         return
     user.sub_on_channel = True
-    b = await bonus_for_sub_on_channel(user=user)
+    b = await bonus_for_sub_on_channel(session=session,user=user)
     await session.commit()
     await query.message.answer(await get_text_message("subscribed_to_channel", bonus=b))
     await query.message.edit_reply_markup(
@@ -111,7 +111,7 @@ async def get_bonus(
         )
         return
     user.bonus = 0
-    data_bonus = await bonus_(user=user)
+    data_bonus = await bonus_(session=session, user=user)
     await session.commit()
     key = list(data_bonus.keys())[0]
     text = ""

@@ -34,7 +34,7 @@ async def workshop_items_menu(
     await disable_not_main_window(data=await state.get_data(), message=message)
     msg = await message.answer(
         text=await get_text_message("workshop_items_menu", usd=user.usd),
-        reply_markup=await ik_choice_item(),
+        reply_markup=await ik_choice_item(session=session),
     )
     await state.set_data({})
     await state.update_data(active_window=msg.message_id)
@@ -77,7 +77,7 @@ async def distribution_back_witems(
         case "to_witems_menu":
             await query.message.edit_text(
                 text=await get_text_message("workshop_items_menu"),
-                reply_markup=await ik_choice_item(),
+                reply_markup=await ik_choice_item(session=session),
             )
 
 
