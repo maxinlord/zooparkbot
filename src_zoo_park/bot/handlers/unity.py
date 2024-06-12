@@ -168,7 +168,7 @@ async def join_to_unity(
     await state.update_data(q_page=q_page, page=1)
     await query.message.edit_text(
         text=await get_text_message("join_to_unity_menu"),
-        reply_markup=await ik_menu_unity_to_join(page=1),
+        reply_markup=await ik_menu_unity_to_join(session=session, page=1),
     )
 
 
@@ -189,7 +189,7 @@ async def process_turn_unity(
     await state.update_data(page=page)
     with contextlib.suppress(Exception):
         await query.message.edit_reply_markup(
-            reply_markup=await ik_menu_unity_to_join(page=page)
+            reply_markup=await ik_menu_unity_to_join(session=session, page=page)
         )
 
 
@@ -212,7 +212,7 @@ async def process_back_to_menu_all_unity(
             await state.update_data(q_page=q_page, page=1)
             await query.message.edit_text(
                 text=await get_text_message("join_to_unity_menu"),
-                reply_markup=await ik_menu_unity_to_join(page=1),
+                reply_markup=await ik_menu_unity_to_join(session=session, page=1),
             )
 
 

@@ -1,80 +1,93 @@
-from .text import (
-    get_text_message,
-    get_text_button,
-    mention_html,
-    mention_html_by_username,
-)
-from .value import get_value
-from .photo import get_photo
-from .nickname import (
-    has_special_characters_nickname,
-    is_unique_nickname,
-    shorten_whitespace_nickname,
-)
-from .deep_link import validate_command_arg
-from .bonus import (
-    referral_bonus,
-    referrer_bonus,
-    bonus_for_sub_on_channel,
-    bonus_for_sub_on_chat,
-)
-from .random_merchant import (
-    create_random_merchant,
-    calculate_price_with_discount,
-    gen_quantity_animals,
-    gen_price,
-    get_animal_with_random_rarity,
-    get_random_animal,
-)
+import tools.animals
 from .animals import (
     get_all_animals,
     get_quantity_animals_for_rmerchant,
     get_quantity_animals_for_rshop,
     get_price_animal,
+    get_income_animal,
+    get_dict_animals,
+    get_numbers_animals,
+    add_animal,
+    get_total_number_animals,
+    get_random_animal,
+    get_animal_with_random_rarity,
+    gen_quantity_animals,
 )
 
-from .items import (
-    get_all_name_items,
-    get_row_items_for_kb,
-    get_size_items_for_kb,
-    get_items_data_to_kb,
-    count_page_items,
-)
-from .message import disable_not_main_window
 from .aviaries import (
     get_all_name_and_size_aviaries,
     get_quantity_animals_for_avi,
     get_total_number_seats,
     get_remain_seats,
+    add_aviary,
+    get_price_aviaries
 )
-from .income import (
-    income_,
-    get_top_unity_by_animal,
-    get_income_animal,
-    count_income_unity,
-    check_condition_2nd_lvl,
-    check_condition_3rd_lvl,
+
+from .base import gen_key
+
+from .bonus import (
+    referral_bonus,
+    referrer_bonus,
+    bonus_for_sub_on_channel,
+    bonus_for_sub_on_chat,
+    bonus_,
+)
+
+from .deep_link import validate_command_arg
+from .game import get_amount_gamers, get_total_moves, get_user_where_max_score
+from .income import income_
+
+from .items import (
+    get_all_name_items,
+    get_items_data_to_kb,
+    get_row_items_for_kb,
+    get_size_items_for_kb,
+    get_status_item,
+    count_page_items,
+    add_item,
+    activate_item,
+    deactivate_all_items,
+)
+
+from .message import disable_not_main_window, m_choice_quantity_avi
+from .nickname import (
+    is_unique_nickname,
+    shorten_whitespace_nickname,
+    has_special_characters_nickname,
+)
+from .photo import get_photo
+from .random_merchant import create_random_merchant, get_weights_rmerchant, gen_price
+
+from .text import (
+    get_text_message,
+    get_text_button,
+    mention_html,
+    mention_html_by_username,
     factory_text_main_top,
     factory_text_unity_top,
-    bonus_,
-    add_item,
+    factory_text_top_mini_game,
 )
+
+from .transfer import in_used, add_user_to_used
 from .unity import (
+    get_top_unity_by_animal,
     is_unique_name,
-    shorten_whitespace_name_unity,
-    has_special_characters_name,
-    get_row_unity_for_kb,
-    get_size_unity_for_kb,
     get_unity_name_and_idpk,
-    count_page_unity,
-    check_condition_1st_lvl,
-    get_data_by_lvl_unity,
+    get_row_unity_for_kb,
     get_row_unity_members,
+    get_size_unity_for_kb,
     get_size_unity_members,
+    check_condition_1st_lvl,
+    check_condition_2nd_lvl,
+    check_condition_3rd_lvl,
+    count_income_unity,
+    count_page_unity,
     count_page_unity_members,
+    has_special_characters_name,
+    get_data_by_lvl_unity,
+    shorten_whitespace_name_unity,
     get_members_name_and_idpk,
 )
-from .base import gen_key
-from .transfer import in_used, add_user_to_used
-from .user import *
-from .game import *
+
+from .user import get_currency, add_to_amount_expenses_currency, add_to_currency
+from .value import get_value

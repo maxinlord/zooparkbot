@@ -38,7 +38,7 @@ async def rarity_shop_menu(
     await disable_not_main_window(message=message, data=data)
     msg = await message.answer(
         text=await get_text_message("rarity_shop_menu"),
-        reply_markup=await ik_choice_animal_rshop(),
+        reply_markup=await ik_choice_animal_rshop(session=session),
     )
     await state.set_data({})
     await state.update_data(active_window=msg.message_id)
@@ -92,7 +92,7 @@ async def get_rarity_rshop(
             income=animal_income,
             usd=user.usd,
         ),
-        reply_markup=await ik_choice_quantity_animals_rshop(animal_price=animal_price),
+        reply_markup=await ik_choice_quantity_animals_rshop(session=session, animal_price=animal_price),
     )
 
 
@@ -108,7 +108,7 @@ async def back_to_rarity_shop_menu(
         case "to_choice_animal":
             return await query.message.edit_text(
                 text=await get_text_message("rarity_shop_menu"),
-                reply_markup=await ik_choice_animal_rshop(),
+                reply_markup=await ik_choice_animal_rshop(session=session),
             )
         case "to_choice_rarity":
             return await query.message.edit_text(
@@ -198,7 +198,7 @@ async def back_to_choice_quantity_rshop(
             price=data["animal_price"],
             income=animal_income,
         ),
-        reply_markup=await ik_choice_quantity_animals_rshop(
+        reply_markup=await ik_choice_quantity_animals_rshop(session=session,
             animal_price=data["animal_price"]
         ),
     )

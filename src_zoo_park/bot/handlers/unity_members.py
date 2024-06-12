@@ -35,7 +35,7 @@ async def unity_members(
     q_page = await count_page_unity_members(idpk_unity=data["idpk_unity"])
     msg = await message.answer(
         text=await get_text_message("menu_unity_members"),
-        reply_markup=await ik_menu_unity_members(unity_idpk=data["idpk_unity"]),
+        reply_markup=await ik_menu_unity_members(session=session, unity_idpk=data["idpk_unity"]),
     )
     await state.update_data(
         active_window=msg.message_id,
@@ -61,7 +61,7 @@ async def process_turn_unity_members(
     await state.update_data(page=page)
     with contextlib.suppress(Exception):
         await query.message.edit_reply_markup(
-            reply_markup=await ik_menu_unity_members(
+            reply_markup=await ik_menu_unity_members(session=session,
                 unity_idpk=data["idpk_unity"], page=page
             )
         )
@@ -111,7 +111,7 @@ async def process_back_to_menu_all_members(
             await state.update_data(q_page=q_page)
             await query.message.edit_text(
                 text=await get_text_message("menu_unity_members"),
-                reply_markup=await ik_menu_unity_members(
+                reply_markup=await ik_menu_unity_members(session=session,
                     unity_idpk=data["idpk_unity"], page=data["page"]
                 ),
             )
@@ -132,7 +132,7 @@ async def delete_from_members(
     await session.commit()
     await query.message.edit_text(
         text=await get_text_message("menu_unity_members"),
-        reply_markup=await ik_menu_unity_members(unity_idpk=data["idpk_unity"], page=1),
+        reply_markup=await ik_menu_unity_members(session=session, unity_idpk=data["idpk_unity"], page=1),
     )
     await query.bot.send_message(
         chat_id=data["id_member"],

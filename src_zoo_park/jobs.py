@@ -22,7 +22,7 @@ from config import dict_tr_currencys
 
 
 async def job_sec(bot) -> None:
-    await accrual_of_income()
+    pass
     # await test()
     # await add_bonus_to_users()
     # await ender_games(bot)
@@ -30,6 +30,7 @@ async def job_sec(bot) -> None:
 
 async def job_minute(bot) -> None:
     if datetime.now().second == 59:
+        await accrual_of_income()
         await update_rate_bank()
         await deleter_request_to_unity()
         await ender_minigames(bot)
@@ -165,7 +166,7 @@ async def award_winner(bot: Bot, session: AsyncSession, game: Game):
         else owner_game.nickname
     )
     if not idpk_gamer:
-        t = await factory_text_top_mini_game(session=session, game=game)
+        top_mini_game_text = await factory_text_top_mini_game(session=session, game=game)
         await bot.edit_message_text(
             text=await get_text_message(
                 "game_start",
@@ -189,8 +190,8 @@ async def award_winner(bot: Bot, session: AsyncSession, game: Game):
         amount=game.amount_award,
     )
     await session.commit()
-    c = dict_tr_currencys[game.currency_award]
-    award = f"{game.amount_award:,d}{c}"
+    currency_translation = dict_tr_currencys[game.currency_award]
+    award = f"{game.amount_award:,d}{currency_translation}"
     await bot.send_message(
         chat_id=winner.id_user,
         text=await get_text_message(
@@ -204,11 +205,11 @@ async def award_winner(bot: Bot, session: AsyncSession, game: Game):
     )
 
     with contextlib.suppress(Exception):
-        t = await factory_text_top_mini_game(session=session, game=game)
+        top_mini_game_text = await factory_text_top_mini_game(session=session, game=game)
         await bot.edit_message_text(
             text=await get_text_message(
                 "game_start",
-                t=t,
+                t=top_mini_game_text,
                 nickname=nickname,
                 game_type=game.type_game,
                 amount_gamers=game.amount_gamers,
@@ -231,7 +232,7 @@ async def gen_text_winner(bot: Bot, session: AsyncSession, game: Game):
         else owner_game.nickname
     )
     if not idpk_gamer:
-        t = await factory_text_top_mini_game(session=session, game=game)
+        text_top_mini_game = await factory_text_top_mini_game(session=session, game=game)
         await bot.edit_message_text(
             text=await get_text_message(
                 "game_start",

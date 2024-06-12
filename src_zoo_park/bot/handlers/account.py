@@ -91,7 +91,7 @@ async def account_items(
     await state.update_data(page=1, q_page=q_page)
     await query.message.edit_text(
         text=await get_text_message("menu_items"),
-        reply_markup=await ik_menu_items(
+        reply_markup=await ik_menu_items(session=session,
             items=user.items,
         ),
     )
@@ -113,7 +113,7 @@ async def process_turn_right(
     await state.update_data(page=page)
     with contextlib.suppress(Exception):
         await query.message.edit_reply_markup(
-            reply_markup=await ik_menu_items(
+            reply_markup=await ik_menu_items(session=session,
                 items=user.items,
                 page=page,
             ),
@@ -156,7 +156,7 @@ async def process_back_to_menu(
             data = await state.get_data()
             await query.message.edit_text(
                 text=await get_text_message("menu_items"),
-                reply_markup=await ik_menu_items(items=user.items, page=data["page"]),
+                reply_markup=await ik_menu_items(session=session, items=user.items, page=data["page"]),
             )
 
 

@@ -1,7 +1,9 @@
 from sqlalchemy import select
-from db import Text, Button, Value, Unity, User
+from db import Text, Button, Value, Unity, User, Game, Gamer
 from init_db import _sessionmaker_for_func
 from cache import text_cache, button_cache
+from sqlalchemy.ext.asyncio import AsyncSession
+import tools
 
 
 async def get_text_message(name: str, **kw) -> str:
@@ -9,7 +11,7 @@ async def get_text_message(name: str, **kw) -> str:
         if name in text_cache:
             text_obj = text_cache[name]
         else:
-            text_obj = await get_or_create_text(session, name)
+            text_obj = await _get_or_create_text(session, name)
             text_cache[name] = text_obj
 
         debug_key = "debug_key_text"
@@ -20,7 +22,7 @@ async def get_text_message(name: str, **kw) -> str:
                 select(Value.value_int).where(Value.name == "DEBUG_TEXT")
             )
             text_cache[debug_key] = debug_text
-        formatted_text = await format_text(
+        formatted_text = await _format_text(
             text_obj=text_obj,
             debug_text=debug_text,
             kw=kw,
@@ -29,7 +31,7 @@ async def get_text_message(name: str, **kw) -> str:
         return formatted_text
 
 
-async def get_or_create_text(session, name):
+async def _get_or_create_text(session, name):
     text_obj = await session.scalar(select(Text).where(Text.name == name))
     if not text_obj:
         text_obj = Text(name=name)
@@ -37,7 +39,7 @@ async def get_or_create_text(session, name):
     return text_obj
 
 
-async def get_or_create_button(session, name):
+async def _get_or_create_button(session, name):
     bttn_obj: Text = await session.scalar(select(Button).where(Button.name == name))
     if not bttn_obj:
         bttn_obj = Button(name=name)
@@ -45,7 +47,7 @@ async def get_or_create_button(session, name):
     return bttn_obj
 
 
-async def format_text(text_obj: Text, kw: dict, debug_text: int = 0):
+async def _format_text(text_obj: Text, kw: dict, debug_text: int = 0):
     prefix = f"[{text_obj.name}]\n" if debug_text else ""
     if not kw:
         return f"{prefix}{text_obj.text}"
@@ -56,7 +58,7 @@ async def format_text(text_obj: Text, kw: dict, debug_text: int = 0):
     return f"{prefix}{text_obj.text.format(**kw)}"
 
 
-async def format_button(bttn_obj: Text, kw: dict, debug_button: int = 0):
+async def _format_button(bttn_obj: Text, kw: dict, debug_button: int = 0):
     prefix = f"[{bttn_obj.name}]|" if debug_button else ""
     if not kw:
         return f"{prefix}{bttn_obj.text}"
@@ -72,9 +74,9 @@ async def get_text_button(name: str, **kw) -> str:
         if name in button_cache:
             bttn_obj = button_cache[name]
         else:
-            bttn_obj = await get_or_create_button(session, name)
+            bttn_obj = await _get_or_create_button(session, name)
             button_cache[name] = bttn_obj
-        
+
         debug_key = "debug_key_button"
         if debug_key in button_cache:
             debug_button = button_cache[debug_key]
@@ -83,7 +85,7 @@ async def get_text_button(name: str, **kw) -> str:
                 select(Value.value_int).where(Value.name == "DEBUG_BUTTON")
             )
             button_cache[debug_key] = debug_button
-        formatted_bttn = await format_button(
+        formatted_bttn = await _format_button(
             bttn_obj=bttn_obj,
             kw=kw,
             debug_button=debug_button,
@@ -98,3 +100,94 @@ def mention_html(id_user: int, name: str) -> str:
 
 def mention_html_by_username(username: str, name: str) -> str:
     return f'<a href="http://t.me/{username}">{name}</a>'
+
+
+async def factory_text_unity_top(session: AsyncSession) -> str:
+    unites = await session.scalars(select(Unity))
+    unites = unites.all()
+    unites_income = [await tools.count_income_unity(unity=unity) for unity in unites]
+    ls = list(zip(unites, unites_income))
+    ls.sort(key=lambda x: x[1], reverse=True)
+    text = ""
+    for counter, ls_obj in enumerate(ls, start=1):
+        unity = ls_obj[0]
+        i = ls_obj[1]
+        text += (
+            await tools.get_text_message(
+                "pattern_line_top_unity", n=unity.name, i=i, c=counter
+            )
+            + "\n"
+        )
+    return text
+
+
+async def factory_text_main_top(session: AsyncSession, idpk_user: int) -> str:
+    async with _sessionmaker_for_func() as session:
+        total_place_top = await tools.get_value(
+            session=session, value_name="TOTAL_PLACE_TOP"
+        )
+        users = await session.scalars(select(User))
+        users = users.all()
+        users_income = [
+            (user, await tools.income_(session=session, user=user)) for user in users
+        ]
+        users_income.sort(key=lambda x: x[1], reverse=True)
+
+        async def format_text(user, income, counter, unity_name):
+            pattern = (
+                "pattern_line_top_self_place"
+                if user.idpk == idpk_user
+                else "pattern_line_top_user"
+            )
+            return await tools.get_text_message(
+                pattern,
+                n=user.nickname,
+                i=income,
+                c=counter,
+                u=unity_name or "",
+            )
+
+        text = ""
+        for counter, (user, income) in enumerate(users_income, start=1):
+            unity_idpk = user.current_unity.split(":")[-1] if user.current_unity else None
+            unity = await session.get(Unity, int(unity_idpk)) if unity_idpk else None
+            if counter > total_place_top:
+                break
+            text += await format_text(
+                user, income, counter, unity.name if unity else ""
+            )
+
+        self_place, user_data = next(
+            (place, user_data)
+            for place, user_data in enumerate(users_income, start=1)
+            if user_data[0].idpk == idpk_user
+        )
+        if self_place > total_place_top:
+            text += await tools.get_text_message(
+                "pattern_line_not_in_top",
+                n=user_data[0].nickname,
+                i=user_data[1],
+                c=self_place,
+            )
+        return text
+
+
+async def factory_text_top_mini_game(session: AsyncSession, game: Game):
+    gamers = await session.scalars(select(Gamer).where(Gamer.id_game == game.id_game))
+    gamers = list(gamers)
+    gamers_sorted = sorted(gamers, key=lambda x: x.score, reverse=True)
+    text = ""
+    for counter, gamer in enumerate(gamers_sorted, start=1):
+        user = await session.get(User, gamer.idpk_gamer)
+        nickname = (
+            mention_html_by_username(username=user.username, name=user.nickname)
+            if user.nickname
+            else user.nickname
+        )
+        text += await get_text_message(
+            "pattern_place_in_top_game",
+            name_=nickname,
+            score=gamer.score,
+            c=counter,
+        )
+    return text

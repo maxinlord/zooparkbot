@@ -4,7 +4,13 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from db import User, Aviary
-from tools import get_text_message, disable_not_main_window, add_aviary
+from tools import (
+    get_text_message,
+    disable_not_main_window,
+    add_aviary,
+    get_price_aviaries,
+    m_choice_quantity_avi,
+)
 from bot.states import UserState
 from bot.keyboards import (
     ik_choice_aviary,
@@ -29,7 +35,7 @@ async def aviaries_menu(
     await disable_not_main_window(data=await state.get_data(), message=message)
     msg = await message.answer(
         text=await get_text_message("aviaries_menu"),
-        reply_markup=await ik_choice_aviary(),
+        reply_markup=await ik_choice_aviary(session=session),
     )
     await state.set_data({})
     await state.update_data(active_window=msg.message_id)
@@ -45,15 +51,12 @@ async def choice_quantity_avi(
     user: User,
 ):
     aviary = query.data.split(":")[0]
-    aviary_price = await session.scalar(
-        select(Aviary.price).where(Aviary.code_name == aviary)
-    )
-    await state.update_data(code_name_aviary=aviary, aviary_price=aviary_price)
-    await query.message.edit_text(
-        text=await get_text_message(
-            "choice_quantity_aviaries", price_one_aviary=aviary_price, usd=user.usd
-        ),
-        reply_markup=await ik_choice_quantity_aviary_avi(aviary_price),
+    await m_choice_quantity_avi(
+        session=session,
+        aviary=aviary,
+        state=state,
+        query=query,
+        user=user,
     )
 
 
@@ -77,11 +80,21 @@ async def get_qa_to_buy_avi(
     user.usd -= finite_price
     user.amount_expenses_usd += finite_price
     await add_aviary(
-        self=user, code_name_aviary=data["code_name_aviary"], quantity=quantity
+        session=session,
+        self=user,
+        code_name_aviary=data["code_name_aviary"],
+        quantity=quantity,
     )
     await session.commit()
     await query.answer(
         await get_text_message("aviary_bought_successfully"), show_alert=True
+    )
+    await m_choice_quantity_avi(
+        user=user,
+        session=session,
+        aviary=data["code_name_aviary"],
+        state=state,
+        query=query,
     )
 
 
@@ -97,7 +110,7 @@ async def back_distributor_avi(
         case "to_choice_aviary":
             return await query.message.edit_text(
                 text=await get_text_message("aviaries_menu"),
-                reply_markup=await ik_choice_aviary(),
+                reply_markup=await ik_choice_aviary(session=session),
             )
 
 
@@ -137,7 +150,9 @@ async def back_to_choice_quantity_avi(
             price_one_aviary=data["aviary_price"],
             usd=user.usd,
         ),
-        reply_markup=await ik_choice_quantity_aviary_avi(data["aviary_price"]),
+        reply_markup=await ik_choice_quantity_aviary_avi(
+            session=session, aviary_price=data["aviary_price"]
+        ),
     )
     await state.update_data(active_window=msg.message_id)
     await state.set_state(UserState.zoomarket_menu)
@@ -164,7 +179,10 @@ async def get_custom_quantity_aviary(
     user.usd -= finite_price
     user.amount_expenses_usd += finite_price
     await add_aviary(
-        self=user, code_name_aviary=data["code_name_aviary"], quantity=int(message.text)
+        session=session,
+        self=user,
+        code_name_aviary=data["code_name_aviary"],
+        quantity=int(message.text),
     )
     await session.commit()
     await message.answer(
