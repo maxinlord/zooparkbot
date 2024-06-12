@@ -52,7 +52,7 @@ async def random_merchant_menu(
         select(Animal.name).where(Animal.code_name == merchant.code_name_animal)
     )
     msg = await message.answer_photo(
-        photo=await get_photo(session=session, photo_name=''),
+        photo=await get_photo(session=session, photo_name='plug_photo'),
         caption=await get_text_message(
             "random_merchant_menu", n=merchant.name, usd=user.usd
         ),
@@ -326,7 +326,7 @@ async def back_to_choice_quantity(
         text=await get_text_message("backed"), reply_markup=await rk_zoomarket_menu()
     )
     msg = await message.answer_photo(
-        photo=await get_photo(session=session, photo_name=''),
+        photo=await get_photo(session=session, photo_name='plug_photo'),
         caption=await get_text_message("merchant_choise_quantity_animal"),
         reply_markup=await ik_choice_quantity_animals_rmerchant(
             animal_price=data["animal_price"]
