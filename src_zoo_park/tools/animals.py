@@ -16,7 +16,7 @@ async def get_all_animals() -> list[Animal]:
 
 async def get_quantity_animals_for_rmerchant() -> list[int]:
     async with _sessionmaker_for_func() as session:
-        quantitys = await get_value(session=session, value_name="QUANTITYS_FOR_RARITY_MERCHANT", value_type='str')
+        quantitys = await get_value(session=session, value_name="QUANTITYS_FOR_RANDOM_MERCHANT", value_type='str')
         quantitys = map(lambda x: int(x.strip()), quantitys.split(","))
         return list(quantitys)
 

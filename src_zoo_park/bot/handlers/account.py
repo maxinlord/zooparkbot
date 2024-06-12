@@ -179,7 +179,7 @@ async def process_viewing_item(
             description=item.description,
         ),
         reply_markup=await ik_item_activate_menu(
-            await get_status_item(User, code_name_item)
+            await get_status_item(user, code_name_item)
         ),
     )
 
