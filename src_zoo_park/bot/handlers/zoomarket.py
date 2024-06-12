@@ -21,7 +21,7 @@ async def zoomarket(
 ):
     await state.set_state(UserState.zoomarket_menu)
     await message.answer(
-        text=await get_text_message("zoomarket"), reply_markup=await rk_zoomarket_menu()
+        text=await get_text_message("zoomarket_menu"), reply_markup=await rk_zoomarket_menu()
     )
 
 

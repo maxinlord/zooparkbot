@@ -2,6 +2,7 @@ from sqlalchemy import select, and_
 from db import Text, Button, Value, Item
 from init_db import _sessionmaker_for_func
 import json
+from tools import get_value
 
 
 async def get_all_name_items():
@@ -14,8 +15,8 @@ async def get_items_data_to_kb(items: str) -> list[tuple[str, str, str]]:
     decoded_dict: dict = json.loads(items)
     data = []
     async with _sessionmaker_for_func() as session:
-        EMOJI_FOR_ACTIVATE_ITEM = await session.scalar(
-            select(Value.value_str).where(Value.name == "EMOJI_FOR_ACTIVATE_ITEM")
+        EMOJI_FOR_ACTIVATE_ITEM = await get_value(
+            session=session, value_name="EMOJI_FOR_ACTIVATE_ITEM", value_type='str'
         )
         for key, value in decoded_dict.items():
             name_item = await session.scalar(
@@ -28,17 +29,13 @@ async def get_items_data_to_kb(items: str) -> list[tuple[str, str, str]]:
 
 async def get_row_items_for_kb():
     async with _sessionmaker_for_func() as session:
-        row_items = await session.scalar(
-            select(Value.value_int).where(Value.name == "ROW_ITEMS_FOR_KB")
-        )
+        row_items = await get_value(session=session, value_name="ROW_ITEMS_FOR_KB")
     return row_items
 
 
 async def get_size_items_for_kb():
     async with _sessionmaker_for_func() as session:
-        size_items = await session.scalar(
-            select(Value.value_int).where(Value.name == "SIZE_ITEMS_FOR_KB")
-        )
+        size_items = await get_value(session=session, value_name="SIZE_ITEMS_FOR_KB")
     return size_items
 
 

@@ -17,6 +17,7 @@ from tools import (
     get_amount_gamers,
     factory_text_top_mini_game,
     mention_html_by_username,
+    get_value
 )
 from bot.states import UserState
 from bot.keyboards import rk_main_menu, ik_start_created_game, ik_button_play
@@ -186,12 +187,8 @@ async def command_start(
 async def getting_nickname(
     message: Message, state: FSMContext, session: AsyncSession
 ) -> None:
-    LIMIT_LENGTH_MAX = await session.scalar(
-        select(Value.value_int).where(Value.name == "NICKNAME_LENGTH_MAX")
-    )
-    LIMIT_LENGTH_MIN = await session.scalar(
-        select(Value.value_int).where(Value.name == "NICKNAME_LENGTH_MIN")
-    )
+    LIMIT_LENGTH_MAX = await get_value(session=session, name="NICKNAME_LENGTH_MAX")
+    LIMIT_LENGTH_MIN = await get_value(session=session, name="NICKNAME_LENGTH_MIN")
     if len(message.text) > LIMIT_LENGTH_MAX:
         await message.answer(text=await get_text_message("nickname_too_long"))
         return

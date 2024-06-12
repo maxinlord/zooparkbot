@@ -11,7 +11,7 @@ from tools import (
     get_price_animal,
     get_income_animal,
     add_animal,
-    get_total_number_animals
+    get_total_number_animals,
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -74,7 +74,7 @@ async def get_rarity_rshop(
     rarity = query.data.split(":")[0]
     unity_idpk = int(user.current_unity.split(":")[-1]) if user.current_unity else None
     animal_price = await get_price_animal(
-        animal_code_name=data["animal"] + rarity, unity_idpk=unity_idpk
+        session=session, animal_code_name=data["animal"] + rarity, unity_idpk=unity_idpk
     )
     animal = await session.scalar(
         select(Animal).where(Animal.code_name == data["animal"] + rarity)
@@ -82,7 +82,7 @@ async def get_rarity_rshop(
     await state.update_data(
         animal_price=animal_price, animal=data["animal"], rarity=rarity
     )
-    animal_income = await get_income_animal(animal=animal, unity_idpk=unity_idpk)
+    animal_income = await get_income_animal(session=session,animal=animal, unity_idpk=unity_idpk)
     await query.message.edit_text(
         text=await get_text_message(
             "choice_quantity_rarity_shop_menu",
@@ -128,7 +128,9 @@ async def get_quantity_rshop(
 ):
     quantity_animal = int(query.data.split(":")[0])
     remain_seats = await get_remain_seats(
-        aviaries=user.aviaries, amount_animals=await get_total_number_animals(self=user)
+        session=session,
+        aviaries=user.aviaries,
+        amount_animals=await get_total_number_animals(self=user),
     )
     if remain_seats < quantity_animal:
         await query.answer(await get_text_message("not_enough_seats"), show_alert=True)
@@ -187,7 +189,7 @@ async def back_to_choice_quantity_rshop(
         select(Animal).where(Animal.code_name == data["animal"] + data["rarity"])
     )
     unity_idpk = int(user.current_unity.split(":")[-1]) if user.current_unity else None
-    animal_income = await get_income_animal(animal=animal, unity_idpk=unity_idpk)
+    animal_income = await get_income_animal(session=session, animal=animal, unity_idpk=unity_idpk)
     msg = await message.answer(
         text=await get_text_message(
             "choice_quantity_rarity_shop_menu",
@@ -219,7 +221,9 @@ async def get_custom_quantity_animals_rshop(
         return
     quantity_animal = int(message.text)
     remain_seats = await get_remain_seats(
-        aviaries=user.aviaries, amount_animals=await get_total_number_animals(self=user)
+        session=session,
+        aviaries=user.aviaries,
+        amount_animals=await get_total_number_animals(self=user),
     )
     if remain_seats < quantity_animal:
         await message.answer(await get_text_message("not_enough_seats"))

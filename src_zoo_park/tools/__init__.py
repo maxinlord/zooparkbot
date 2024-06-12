@@ -1,4 +1,11 @@
-from .text import get_text_message, get_text_button, mention_html, mention_html_by_username
+from .text import (
+    get_text_message,
+    get_text_button,
+    mention_html,
+    mention_html_by_username,
+)
+from .value import get_value
+from .photo import get_photo
 from .nickname import (
     has_special_characters_nickname,
     is_unique_nickname,
@@ -40,7 +47,6 @@ from .aviaries import (
     get_total_number_seats,
     get_remain_seats,
 )
-from .bank import get_rate_bank
 from .income import (
     income_,
     get_top_unity_by_animal,
@@ -51,8 +57,7 @@ from .income import (
     factory_text_main_top,
     factory_text_unity_top,
     bonus_,
-    add_item
-    
+    add_item,
 )
 from .unity import (
     is_unique_name,
@@ -69,7 +74,7 @@ from .unity import (
     count_page_unity_members,
     get_members_name_and_idpk,
 )
-from .base import gen_key 
+from .base import gen_key
 from .transfer import in_used, add_user_to_used
 from .user import *
 from .game import *

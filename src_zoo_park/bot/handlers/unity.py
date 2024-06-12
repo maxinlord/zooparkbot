@@ -15,6 +15,7 @@ from tools import (
     is_unique_name,
     disable_not_main_window,
     count_page_unity,
+    get_value
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -51,9 +52,7 @@ async def unity_menu(
             reply_markup=await rk_unity_menu(),
         )
         return
-    PRICE_FOR_CREATE_UNITY = await session.scalar(
-        select(Value.value_int).where(Value.name == "PRICE_FOR_CREATE_UNITY")
-    )
+    PRICE_FOR_CREATE_UNITY = await get_value(session=session, value_name='PRICE_FOR_CREATE_UNITY')
     await state.update_data(price_fcu=PRICE_FOR_CREATE_UNITY)
     msg = await message.answer(
         text=await get_text_message("unity_options"),
@@ -118,12 +117,8 @@ async def get_name_unity(
     state: FSMContext,
     user: User,
 ):
-    LIMIT_LENGTH_MAX = await session.scalar(
-        select(Value.value_int).where(Value.name == "NAME_UNITY_LENGTH_MAX")
-    )
-    LIMIT_LENGTH_MIN = await session.scalar(
-        select(Value.value_int).where(Value.name == "NAME_UNITY_LENGTH_MIN")
-    )
+    LIMIT_LENGTH_MAX = await get_value(session=session, value_name='NAME_UNITY_LENGTH_MAX')
+    LIMIT_LENGTH_MIN = await get_value(session=session, value_name='NAME_UNITY_LENGTH_MIN')
     if len(message.text) > LIMIT_LENGTH_MAX:
         await message.answer(text=await get_text_message("name_unity_too_long"))
         return
@@ -172,7 +167,7 @@ async def join_to_unity(
         return
     await state.update_data(q_page=q_page, page=1)
     await query.message.edit_text(
-        text=await get_text_message("join_to_unity"),
+        text=await get_text_message("join_to_unity_menu"),
         reply_markup=await ik_menu_unity_to_join(page=1),
     )
 
@@ -216,7 +211,7 @@ async def process_back_to_menu_all_unity(
             q_page = await count_page_unity()
             await state.update_data(q_page=q_page, page=1)
             await query.message.edit_text(
-                text=await get_text_message("join_to_unity"),
+                text=await get_text_message("join_to_unity_menu"),
                 reply_markup=await ik_menu_unity_to_join(page=1),
             )
 
@@ -257,9 +252,7 @@ async def process_send_request(
         text=await get_text_message("request_send"),
         reply_markup=None,
     )
-    MIN_TO_END_REQUEST = await session.scalar(
-        select(Value.value_int).where(Value.name == "MIN_TO_END_REQUEST")
-    )
+    MIN_TO_END_REQUEST = await get_value(session=session, value_name='MIN_TO_END_REQUEST')
     date_request_end = datetime.now() + timedelta(minutes=MIN_TO_END_REQUEST)
     request = RequestToUnity(
         idpk_user=user.idpk,
@@ -346,7 +339,7 @@ async def exit_from_unity(
         await state.set_state(UserState.main_menu)
         await session.commit()
         await message.answer(
-            text=await get_text_message("exit_from_unity"), reply_markup=None
+            text=await get_text_message("exit_from_unity_text"), reply_markup=None
         )
         await message.answer(
             text=await get_text_message("main_menu"), reply_markup=await rk_main_menu()
@@ -360,7 +353,7 @@ async def exit_from_unity(
         next_owner.current_unity = f"owner:{unity.idpk}"
         unity.idpk_user = next_owner.idpk
         await message.answer(
-            text=await get_text_message("exit_from_unity"), reply_markup=None
+            text=await get_text_message("exit_from_unity_text"), reply_markup=None
         )
         await message.bot.send_message(
             chat_id=next_owner.id_user,

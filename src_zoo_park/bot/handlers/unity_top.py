@@ -9,6 +9,7 @@ from tools import (
     disable_not_main_window,
     factory_text_unity_top,
     get_top_unity_by_animal,
+    get_value
 )
 from bot.states import UserState
 from bot.filters import GetTextButton
@@ -31,16 +32,14 @@ async def unity_members(
     animal_name = await session.scalar(
         select(Animal.name).where(Animal.code_name == code_name_animal)
     )
-    bonus = await session.scalar(
-        select(Value.value_int).where(Value.name == "BONUS_FOR_AMOUNT_ANIMALS")
-    )
+    BONUS_FOR_AMOUNT_ANIMALS = await get_value(session=session, value_name="BONUS_FOR_AMOUNT_ANIMALS")
     await message.answer(
         text=await get_text_message(
             "unity_top_10",
             name_unity=unity.name,
             animal_name=animal_name,
             amount_animal=amount_animal,
-            bonus=bonus,
+            bonus=BONUS_FOR_AMOUNT_ANIMALS,
             t=tops,
         )
     )

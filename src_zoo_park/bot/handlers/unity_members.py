@@ -87,7 +87,7 @@ async def process_viewing_member_bio(
         text=await get_text_message(
             "member_bio",
             nickname=member.nickname,
-            income=await income_(member),
+            income=await income_(session=session, user=member),
             rub=member.rub,
             usd=member.usd,
             amount_animals=await get_total_number_animals(self=member),
@@ -136,5 +136,5 @@ async def delete_from_members(
     )
     await query.bot.send_message(
         chat_id=data["id_member"],
-        text=await get_text_message("delete_from_members"),
+        text=await get_text_message("delete_from_members_text"),
     )

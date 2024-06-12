@@ -33,7 +33,7 @@ async def bonus(
     await disable_not_main_window(data=await state.get_data(), message=message)
     msg = await message.answer(
         text=await get_text_message(
-            "bonus",
+            "bonus_info",
             ctu=CHAT_URL,
             clu=CHANNEL_URL,
         ),
@@ -60,7 +60,7 @@ async def get_bonus_chat(
         )
         return
     user.sub_on_chat = True
-    b = await bonus_for_sub_on_chat(user=user)
+    b = await bonus_for_sub_on_chat(session=session, user=user)
     await session.commit()
     await query.message.answer(await get_text_message("subscribed_to_4at", bonus=b))
     await query.message.edit_reply_markup(

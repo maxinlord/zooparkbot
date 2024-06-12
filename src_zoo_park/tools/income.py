@@ -6,17 +6,21 @@ from db import Value, Item, Aviary, User, Animal, Unity, Item
 from init_db import _sessionmaker_for_func
 import json
 from config import rarities
-from tools import get_text_message
+from tools import get_text_message, get_value
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-async def income_(user: User):
+async def income_(session: AsyncSession, user: User):
     unity_idpk = int(user.current_unity.split(":")[-1]) if user.current_unity else None
     animals: dict = json.loads(user.animals)
-    income = await income_from_animal(animals, unity_idpk)
+    income = await income_from_animal(
+        session=session, animals=animals, unity_idpk=unity_idpk
+    )
     if unity_idpk:
-        unity_data = await get_unity_data_for_income(unity_idpk)
+        unity_data = await get_unity_data_for_income(
+            session=session, idpk_unity=unity_idpk
+        )
         if unity_data["lvl"] in [1, 2, 3]:
             income *= 1 + (unity_data["bonus"] / 100)
     return int(income)
@@ -35,39 +39,29 @@ async def _get_income_animal(animal: Animal, unity_idpk: int | None, bonus: int)
         return animal.income
 
 
-async def income_from_animal(animals: dict, unity_idpk: int):
+async def income_from_animal(session: AsyncSession, animals: dict, unity_idpk: int):
     income = 0
-    async with _sessionmaker_for_func() as session:
-        bonus = await session.scalar(
-            select(Value.value_int).where(Value.name == "BONUS_FOR_AMOUNT_ANIMALS")
+    bonus = await get_value(session=session, value_name="BONUS_FOR_AMOUNT_ANIMALS")
+    for animal, quantity in animals.items():
+        animal = await session.scalar(select(Animal).where(Animal.code_name == animal))
+        animal_income = await _get_income_animal(
+            animal=animal, unity_idpk=unity_idpk, bonus=bonus
         )
-        for animal, quantity in animals.items():
-            animal = await session.scalar(
-                select(Animal).where(Animal.code_name == animal)
-            )
-            animal_income = await _get_income_animal(
-                animal=animal, unity_idpk=unity_idpk, bonus=bonus
-            )
-            income += animal_income * quantity
+        income += animal_income * quantity
     return income
 
 
-async def get_unity_data_for_income(idpk_unity: int):
-    async with _sessionmaker_for_func() as session:
-        unity = await session.get(Unity, idpk_unity)
-        data = {"lvl": unity.level}
-        if unity.level in [1, 2]:
-            data["bonus"] = await session.scalar(
-                select(Value.value_int).where(
-                    Value.name == "BONUS_ADD_TO_INCOME_1ST_LVL"
-                )
-            )
-        elif unity.level == 3:
-            data["bonus"] = await session.scalar(
-                select(Value.value_int).where(
-                    Value.name == "BONUS_ADD_TO_INCOME_3RD_LVL"
-                )
-            )
+async def get_unity_data_for_income(session: AsyncSession, idpk_unity: int):
+    unity = await session.get(Unity, idpk_unity)
+    data = {"lvl": unity.level}
+    if unity.level in [1, 2]:
+        data["bonus"] = await get_value(
+            session=session, value_name="BONUS_ADD_TO_INCOME_1ST_LVL"
+        )
+    elif unity.level == 3:
+        data["bonus"] = await get_value(
+            session=session, value_name="BONUS_ADD_TO_INCOME_3RD_LVL"
+        )
     return data
 
 
@@ -97,37 +91,36 @@ async def get_dict_animals(self: User) -> dict:
     return decoded_dict
 
 
-async def get_income_animal(animal: Animal, unity_idpk: int):
-    async with _sessionmaker_for_func() as session:
-        if unity_idpk:
-            unity_idpk_top, animal_top = await get_top_unity_by_animal()
-            if (
-                unity_idpk_top == unity_idpk
-                and animal.code_name == list(animal_top.keys())[0]
-            ):
-                bonus = await session.scalar(
-                    select(Value.value_int).where(
-                        Value.name == "BONUS_FOR_AMOUNT_ANIMALS"
-                    )
-                )
-                animal_income = animal.income * (1 + (bonus / 100))
-                return int(animal_income)
-        return animal.income
+async def get_income_animal(session: AsyncSession, animal: Animal, unity_idpk: int):
+    if unity_idpk:
+        unity_idpk_top, animal_top = await get_top_unity_by_animal()
+        if (
+            unity_idpk_top == unity_idpk
+            and animal.code_name == list(animal_top.keys())[0]
+        ):
+            bonus = await get_value(
+                session=session, value_name="BONUS_FOR_AMOUNT_ANIMALS"
+            )
+            animal_income = animal.income * (1 + (bonus / 100))
+            return int(animal_income)
+    return animal.income
 
 
-async def check_condition_2nd_lvl(unity: Unity) -> bool:
+async def check_condition_2nd_lvl(session: AsyncSession, unity: Unity) -> bool:
     async with _sessionmaker_for_func() as session:
-        AMOUNT_INCOME_2ND_LVL = await session.scalar(
-            select(Value.value_int).where(Value.name == "AMOUNT_INCOME_2ND_LVL")
+        AMOUNT_INCOME_2ND_LVL = await get_value(
+            session=session, value_name="AMOUNT_INCOME_2ND_LVL"
         )
-        AMOUNT_ANIMALS_2ND_LVL = await session.scalar(
-            select(Value.value_int).where(Value.name == "AMOUNT_ANIMALS_2ND_LVL")
+        AMOUNT_ANIMALS_2ND_LVL = await get_value(
+            session=session, value_name="AMOUNT_ANIMALS_2ND_LVL"
         )
         total_income = 0
         users = [
             await session.get(User, int(idpk)) for idpk in unity.get_members_idpk()
         ]
-        total_income = sum([await income_(user=user) for user in users])
+        total_income = sum(
+            [await income_(session=session, user=user) for user in users]
+        )
         if total_income < AMOUNT_INCOME_2ND_LVL:
             return False
         return all(
@@ -137,16 +130,16 @@ async def check_condition_2nd_lvl(unity: Unity) -> bool:
         )
 
 
-async def check_condition_3rd_lvl(unity: Unity) -> bool:
+async def check_condition_3rd_lvl(session: AsyncSession, unity: Unity) -> bool:
     async with _sessionmaker_for_func() as session:
-        AMOUNT_INCOME_3RD_LVL = await session.scalar(
-            select(Value.value_int).where(Value.name == "AMOUNT_INCOME_3RD_LVL")
+        AMOUNT_INCOME_3RD_LVL = await get_value(
+            session=session, value_name="AMOUNT_INCOME_3RD_LVL"
         )
-        AMOUNT_ANIMALS_3RD_LVL = await session.scalar(
-            select(Value.value_int).where(Value.name == "AMOUNT_ANIMALS_3RD_LVL")
+        AMOUNT_ANIMALS_3RD_LVL = await get_value(
+            session=session, value_name="AMOUNT_ANIMALS_3RD_LVL"
         )
-        AMOUNT_MEMBERS_3RD_LVL = await session.scalar(
-            select(Value.value_int).where(Value.name == "AMOUNT_MEMBERS_3RD_LVL")
+        AMOUNT_MEMBERS_3RD_LVL = await get_value(
+            session=session, value_name="AMOUNT_MEMBERS_3RD_LVL"
         )
         if unity.get_number_members() < AMOUNT_MEMBERS_3RD_LVL:
             return False
@@ -154,7 +147,9 @@ async def check_condition_3rd_lvl(unity: Unity) -> bool:
         users = [
             await session.get(User, int(idpk)) for idpk in unity.get_members_idpk()
         ]
-        total_income = sum([await income_(user=user) for user in users])
+        total_income = sum(
+            [await income_(session=session, user=user) for user in users]
+        )
         if total_income < AMOUNT_INCOME_3RD_LVL:
             return False
         return all(
@@ -175,7 +170,9 @@ async def count_income_unity(unity: Unity) -> int:
         users = [
             await session.get(User, int(idpk)) for idpk in unity.get_members_idpk()
         ]
-        total_income = sum([await income_(user=user) for user in users])
+        total_income = sum(
+            [await income_(session=session, user=user) for user in users]
+        )
         return total_income
 
 
@@ -185,7 +182,7 @@ async def fetch_and_parse(session, name, parse_func):
 
 
 async def handle_rub_bonus(user, session):
-    income = await income_(user)
+    income = await income_(session=session, user=user)
     if income == 0:
         income = 12
     income_for_3_min = income * 180
@@ -297,9 +294,7 @@ async def bonus_(user: User):
 async def _get_random_animal(session: AsyncSession, user_animals: str) -> Animal:
     dict_animals: dict = json.loads(user_animals)
     if not dict_animals:
-        r = await session.scalar(
-            select(Value.value_str).where(Value.name == "START_ANIMALS_FOR_RMERCHANT")
-        )
+        r = await get_value(session=session, value_name="START_ANIMALS_FOR_RMERCHANT", value_type='str')
         c_names = [c_name.strip() for c_name in r.split(",")]
     else:
         c_names = [c_name.split("_")[0] for c_name in dict_animals]
@@ -316,9 +311,7 @@ async def _get_random_animal(session: AsyncSession, user_animals: str) -> Animal
 
 async def _get_weights() -> list:
     async with _sessionmaker_for_func() as session:
-        w_str = await session.scalar(
-            select(Value.value_str).where(Value.name == "WEIGHTS_FOR_RANDOM_MERCHANT")
-        )
+        w_str = await get_value(session=session, value_name="WEIGHTS_FOR_RANDOM_MERCHANT", value_type='str')
         weights = [float(w.strip()) for w in w_str.split(",")]
         return weights
 
@@ -360,36 +353,43 @@ async def factory_text_unity_top() -> str:
         return text
 
 
-async def factory_text_main_top(idpk_user: int) -> str:
+async def factory_text_main_top(session: AsyncSession, idpk_user: int) -> str:
     async with _sessionmaker_for_func() as session:
-        total_place_top = await session.scalar(
-            select(Value.value_int).where(Value.name == "TOTAL_PLACE_TOP")
-        )
+        total_place_top = await get_value(session=session, value_name="TOTAL_PLACE_TOP")
         users = await session.scalars(select(User))
         users = users.all()
-        users_income = [(user, await income_(user)) for user in users]
+        users_income = [
+            (user, await income_(session=session, user=user)) for user in users
+        ]
         users_income.sort(key=lambda x: x[1], reverse=True)
 
         async def format_text(user, income, counter, unity_name):
-            pattern = "pattern_line_top_self_place" if user.idpk == idpk_user else "pattern_line_top_user"
+            pattern = (
+                "pattern_line_top_self_place"
+                if user.idpk == idpk_user
+                else "pattern_line_top_user"
+            )
             return await get_text_message(
                 pattern,
                 n=user.nickname,
                 i=income,
                 c=counter,
-                u=unity_name or '',
+                u=unity_name or "",
             )
 
         text = ""
         for counter, (user, income) in enumerate(users_income, start=1):
-            unity = user.current_unity.split(':')[-1] if user.current_unity else None
+            unity = user.current_unity.split(":")[-1] if user.current_unity else None
             unity = await session.get(Unity, unity)
             if counter > total_place_top:
                 break
-            text += await format_text(user, income, counter, unity.name if unity else '')
+            text += await format_text(
+                user, income, counter, unity.name if unity else ""
+            )
 
         self_place, user_data = next(
-            (place, user_data) for place, user_data in enumerate(users_income, start=1)
+            (place, user_data)
+            for place, user_data in enumerate(users_income, start=1)
             if user_data[0].idpk == idpk_user
         )
         if self_place > total_place_top:
@@ -400,4 +400,3 @@ async def factory_text_main_top(idpk_user: int) -> str:
                 c=self_place,
             )
         return text
-

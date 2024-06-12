@@ -50,6 +50,7 @@ async def handle_game_winner(query, session, game, data):
         currency=game.currency_award,
         amount=game.amount_award,
     )
+    # await session.commit()
     await query.bot.send_message(
         chat_id=winer.id_user,
         text=await get_text_message(
@@ -73,6 +74,7 @@ async def buy_one_of_offer(
     msg = await query.message.answer_dice(emoji=game.type_game)
     value_dice = msg.dice.value
     await asyncio.sleep(4)
+
     gamer = await session.scalar(
         select(Gamer).where(
             and_(Gamer.idpk_gamer == user.idpk, Gamer.id_game == game.id_game)
@@ -80,6 +82,7 @@ async def buy_one_of_offer(
     )
     gamer.score += value_dice
     gamer.moves -= 1
+
     await session.commit()
     if gamer.moves == 0:
         await handle_game_end(query, state, session)

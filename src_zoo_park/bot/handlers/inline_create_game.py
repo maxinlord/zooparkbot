@@ -20,6 +20,7 @@ from tools import (
     add_to_amount_expenses_currency,
     get_currency,
     mention_html_by_username,
+    get_value
 )
 from config import dict_tr_currencys, games
 from datetime import datetime, timedelta
@@ -150,9 +151,7 @@ async def inline_game_three_pm(
         )
         return await inline_query.answer(results=[r], cache_time=0)
 
-    sec = await session.scalar(
-        select(Value.value_int).where(Value.name == "SEC_TO_EXPIRE_GAME")
-    )
+    SEC_TO_EXPIRE_GAME = await get_value(session=session, value_name="SEC_TO_EXPIRE_GAME")
     game = Game(
         id_game=f"game_{gen_key(length=12)}",
         idpk_user=user.idpk,
@@ -160,7 +159,7 @@ async def inline_game_three_pm(
         amount_gamers=gamers,
         amount_award=int(split_query[2]),
         currency_award=split_query[3],
-        end_date=datetime.now() + timedelta(seconds=sec),
+        end_date=datetime.now() + timedelta(seconds=SEC_TO_EXPIRE_GAME),
         amount_moves=random.randint(1, 15),
     )
     session.add(game)

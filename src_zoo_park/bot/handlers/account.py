@@ -15,7 +15,7 @@ from tools import (
     activate_item,
     deactivate_all_items,
     get_status_item,
-    get_total_number_animals
+    get_total_number_animals,
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -34,6 +34,9 @@ flags = {"throttling_key": "default"}
 router = Router()
 
 
+import asyncio
+
+
 @router.message(UserState.main_menu, GetTextButton("account"), flags=flags)
 async def account(
     message: Message,
@@ -42,24 +45,35 @@ async def account(
     user: User,
 ):
     await disable_not_main_window(data=await state.get_data(), message=message)
-    msg = await message.answer(
-        text=await get_text_message(
-            "account_info",
-            nn=user.nickname,
-            rub=user.rub,
-            usd=user.usd,
-            pawc=user.paw_coins,
-            animals=user.animals,
+
+    total_places, remain_places, income, ik_account_menu_k = await asyncio.gather(
+        get_total_number_seats(session=session, aviaries=user.aviaries),
+        get_remain_seats(
+            session=session,
             aviaries=user.aviaries,
-            total_places=await get_total_number_seats(user.aviaries),
-            remain_places=await get_remain_seats(
-                aviaries=user.aviaries,
-                amount_animals=await get_total_number_animals(self=user),
-            ),
-            items=user.items,
-            income=await income_(user),
+            amount_animals=await get_total_number_animals(self=user),
         ),
-        reply_markup=await ik_account_menu(),
+        income_(session=session, user=user),
+        ik_account_menu(),
+    )
+    
+    text_message = await get_text_message(
+        "account_info",
+        nn=user.nickname,
+        rub=user.rub,
+        usd=user.usd,
+        pawc=user.paw_coins,
+        animals=user.animals,
+        aviaries=user.aviaries,
+        total_places=total_places,
+        remain_places=remain_places,
+        items=user.items,
+        income=income,
+    )
+
+    msg = await message.answer(
+        text=text_message,
+        reply_markup=ik_account_menu_k,
     )
 
     await state.set_data({})
@@ -125,13 +139,16 @@ async def process_back_to_menu(
                     pawc=user.paw_coins,
                     animals=user.animals,
                     aviaries=user.aviaries,
-                    total_places=await get_total_number_seats(user.aviaries),
+                    total_places=await get_total_number_seats(
+                        session=session, aviaries=user.aviaries
+                    ),
                     remain_places=await get_remain_seats(
+                        session=session,
                         aviaries=user.aviaries,
                         amount_animals=await get_total_number_animals(self=user),
                     ),
                     items=user.items,
-                    income=await income_(user),
+                    income=await income_(session=session, user=user),
                 ),
                 reply_markup=await ik_account_menu(),
             )
@@ -161,7 +178,9 @@ async def process_viewing_item(
             name_=item.description,
             description=item.description,
         ),
-        reply_markup=await ik_item_activate_menu(await get_status_item(User, code_name_item)),
+        reply_markup=await ik_item_activate_menu(
+            await get_status_item(User, code_name_item)
+        ),
     )
 
 

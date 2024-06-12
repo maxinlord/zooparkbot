@@ -133,7 +133,9 @@ async def back_to_choice_quantity_avi(
     )
     msg = await message.answer(
         text=await get_text_message(
-            "choice_quantity_aviaries", price_one_aviary=data["aviary_price"]
+            "choice_quantity_aviaries",
+            price_one_aviary=data["aviary_price"],
+            usd=user.usd,
         ),
         reply_markup=await ik_choice_quantity_aviary_avi(data["aviary_price"]),
     )

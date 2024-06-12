@@ -16,6 +16,8 @@ from tools import (
     get_remain_seats,
     add_animal,
     get_total_number_animals,
+    get_value,
+    get_photo
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -45,14 +47,12 @@ async def random_merchant_menu(
         select(RandomMerchant).where(RandomMerchant.id_user == user.id_user)
     )
     if not merchant:
-        merchant: RandomMerchant = await create_random_merchant(id_user=user.id_user)
+        merchant: RandomMerchant = await create_random_merchant(session=session, id_user=user.id_user)
     animal_name = await session.scalar(
         select(Animal.name).where(Animal.code_name == merchant.code_name_animal)
     )
     msg = await message.answer_photo(
-        photo=await session.scalar(
-            select(Photo.photo_id).where(Photo.name == "plug_photo")
-        ),
+        photo=await get_photo(session=session, photo_name='new_photo_196'),
         caption=await get_text_message(
             "random_merchant_menu", n=merchant.name, usd=user.usd
         ),
@@ -69,6 +69,29 @@ async def random_merchant_menu(
     await state.update_data(active_window=msg.message_id, animal_name=animal_name)
 
 
+async def check_funds_and_seats(query, user, merchant, session, price, quantity_animals):
+    if user.usd < price:
+        await query.answer(await get_text_message("not_enough_money"), show_alert=True)
+        return False
+    remain_seats = await get_remain_seats(
+        session=session,
+        aviaries=user.aviaries,
+        amount_animals=await get_total_number_animals(self=user),
+    )
+    if remain_seats < quantity_animals:
+        await query.answer(await get_text_message("not_enough_seats"), show_alert=True)
+        return False
+    return True
+
+async def update_user_data(user, merchant, price, quantity_animals):
+    user.usd -= price
+    user.amount_expenses_usd += price
+    await add_animal(
+        self=user,
+        code_name_animal=merchant.code_name_animal,
+        quantity=quantity_animals,
+    )
+
 @router.callback_query(UserState.zoomarket_menu, CompareDataByIndex("offer"))
 async def buy_one_of_offer(
     query: CallbackQuery,
@@ -82,28 +105,9 @@ async def buy_one_of_offer(
     )
     match offer:
         case "1":
-            if user.usd < merchant.price_with_discount:
-                await query.answer(
-                    await get_text_message("not_enough_money"),
-                    show_alert=True,
-                )
+            if not await check_funds_and_seats(query, user, merchant, session, merchant.price_with_discount, merchant.quantity_animals):
                 return
-            remain_seats = await get_remain_seats(
-                aviaries=user.aviaries,
-                amount_animals=await get_total_number_animals(self=user),
-            )
-            if remain_seats < merchant.quantity_animals:
-                await query.answer(
-                    await get_text_message("not_enough_seats"), show_alert=True
-                )
-                return
-            await add_animal(
-                self=user,
-                code_name_animal=merchant.code_name_animal,
-                quantity=merchant.quantity_animals,
-            )
-            user.usd -= merchant.price_with_discount
-            user.amount_expenses_usd += merchant.price_with_discount
+            await update_user_data(user, merchant, merchant.price_with_discount, merchant.quantity_animals)
             merchant.first_offer_bought = True
             await session.commit()
             await query.message.edit_reply_markup(
@@ -116,27 +120,12 @@ async def buy_one_of_offer(
                 await get_text_message("offer_bought_successfully"), show_alert=True
             )
         case "2":
-            if user.usd < merchant.price:
-                await query.answer(
-                    await get_text_message("not_enough_money"), show_alert=True
-                )
-                return
-            remain_seats = await get_remain_seats(
-                aviaries=user.aviaries,
-                amount_animals=await get_total_number_animals(self=user),
-            )
-            MAX_QUANTITY_ANIMALS = await session.scalar(
-                select(Value.value_int).where(Value.name == "MAX_QUANTITY_ANIMALS")
-            )
-            if remain_seats < MAX_QUANTITY_ANIMALS:
-                await query.answer(
-                    await get_text_message("no_seats_to_full_prize"), show_alert=True
-                )
+            if not await check_funds_and_seats(query, user, merchant, session, merchant.price, await get_value(session=session, value_name='MAX_QUANTITY_ANIMALS')):
                 return
             await query.message.delete_reply_markup()
             user.usd -= merchant.price
             user.amount_expenses_usd += merchant.price
-            quantity_animals = await gen_quantity_animals()
+            quantity_animals = await gen_quantity_animals(session=session)
 
             await state.set_state(UserState.for_while_shell)
             while quantity_animals > 0:
@@ -162,7 +151,7 @@ async def buy_one_of_offer(
             await state.set_state(UserState.zoomarket_menu)
 
             await query.message.answer(await get_text_message("you_lucky"))
-            merchant.price = await gen_price()
+            merchant.price = await gen_price(session=session)
             await session.commit()
 
         case "3":
@@ -170,6 +159,7 @@ async def buy_one_of_offer(
                 caption=await get_text_message("merchant_choice_animal"),
                 reply_markup=await ik_choice_animal_rmerchant(),
             )
+
 
 
 @router.callback_query(
@@ -210,7 +200,7 @@ async def choice_qa_to_buy(
     quantity = int(query.data.split(":")[0])
     finite_price = animal_price * quantity
 
-    remain_seats = await get_remain_seats(
+    remain_seats = await get_remain_seats(session=session,
         aviaries=user.aviaries, amount_animals=await get_total_number_animals(self=user)
     )
     if remain_seats < quantity:
@@ -225,7 +215,7 @@ async def choice_qa_to_buy(
 
     await state.set_state(UserState.for_while_shell)
     while quantity > 0:
-        animal_obj: Animal = await get_animal_with_random_rarity(
+        animal_obj: Animal = await get_animal_with_random_rarity(session=session,
             animal=data["code_name_animal"]
         )
         part_animals = random.randint(1, quantity)
@@ -336,9 +326,7 @@ async def back_to_choice_quantity(
         text=await get_text_message("backed"), reply_markup=await rk_zoomarket_menu()
     )
     msg = await message.answer_photo(
-        photo=await session.scalar(
-            select(Photo.photo_id).where(Photo.name == "plug_photo")
-        ),
+        photo=await get_photo(session=session, photo_name='new_photo_196'),
         caption=await get_text_message("merchant_choise_quantity_animal"),
         reply_markup=await ik_choice_quantity_animals_rmerchant(
             animal_price=data["animal_price"]
@@ -361,7 +349,7 @@ async def get_custom_quantity_animals(
     if int(message.text) < 1:
         await message.answer(text=await get_text_message("enter_digit"))
         return
-    remain_seats = await get_remain_seats(
+    remain_seats = await get_remain_seats(session=session,
         aviaries=user.aviaries, amount_animals=await get_total_number_animals(self=user)
     )
     if remain_seats < int(message.text):
@@ -383,7 +371,7 @@ async def get_custom_quantity_animals(
     )
     await state.set_state(UserState.for_while_shell)
     while quantity > 0:
-        animal = await get_animal_with_random_rarity(animal=data["code_name_animal"])
+        animal = await get_animal_with_random_rarity(session=session, animal=data["code_name_animal"])
         part_animals = random.randint(1, quantity)
         quantity -= part_animals
         async with ChatActionSender.typing(bot=message.bot, chat_id=message.chat.id):

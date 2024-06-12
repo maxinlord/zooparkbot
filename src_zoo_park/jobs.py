@@ -8,6 +8,7 @@ from tools import (
     referrer_bonus,
     referral_bonus,
     get_text_message,
+    get_value,
     income_,
     get_user_where_max_score,
     add_to_currency,
@@ -21,9 +22,8 @@ from config import dict_tr_currencys
 
 
 async def job_sec(bot) -> None:
-    # await test()
     await accrual_of_income()
-    await updater_mess_minigame(bot=bot)
+    # await test()
     # await add_bonus_to_users()
     # await ender_games(bot)
 
@@ -33,6 +33,7 @@ async def job_minute(bot) -> None:
         await update_rate_bank()
         await deleter_request_to_unity()
         await ender_minigames(bot)
+        await updater_mess_minigame(bot=bot)
 
 
 async def verification_referrals(bot: Bot):
@@ -43,17 +44,10 @@ async def verification_referrals(bot: Bot):
             )
         )
         users = users.all()
-        QUANTITY_MOVES_TO_PASS = await session.scalar(
-            select(Value.value_int).where(Value.name == "QUANTITY_MOVES_TO_PASS")
-        )
-        QUANTITY_RUB_TO_PASS = await session.scalar(
-            select(Value.value_int).where(Value.name == "QUANTITY_RUB_TO_PASS")
-        )
-        QUANTITY_USD_TO_PASS = await session.scalar(
-            select(Value.value_int).where(Value.name == "QUANTITY_USD_TO_PASS")
-        )
+        QUANTITY_MOVES_TO_PASS = await get_value(session=session, value_name='QUANTITY_MOVES_TO_PASS')
+        QUANTITY_RUB_TO_PASS = await get_value(session=session, value_name='QUANTITY_RUB_TO_PASS')
+        QUANTITY_USD_TO_PASS = await get_value(session=session, value_name='QUANTITY_USD_TO_PASS')
         for user in users:
-
             if user.moves < QUANTITY_MOVES_TO_PASS:
                 continue
             if user.amount_expenses_rub < QUANTITY_RUB_TO_PASS:
@@ -66,7 +60,7 @@ async def verification_referrals(bot: Bot):
                 chat_id=referrer.id_user,
                 text=await get_text_message("you_got_bonus_referrer", bonus=bonus),
             )
-            bonus = await referral_bonus(referral=user)
+            bonus = await referral_bonus(session=session, referral=user)
             await bot.send_message(
                 chat_id=user.id_user,
                 text=await get_text_message("you_got_bonus_referral", bonus=bonus),
@@ -89,17 +83,13 @@ async def add_bonus_to_users() -> None:
 
 async def update_rate_bank():
     async with _sessionmaker_for_func() as session:
-        MAX_INCREASE_TO_RATE = await session.scalar(
-            select(Value.value_int).where(Value.name == "MAX_INCREASE_TO_RATE")
-        )
-        current_rate = await session.scalar(
-            select(Value.value_int).where(Value.name == "RATE_RUB_USD")
-        )
+        MAX_INCREASE_TO_RATE = await get_value(session=session, value_name='MAX_INCREASE_TO_RATE')
+        current_rate = await get_value(session=session, value_name='RATE_RUB_USD', cache_=False)
         current_rate += random.randint(-MAX_INCREASE_TO_RATE, MAX_INCREASE_TO_RATE)
-        MIN_RATE_RUB_USD = await session.scalar(
-            select(Value.value_int).where(Value.name == "MIN_RATE_RUB_USD")
-        )
+        MIN_RATE_RUB_USD = await get_value(session=session, value_name='MIN_RATE_RUB_USD')
+        MAX_RATE_RUB_USD = await get_value(session=session, value_name='MAX_RATE_RUB_USD')
         current_rate = max(current_rate, MIN_RATE_RUB_USD)
+        current_rate = min(current_rate, MAX_RATE_RUB_USD)
         await session.execute(
             update(Value)
             .where(Value.name == "RATE_RUB_USD")
@@ -113,7 +103,7 @@ async def accrual_of_income():
         users = await session.scalars(select(User))
         users = users.all()
         for user in users:
-            user.rub += await income_(user=user)
+            user.rub += await income_(session=session,user=user)
         await session.commit()
 
 
@@ -162,6 +152,7 @@ async def test():
 
 async def end_game(session: AsyncSession, game: Game):
     game.end = True
+    game.last_update_mess = True
     await session.commit()
 
 
@@ -197,6 +188,7 @@ async def award_winner(bot: Bot, session: AsyncSession, game: Game):
         currency=game.currency_award,
         amount=game.amount_award,
     )
+    await session.commit()
     c = dict_tr_currencys[game.currency_award]
     award = f"{game.amount_award:,d}{c}"
     await bot.send_message(

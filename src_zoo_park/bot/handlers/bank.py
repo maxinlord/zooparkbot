@@ -4,7 +4,7 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from db import User
-from tools import get_text_message, get_rate_bank
+from tools import get_text_message, get_value
 from bot.states import UserState
 from bot.keyboards import (
     ik_bank,
@@ -25,11 +25,11 @@ async def bank(
     state: FSMContext,
     user: User,
 ):
-    rate = await get_rate_bank()
+    rate = await get_value(session=session, value_name='RATE_RUB_USD', cache_=False)
     time_to_update_bank = 60 - datetime.now().second
     await message.answer(
         text=await get_text_message(
-            "bank", r=rate, ub=time_to_update_bank, rub=user.rub, usd=user.usd
+            "bank_info", r=rate, ub=time_to_update_bank, rub=user.rub, usd=user.usd
         ),
         reply_markup=await ik_bank(),
     )
@@ -43,12 +43,12 @@ async def update_bank(
     user: User,
 ):
     await query.answer(cache_time=1)
-    rate = await get_rate_bank()
+    rate = await get_value(session=session, value_name='RATE_RUB_USD', cache_=False)
     time_to_update_bank = 60 - datetime.now().second
     with contextlib.suppress(Exception):
         await query.message.edit_text(
             text=await get_text_message(
-                "bank", r=rate, ub=time_to_update_bank, rub=user.rub, usd=user.usd
+                "bank_info", r=rate, ub=time_to_update_bank, rub=user.rub, usd=user.usd
             ),
             reply_markup=await ik_bank(),
         )
@@ -61,12 +61,12 @@ async def exchange_bank(
     state: FSMContext,
     user: User,
 ):
-    rate = await get_rate_bank()
+    rate = await get_value(session=session, value_name='RATE_RUB_USD', cache_=False)
     await state.update_data(rate=rate)
     if user.rub < rate:
         await query.answer(await get_text_message("no_money"), show_alert=True)
         return
-    await query.message.delete()
+    await query.message.delete_reply_markup()
     await query.message.answer(
         text=await get_text_message("enter_amount_to_exchange"),
         reply_markup=await rk_exchange_bank(),
@@ -85,10 +85,12 @@ async def exchange_all_amount(
     if user.rub < data["rate"]:
         await message.answer(await get_text_message("no_money"))
         return
-    you_change = user.rub
-    you_got = user.rub // data["rate"]
+
+    you_got, remains = divmod(user.rub, data["rate"])
+    you_change = you_got * data["rate"]
     user.usd += you_got
-    user.rub = user.rub % data["rate"]
+    user.rub = remains
+
     await session.commit()
     await message.answer(
         await get_text_message(
@@ -113,11 +115,15 @@ async def back_to_bank(
         text=await get_text_message("back_to_bank"), reply_markup=await rk_main_menu()
     )
     await state.set_state(UserState.main_menu)
-    rate = await get_rate_bank()
+    rate = await get_value(session=session, value_name='RATE_RUB_USD', cache_=False)
     time_to_update_bank = 60 - datetime.now().second
     await message.answer(
         text=await get_text_message(
-            "bank", r=rate, ub=time_to_update_bank, rub=user.rub, usd=user.usd
+            "bank_info",
+            r=rate,
+            ub=time_to_update_bank,
+            rub=user.rub,
+            usd=user.usd,
         ),
         reply_markup=await ik_bank(),
     )
@@ -130,10 +136,10 @@ async def get_amount(
     state: FSMContext,
     user: User,
 ):
-    data = await state.get_data()
     if not message.text.isdigit():
         await message.answer(await get_text_message("enter_amount_to_exchange"))
         return
+    data = await state.get_data()
     rate = data["rate"]
     amount = int(message.text)
     if amount < rate:
@@ -142,14 +148,19 @@ async def get_amount(
     if amount > user.rub:
         await message.answer(await get_text_message("no_money"))
         return
-    you_change = user.rub
-    you_got = amount // rate
+
+    you_got, remains = divmod(amount, data["rate"])
+    you_change = you_got * data["rate"]
     user.usd += you_got
-    user.rub -= amount - (amount % rate)
+    user.rub -= amount - remains
+
     await session.commit()
     await message.answer(
         await get_text_message(
-            "exchange_bank_success", you_change=you_change, you_got=you_got, rate=rate
+            "exchange_bank_success",
+            you_change=you_change,
+            you_got=you_got,
+            rate=rate,
         ),
         reply_markup=await rk_main_menu(),
     )

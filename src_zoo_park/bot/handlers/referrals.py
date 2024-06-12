@@ -57,13 +57,13 @@ async def back_to_account_menu_r(
             pawc=user.paw_coins,
             animals=user.animals,
             aviaries=user.aviaries,
-            total_places=await get_total_number_seats(user.aviaries),
-            remain_places=await get_remain_seats(
+            total_places=await get_total_number_seats(session=session, aviaries=user.aviaries),
+            remain_places=await get_remain_seats(session=session,
                 aviaries=user.aviaries,
                 amount_animals=await get_total_number_animals(self=user),
             ),
             items=user.items,
-            income=await income_(user),
+            income=await income_(session=session,user=user),
         ),
         reply_markup=await ik_account_menu(),
     )

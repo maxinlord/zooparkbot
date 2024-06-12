@@ -3,6 +3,9 @@ import re
 from sqlalchemy import desc, select
 from init_db import _sessionmaker_for_func
 from db import Unity, Value, User, Animal
+from tools import get_value
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def shorten_whitespace_name_unity(name: str) -> str:
@@ -27,17 +30,13 @@ async def is_unique_name(name: str) -> bool:
 
 async def get_row_unity_for_kb():
     async with _sessionmaker_for_func() as session:
-        row = await session.scalar(
-            select(Value.value_int).where(Value.name == "ROW_UNITY_FOR_KB")
-        )
+        row = await get_value(session=session, value_name="ROW_UNITY_FOR_KB")
     return row
 
 
 async def get_size_unity_for_kb():
     async with _sessionmaker_for_func() as session:
-        size = await session.scalar(
-            select(Value.value_int).where(Value.name == "SIZE_UNITY_FOR_KB")
-        )
+        size = await get_value(session=session, value_name="SIZE_UNITY_FOR_KB")
     return size
 
 
@@ -56,12 +55,11 @@ async def count_page_unity() -> int:
         return len_unity // size + (1 if remains else 0)
 
 
-async def check_condition_1st_lvl(unity: Unity) -> bool:
-    async with _sessionmaker_for_func() as session:
-        AMOUNT_MEMBERS_1ST_LVL = await session.scalar(
-            select(Value.value_int).where(Value.name == "AMOUNT_MEMBERS_1ST_LVL")
-        )
-        return unity.get_number_members() >= AMOUNT_MEMBERS_1ST_LVL
+async def check_condition_1st_lvl(session: AsyncSession, unity: Unity) -> bool:
+    AMOUNT_MEMBERS_1ST_LVL = await get_value(
+        session=session, value_name="AMOUNT_MEMBERS_1ST_LVL"
+    )
+    return unity.get_number_members() >= AMOUNT_MEMBERS_1ST_LVL
 
 
 async def get_data_by_lvl_unity(lvl: int) -> dict:
@@ -69,79 +67,57 @@ async def get_data_by_lvl_unity(lvl: int) -> dict:
         data = {"lvl": lvl}
         match lvl:
             case 0:
-                data["amount_members"] = await session.scalar(
-                    select(Value.value_int).where(
-                        Value.name == "AMOUNT_MEMBERS_1ST_LVL"
-                    )
+                data["amount_members"] = await get_value(
+                    session=session, value_name="AMOUNT_MEMBERS_1ST_LVL"
                 )
                 data["next_lvl"] = 1
             case 1:
-                data["amount_income"] = await session.scalar(
-                    select(Value.value_int).where(Value.name == "AMOUNT_INCOME_2ND_LVL")
+                data["amount_income"] = await get_value(
+                    session=session, value_name="AMOUNT_INCOME_2ND_LVL"
                 )
-                data["amount_animals"] = await session.scalar(
-                    select(Value.value_int).where(
-                        Value.name == "AMOUNT_ANIMALS_2ND_LVL"
-                    )
+                data["amount_animals"] = await get_value(
+                    session=session, value_name="AMOUNT_ANIMALS_2ND_LVL"
                 )
-                data["bonus_add_to_income"] = await session.scalar(
-                    select(Value.value_int).where(
-                        Value.name == "BONUS_ADD_TO_INCOME_1ST_LVL"
-                    )
+                data["bonus_add_to_income"] = await get_value(
+                    session=session, value_name="BONUS_ADD_TO_INCOME_1ST_LVL"
                 )
                 data["next_lvl"] = 2
             case 2:
-                data["amount_income"] = await session.scalar(
-                    select(Value.value_int).where(Value.name == "AMOUNT_INCOME_3RD_LVL")
+                data["amount_income"] = await get_value(
+                    session=session, value_name="AMOUNT_INCOME_3RD_LVL"
                 )
-                data["amount_animals"] = await session.scalar(
-                    select(Value.value_int).where(
-                        Value.name == "AMOUNT_ANIMALS_3RD_LVL"
-                    )
+                data["amount_animals"] = await get_value(
+                    session=session, value_name="AMOUNT_ANIMALS_3RD_LVL"
                 )
-                data["amount_members"] = await session.scalar(
-                    select(Value.value_int).where(
-                        Value.name == "AMOUNT_MEMBERS_3RD_LVL"
-                    )
+                data["amount_members"] = await get_value(
+                    session=session, value_name="AMOUNT_MEMBERS_3RD_LVL"
                 )
-                data["bonus_add_to_income"] = await session.scalar(
-                    select(Value.value_int).where(
-                        Value.name == "BONUS_ADD_TO_INCOME_1ST_LVL"
-                    )
+                data["bonus_add_to_income"] = await get_value(
+                    session=session, value_name="BONUS_ADD_TO_INCOME_2ND_LVL"
                 )
-                data["bonus_discount_for_animal"] = await session.scalar(
-                    select(Value.value_int).where(
-                        Value.name == "BONUS_DISCOUNT_FOR_ANIMAL_2ND_LVL"
-                    )
+                data["bonus_discount_for_animal"] = await get_value(
+                    session=session, value_name="BONUS_DISCOUNT_FOR_ANIMAL_2ND_LVL"
                 )
                 data["next_lvl"] = 3
             case 3:
-                data["bonus_add_to_income"] = await session.scalar(
-                    select(Value.value_int).where(
-                        Value.name == "BONUS_ADD_TO_INCOME_3RD_LVL"
-                    )
+                data["bonus_add_to_income"] = await get_value(
+                    session=session, value_name="BONUS_ADD_TO_INCOME_3RD_LVL"
                 )
-                data["bonus_discount_for_animal"] = await session.scalar(
-                    select(Value.value_int).where(
-                        Value.name == "BONUS_DISCOUNT_FOR_ANIMAL_3RD_LVL"
-                    )
+                data["bonus_discount_for_animal"] = await get_value(
+                    session=session, value_name="BONUS_DISCOUNT_FOR_ANIMAL_3RD_LVL"
                 )
     return data
 
 
 async def get_row_unity_members():
     async with _sessionmaker_for_func() as session:
-        row = await session.scalar(
-            select(Value.value_int).where(Value.name == "ROW_UNITY_MEMBERS")
-        )
+        row = await get_value(session=session, value_name="ROW_UNITY_MEMBERS")
     return row
 
 
 async def get_size_unity_members():
     async with _sessionmaker_for_func() as session:
-        size = await session.scalar(
-            select(Value.value_int).where(Value.name == "SIZE_UNITY_MEMBERS")
-        )
+        size = await get_value(session=session, value_name="SIZE_UNITY_MEMBERS")
     return size
 
 
@@ -162,8 +138,3 @@ async def get_members_name_and_idpk(idpk_unity: int) -> list[tuple[str, int]]:
         members_name = [member.nickname for member in members]
         data = list(zip(members_name, members_idpk))
     return data
-
-
-
-
-
