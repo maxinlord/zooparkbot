@@ -38,7 +38,7 @@ async def get_size_items_for_kb(session: AsyncSession):
 
 async def count_page_items(session: AsyncSession, items: str) -> int:
     decoded_dict: dict = json.loads(items)
-    size_items = await get_size_items_for_kb()
+    size_items = await get_size_items_for_kb(session=session)
     return math.ceil(len(decoded_dict) / size_items)
 
 
