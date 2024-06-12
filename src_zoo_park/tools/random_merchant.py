@@ -66,7 +66,7 @@ async def gen_price(session: AsyncSession) -> int:
 
 
 async def get_weights(session: AsyncSession) -> list:
-    w_str = await get_value(session=session, value_name="WEIGHTS_FOR_RANDOM_MERCHANT")
+    w_str = await get_value(session=session, value_name="WEIGHTS_FOR_RANDOM_MERCHANT", value_type='str')
     weights = [float(w.strip()) for w in w_str.split(",")]
     return weights
 

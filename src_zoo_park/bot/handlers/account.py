@@ -211,6 +211,6 @@ async def process_viewing_recipes(
             description=item.description,
         ),
         reply_markup=await ik_item_activate_menu(
-            await get_status_item(User, data["code_name_item"])
+            await get_status_item(user, data["code_name_item"])
         ),
     )
