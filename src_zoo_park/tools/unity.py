@@ -45,7 +45,7 @@ async def get_unity_name_and_idpk(session: AsyncSession) -> list[tuple[str, int]
 async def count_page_unity(
     session: AsyncSession,
 ) -> int:
-    size = await get_size_unity_for_kb()
+    size = await get_size_unity_for_kb(session=session)
     r = await session.scalars(select(Unity.name))
     len_unity = len(r.all())
     remains = len_unity % size

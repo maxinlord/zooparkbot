@@ -170,12 +170,10 @@ async def buy_one_of_offer(
                             "you_got_this_animal", an=animal.name, aq=part_animals
                         )
                     )
-            await state.set_state(UserState.zoomarket_menu)
-
-            await query.message.answer(await get_text_message("you_lucky"))
-            merchant.price = await gen_price(session=session)
+            merchant.price = await gen_price(session=session, user=user)
             await session.commit()
-
+            await state.set_state(UserState.zoomarket_menu)
+            await query.message.answer(await get_text_message("you_lucky"))
         case "3":
             await query.message.edit_caption(
                 caption=await get_text_message("merchant_choice_animal"),

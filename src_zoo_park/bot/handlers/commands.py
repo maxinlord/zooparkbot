@@ -32,7 +32,10 @@ async def command_reset(
         await message.answer("Пользователь не найден")
         return
     amount = int(args[0])
-    user.usd += amount
-    await session.commit()
     mention = mention_html(id_user=user_to_add.id_user, name=user_to_add.nickname)
-    await message.answer(f"Добавлено {amount} USD игроку {mention}")
+    text = f"Добавлено {amount} USD игроку {user_to_add.nickname}"
+    if amount < 0:
+        text = f"Убавлено {amount} USD у игрока {mention}"
+    user_to_add.usd += amount
+    await session.commit()
+    await message.answer(text)

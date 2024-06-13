@@ -15,7 +15,7 @@ from tools import (
     is_unique_name,
     disable_not_main_window,
     count_page_unity,
-    get_value
+    get_value,
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -52,7 +52,9 @@ async def unity_menu(
             reply_markup=await rk_unity_menu(),
         )
         return
-    PRICE_FOR_CREATE_UNITY = await get_value(session=session, value_name='PRICE_FOR_CREATE_UNITY')
+    PRICE_FOR_CREATE_UNITY = await get_value(
+        session=session, value_name="PRICE_FOR_CREATE_UNITY"
+    )
     await state.update_data(price_fcu=PRICE_FOR_CREATE_UNITY)
     msg = await message.answer(
         text=await get_text_message("unity_options"),
@@ -117,8 +119,12 @@ async def get_name_unity(
     state: FSMContext,
     user: User,
 ):
-    LIMIT_LENGTH_MAX = await get_value(session=session, value_name='NAME_UNITY_LENGTH_MAX')
-    LIMIT_LENGTH_MIN = await get_value(session=session, value_name='NAME_UNITY_LENGTH_MIN')
+    LIMIT_LENGTH_MAX = await get_value(
+        session=session, value_name="NAME_UNITY_LENGTH_MAX"
+    )
+    LIMIT_LENGTH_MIN = await get_value(
+        session=session, value_name="NAME_UNITY_LENGTH_MIN"
+    )
     if len(message.text) > LIMIT_LENGTH_MAX:
         await message.answer(text=await get_text_message("name_unity_too_long"))
         return
@@ -132,7 +138,7 @@ async def get_name_unity(
             )
         )
         return
-    if not await is_unique_name(message.text):
+    if not await is_unique_name(session=session, nickname=message.text):
         await message.answer(text=await get_text_message("nickname_not_unique"))
         return
     data = await state.get_data()
@@ -159,7 +165,7 @@ async def join_to_unity(
     state: FSMContext,
     user: User,
 ):
-    q_page = await count_page_unity()
+    q_page = await count_page_unity(session=session)
     if q_page == 0:
         await query.answer(
             text=await get_text_message("no_unity_to_join"), show_alert=True
@@ -203,12 +209,13 @@ async def process_back_to_menu_all_unity(
     back_to = query.data.split(":")[0]
     match back_to:
         case "to_menu_unity":
+            data = await state.get_data()
             await query.message.edit_text(
                 text=await get_text_message("unity_options"),
-                reply_markup=await ik_unity_options(),
+                reply_markup=await ik_unity_options(data["price_fcu"]),
             )
         case "to_all_unity":
-            q_page = await count_page_unity()
+            q_page = await count_page_unity(session=session)
             await state.update_data(q_page=q_page, page=1)
             await query.message.edit_text(
                 text=await get_text_message("join_to_unity_menu"),
@@ -252,7 +259,9 @@ async def process_send_request(
         text=await get_text_message("request_send"),
         reply_markup=None,
     )
-    MIN_TO_END_REQUEST = await get_value(session=session, value_name='MIN_TO_END_REQUEST')
+    MIN_TO_END_REQUEST = await get_value(
+        session=session, value_name="MIN_TO_END_REQUEST"
+    )
     date_request_end = datetime.now() + timedelta(minutes=MIN_TO_END_REQUEST)
     request = RequestToUnity(
         idpk_user=user.idpk,

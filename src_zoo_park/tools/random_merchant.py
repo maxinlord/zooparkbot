@@ -11,9 +11,10 @@ fake = Faker("ru_RU")
 
 async def create_random_merchant(session: AsyncSession, user: User) -> RandomMerchant:
     """Создание случайного торговца"""
-    r = await session.scalars(select(Animal).where(Animal.code_name.contains("_")))
     MAX_DISCOUNT = await tools.get_value(session=session, value_name="MAX_DISCOUNT")
-    random_animal = random.choice(r.all())
+    random_animal = await tools.get_random_animal(
+        session=session, user_animals=user.animals
+    )
     random_quantity_animals = await tools.gen_quantity_animals(session=session)
     random_discount = random.randint(-MAX_DISCOUNT, MAX_DISCOUNT)
     price_with_discount = calculate_price_with_discount(
@@ -56,6 +57,6 @@ async def gen_price(session: AsyncSession, user: User) -> int:
         session=session, value_name="MIN_RANDOM_PRICE"
     )
     i = await tools.income_(session=session, user=user)
-    MAX_RANDOM_PRICE = MIN_RANDOM_PRICE if i == 0 else i * 60 // 67
+    MAX_RANDOM_PRICE = MIN_RANDOM_PRICE * 3 if i == 0 else i * 12 * 60 // 67
     price = random.randint(MIN_RANDOM_PRICE, MAX_RANDOM_PRICE)
     return price
