@@ -147,7 +147,7 @@ async def buy_one_of_offer(
             await query.message.delete_reply_markup()
             user.usd -= merchant.price
             user.amount_expenses_usd += merchant.price
-            quantity_animals = await gen_quantity_animals(session=session)
+            quantity_animals = await gen_quantity_animals(session=session, user=user)
 
             await state.set_state(UserState.for_while_shell)
             while quantity_animals > 0:

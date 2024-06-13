@@ -131,9 +131,12 @@ async def get_animal_with_random_rarity(session: AsyncSession, animal: str) -> A
     return animal
 
 
-async def gen_quantity_animals(session: AsyncSession) -> int:
+async def gen_quantity_animals(session: AsyncSession, user: User) -> int:
     MAX_QUANTITY_ANIMALS = await tools.get_value(
         session=session, value_name="MAX_QUANTITY_ANIMALS"
     )
+    num = tools.get_numbers_animals(user)
+    if num == 0:
+        MAX_QUANTITY_ANIMALS = 2
     quantity_animals = random.randint(1, MAX_QUANTITY_ANIMALS)
     return quantity_animals
