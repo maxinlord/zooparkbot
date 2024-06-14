@@ -159,7 +159,7 @@ async def get_quantity_rshop(
     await session.commit()
 
 
-@router.callback_query(F.data == "cqa_rshop")
+@router.callback_query(UserState.zoomarket_menu, F.data == "cqa_rshop")
 async def custom_quantity_animals_rshop(
     query: CallbackQuery,
     session: AsyncSession,
