@@ -203,6 +203,7 @@ async def back_to_choice_quantity_rshop(
             description=animal.description,
             price=data["animal_price"],
             income=animal_income,
+            usd=user.usd,
         ),
         reply_markup=await ik_choice_quantity_animals_rshop(
             session=session, animal_price=data["animal_price"]
