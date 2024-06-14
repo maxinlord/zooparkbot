@@ -194,7 +194,7 @@ async def back_to_choice_quantity_rshop(
     )
     unity_idpk = int(user.current_unity.split(":")[-1]) if user.current_unity else None
     animal_income = await get_income_animal(
-        session=session, animal=animal, unity_idpk=unity_idpk
+        session=session, animal=animal, unity_idpk=unity_idpk, items=user.items
     )
     msg = await message.answer(
         text=await get_text_message(
