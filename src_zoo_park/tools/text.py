@@ -31,11 +31,12 @@ async def get_text_message(name: str, **kw) -> str:
         return formatted_text
 
 
-async def _get_or_create_text(session, name):
+async def _get_or_create_text(session: AsyncSession, name):
     text_obj = await session.scalar(select(Text).where(Text.name == name))
     if not text_obj:
         text_obj = Text(name=name)
         session.add(text_obj)
+        await session.commit()
     return text_obj
 
 
@@ -122,54 +123,196 @@ async def factory_text_unity_top(session: AsyncSession) -> str:
 
 
 async def factory_text_main_top(session: AsyncSession, idpk_user: int) -> str:
-    async with _sessionmaker_for_func() as session:
-        total_place_top = await tools.get_value(
-            session=session, value_name="TOTAL_PLACE_TOP"
+    total_place_top = await tools.get_value(
+        session=session, value_name="TOTAL_PLACE_TOP"
+    )
+    users = await session.scalars(select(User))
+    users = users.all()
+    users_income = [
+        (user, await tools.income_(session=session, user=user)) for user in users
+    ]
+    users_income.sort(key=lambda x: x[1], reverse=True)
+
+    async def format_text(user, income, counter, unity_name):
+        pattern = (
+            "pattern_line_top_self_place"
+            if user.idpk == idpk_user
+            else "pattern_line_top_user"
         )
-        users = await session.scalars(select(User))
-        users = users.all()
-        users_income = [
-            (user, await tools.income_(session=session, user=user)) for user in users
-        ]
-        users_income.sort(key=lambda x: x[1], reverse=True)
-
-        async def format_text(user, income, counter, unity_name):
-            pattern = (
-                "pattern_line_top_self_place"
-                if user.idpk == idpk_user
-                else "pattern_line_top_user"
-            )
-            return await tools.get_text_message(
-                pattern,
-                n=user.nickname,
-                i=income,
-                c=counter,
-                u=unity_name or "",
-            )
-
-        text = ""
-        for counter, (user, income) in enumerate(users_income, start=1):
-            unity_idpk = user.current_unity.split(":")[-1] if user.current_unity else None
-            unity = await session.get(Unity, int(unity_idpk)) if unity_idpk else None
-            if counter > total_place_top:
-                break
-            text += await format_text(
-                user, income, counter, unity.name if unity else ""
-            )
-
-        self_place, user_data = next(
-            (place, user_data)
-            for place, user_data in enumerate(users_income, start=1)
-            if user_data[0].idpk == idpk_user
+        return await tools.get_text_message(
+            pattern,
+            n=user.nickname,
+            i=income,
+            c=counter,
+            u=unity_name or "",
         )
-        if self_place > total_place_top:
-            text += await tools.get_text_message(
-                "pattern_line_not_in_top",
-                n=user_data[0].nickname,
-                i=user_data[1],
-                c=self_place,
-            )
-        return text
+
+    text = ""
+    for counter, (user, income) in enumerate(users_income, start=1):
+        unity_idpk = user.current_unity.split(":")[-1] if user.current_unity else None
+        unity = await session.get(Unity, int(unity_idpk)) if unity_idpk else None
+        if counter > total_place_top:
+            break
+        text += await format_text(user, income, counter, unity.name if unity else "")
+
+    self_place, user_data = next(
+        (place, user_data)
+        for place, user_data in enumerate(users_income, start=1)
+        if user_data[0].idpk == idpk_user
+    )
+    if self_place > total_place_top:
+        text += await tools.get_text_message(
+            "pattern_line_not_in_top",
+            n=user_data[0].nickname,
+            i=user_data[1],
+            c=self_place,
+        )
+    return text
+
+
+async def factory_text_main_top_by_money(session: AsyncSession, idpk_user: int) -> str:
+    total_place_top = await tools.get_value(
+        session=session, value_name="TOTAL_PLACE_TOP"
+    )
+    users = await session.scalars(select(User))
+    users = users.all()
+    users.sort(key=lambda x: x.usd, reverse=True)
+
+    async def format_text(user, money, counter, unity_name):
+        pattern = (
+            "pattern_line_top_self_place_money"
+            if user.idpk == idpk_user
+            else "pattern_line_top_user_money"
+        )
+        return await tools.get_text_message(
+            pattern,
+            n=user.nickname,
+            m=money,
+            c=counter,
+            u=unity_name or "",
+        )
+
+    text = ""
+    for counter, user in enumerate(users, start=1):
+        unity_idpk = user.current_unity.split(":")[-1] if user.current_unity else None
+        unity = await session.get(Unity, int(unity_idpk)) if unity_idpk else None
+        if counter > total_place_top:
+            break
+        text += await format_text(user, user.usd, counter, unity.name if unity else "")
+
+    self_place, user = next(
+        (place, user)
+        for place, user in enumerate(users, start=1)
+        if user.idpk == idpk_user
+    )
+    if self_place > total_place_top:
+        text += await tools.get_text_message(
+            "pattern_line_not_in_top_money",
+            n=user.nickname,
+            m=user.usd,
+            c=self_place,
+        )
+    return text
+
+
+async def factory_text_main_top_by_animals(
+    session: AsyncSession, idpk_user: int
+) -> str:
+    total_place_top = await tools.get_value(
+        session=session, value_name="TOTAL_PLACE_TOP"
+    )
+    users = await session.scalars(select(User))
+    users = users.all()
+    users_animals = [
+        (user, await tools.get_total_number_animals(self=user)) for user in users
+    ]
+    users_animals.sort(key=lambda x: x[1], reverse=True)
+
+    async def format_text(user, animals, counter, unity_name):
+        pattern = (
+            "pattern_line_top_self_place_animals"
+            if user.idpk == idpk_user
+            else "pattern_line_top_user_animals"
+        )
+        return await tools.get_text_message(
+            pattern,
+            n=user.nickname,
+            a=animals,
+            c=counter,
+            u=unity_name or "",
+        )
+
+    text = ""
+    for counter, (user, animals) in enumerate(users_animals, start=1):
+        unity_idpk = user.current_unity.split(":")[-1] if user.current_unity else None
+        unity = await session.get(Unity, int(unity_idpk)) if unity_idpk else None
+        if counter > total_place_top:
+            break
+        text += await format_text(user, animals, counter, unity.name if unity else "")
+
+    self_place, user_data = next(
+        (place, user_data)
+        for place, user_data in enumerate(users_animals, start=1)
+        if user_data[0].idpk == idpk_user
+    )
+    if self_place > total_place_top:
+        text += await tools.get_text_message(
+            "pattern_line_not_in_top",
+            n=user_data[0].nickname,
+            a=user_data[1],
+            c=self_place,
+        )
+    return text
+
+
+async def factory_text_main_top_by_referrals(
+    session: AsyncSession, idpk_user: int
+) -> str:
+    total_place_top = await tools.get_value(
+        session=session, value_name="TOTAL_PLACE_TOP"
+    )
+    users = await session.scalars(select(User))
+    users = users.all()
+    users_referrals = [
+        (user, await tools.get_referrals(session=session, user=user)) for user in users
+    ]
+    users_referrals.sort(key=lambda x: x[1], reverse=True)
+
+    async def format_text(user, ref, counter, unity_name):
+        pattern = (
+            "pattern_line_top_self_place_referrals"
+            if user.idpk == idpk_user
+            else "pattern_line_top_user_referrals"
+        )
+        return await tools.get_text_message(
+            pattern,
+            n=user.nickname,
+            r=ref,
+            c=counter,
+            u=unity_name or "",
+        )
+
+    text = ""
+    for counter, (user, ref) in enumerate(users_referrals, start=1):
+        unity_idpk = user.current_unity.split(":")[-1] if user.current_unity else None
+        unity = await session.get(Unity, int(unity_idpk)) if unity_idpk else None
+        if counter > total_place_top:
+            break
+        text += await format_text(user, ref, counter, unity.name if unity else "")
+
+    self_place, user_data = next(
+        (place, user_data)
+        for place, user_data in enumerate(users_referrals, start=1)
+        if user_data[0].idpk == idpk_user
+    )
+    if self_place > total_place_top:
+        text += await tools.get_text_message(
+            "pattern_line_not_in_top",
+            n=user_data[0].nickname,
+            r=user_data[1],
+            c=self_place,
+        )
+    return text
 
 
 async def factory_text_top_mini_game(session: AsyncSession, game: Game):

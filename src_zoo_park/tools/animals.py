@@ -1,6 +1,6 @@
 import random
 from sqlalchemy import select
-from db import Animal, Unity, User
+from db import Animal, Unity, User, Item
 
 import json
 import tools
@@ -60,9 +60,16 @@ async def _get_unity_data_for_price_animal(session: AsyncSession, idpk_unity: in
     return bonus
 
 
-async def get_income_animal(session: AsyncSession, animal: Animal, unity_idpk: int):
+async def _get_income_animal(
+    session: AsyncSession,
+    animal: Animal,
+    unity_idpk: int,
+):
+    animal_income = animal.income
     if unity_idpk:
-        unity_idpk_top, animal_top = await tools.get_top_unity_by_animal(session=session)
+        unity_idpk_top, animal_top = await tools.get_top_unity_by_animal(
+            session=session
+        )
         if (
             unity_idpk_top == unity_idpk
             and animal.code_name == list(animal_top.keys())[0]
@@ -70,9 +77,33 @@ async def get_income_animal(session: AsyncSession, animal: Animal, unity_idpk: i
             bonus = await tools.get_value(
                 session=session, value_name="BONUS_FOR_AMOUNT_ANIMALS"
             )
-            animal_income = animal.income * (1 + (bonus / 100))
-            return int(animal_income)
-    return animal.income
+            animal_income = animal_income * (1 + (bonus / 100))
+    return int(animal_income)
+
+
+async def get_income_animal(
+    session: AsyncSession,
+    animal: Animal,
+    unity_idpk: int,
+    items: str,
+):
+    animal_income = animal.income
+    if await tools.get_status_item(items=items, code_name_item="item_1"):
+        item = await session.scalar(select(Item).where(Item.code_name == "item_1"))
+        animal_income = animal_income * (1 + item.value / 100)
+    if unity_idpk:
+        unity_idpk_top, animal_top = await tools.get_top_unity_by_animal(
+            session=session
+        )
+        if (
+            unity_idpk_top == unity_idpk
+            and animal.code_name == list(animal_top.keys())[0]
+        ):
+            bonus = await tools.get_value(
+                session=session, value_name="BONUS_FOR_AMOUNT_ANIMALS"
+            )
+            animal_income = animal_income * (1 + (bonus / 100))
+    return int(animal_income)
 
 
 async def get_dict_animals(self: User) -> dict:

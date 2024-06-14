@@ -39,3 +39,5 @@ async def command_reset(
     user_to_add.usd += amount
     await session.commit()
     await message.answer(text)
+    mention = mention_html(id_user=user.id_user, name=f"{amount} USD")
+    await message.bot.send_message(chat_id=user_to_add.id_user, text=mention)

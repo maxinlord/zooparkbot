@@ -29,5 +29,6 @@ from .options_menu import (
     ik_get_money,
     ik_get_money_one_piece,
     ik_button_play,
-    ik_watch_results_game
+    ik_watch_results_game,
+    ik_choice_type_top
 )

@@ -12,6 +12,7 @@ from .animals import (
     get_random_animal,
     get_animal_with_random_rarity,
     gen_quantity_animals,
+    _get_income_animal,
 )
 
 from .aviaries import (
@@ -23,6 +24,7 @@ from .aviaries import (
     get_price_aviaries
 )
 
+from .bank import get_rate
 from .base import gen_key
 
 from .bonus import (
@@ -57,6 +59,7 @@ from .nickname import (
 )
 from .photo import get_photo
 from .random_merchant import create_random_merchant, get_weights_rmerchant, gen_price
+from .referrals import get_referrals
 
 from .text import (
     get_text_message,
@@ -66,6 +69,9 @@ from .text import (
     factory_text_main_top,
     factory_text_unity_top,
     factory_text_top_mini_game,
+    factory_text_main_top_by_money,
+    factory_text_main_top_by_animals,
+    factory_text_main_top_by_referrals
 )
 
 from .transfer import in_used, add_user_to_used

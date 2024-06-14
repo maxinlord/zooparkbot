@@ -25,8 +25,8 @@ async def unity_members(
     state: FSMContext,
     user: User,
 ):
-    tops = await factory_text_unity_top()
-    unity_idpk, animal_dict = await get_top_unity_by_animal()
+    tops = await factory_text_unity_top(session=session)
+    unity_idpk, animal_dict = await get_top_unity_by_animal(session=session)
     unity = await session.get(Unity, unity_idpk)
     code_name_animal, amount_animal = list(animal_dict.items())[0]
     animal_name = await session.scalar(

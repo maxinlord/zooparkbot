@@ -44,7 +44,7 @@ async def count_page_items(session: AsyncSession, items: str) -> int:
 
 async def get_status_item(items: str, code_name_item: str):
     decoded_dict: dict = json.loads(items)
-    return decoded_dict[code_name_item]
+    return decoded_dict.get(code_name_item)
 
 
 async def add_item(

@@ -183,7 +183,7 @@ async def process_viewing_item(
             description=item.description,
         ),
         reply_markup=await ik_item_activate_menu(
-            await get_status_item(user, code_name_item)
+            await get_status_item(items=user.items, code_name_item=code_name_item)
         ),
     )
 
@@ -200,10 +200,10 @@ async def process_viewing_recipes(
     data = await state.get_data()
     match query.data:
         case "item_activate":
-            await deactivate_all_items(user)
-            await activate_item(user, data["code_name_item"])
+            await deactivate_all_items(session=session, self=user)
+            await activate_item(session=session, self=user, code_name_item=data["code_name_item"])
         case "item_deactivate":
-            await activate_item(user, data["code_name_item"], False)
+            await activate_item(session=session, self=user, code_name_item=data["code_name_item"], is_active=False)
     await session.commit()
     item = await session.scalar(
         select(Item).where(Item.code_name == data["code_name_item"])
@@ -215,6 +215,6 @@ async def process_viewing_recipes(
             description=item.description,
         ),
         reply_markup=await ik_item_activate_menu(
-            await get_status_item(user, data["code_name_item"])
+            await get_status_item(items=user.items, code_name_item=data["code_name_item"])
         ),
     )

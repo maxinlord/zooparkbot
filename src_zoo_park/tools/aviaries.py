@@ -1,5 +1,5 @@
 from sqlalchemy import select
-from db import Aviary, User
+from db import Aviary, User, Item
 import json
 import tools
 
@@ -74,12 +74,20 @@ async def add_aviary(
 
 
 async def get_price_aviaries(
-    session: AsyncSession, aviaries: str, code_name_aviary: str
+    session: AsyncSession, aviaries: str, code_name_aviary: str, items: str
 ) -> int:
-    decoded_dict: dict = json.loads(aviaries)
-    if aviaries and decoded_dict.get(code_name_aviary):
-        return decoded_dict[code_name_aviary]["price"]
+    aviaries: dict = json.loads(aviaries)
+    items: dict = json.loads(items)
+    aviary_price = 0
+    if aviaries.get(code_name_aviary):
+        aviary_price = aviaries[code_name_aviary]["price"]
     else:
-        return await session.scalar(
+        aviary_price = await session.scalar(
             select(Aviary.price).where(Aviary.code_name == code_name_aviary)
         )
+    if items.get("item_3"):
+        value = await session.scalar(
+            select(Item.value).where(Item.code_name == "item_3")
+        )
+        aviary_price = aviary_price * (1 - value / 100)
+    return int(aviary_price)

@@ -554,3 +554,21 @@ async def ik_watch_results_game(link_on_message: str):
     builder.button(text=await tools.get_text_button("watch_result"), url=link_on_message)
     builder.adjust(1)
     return builder.as_markup()
+
+
+async def ik_choice_type_top(chosen: str):
+    builder = InlineKeyboardBuilder()
+    button_types = [
+        ("top_income", "top_income"),
+        ("top_money", "top_money"),
+        ("top_animals", "top_animals"),
+        ("top_referrals", "top_referrals")
+    ]
+    
+    for button_type, callback_data in button_types:
+        if chosen != button_type:
+            builder.button(
+                text=await tools.get_text_button(button_type), callback_data=callback_data
+            )
+    builder.adjust(1)
+    return builder.as_markup()

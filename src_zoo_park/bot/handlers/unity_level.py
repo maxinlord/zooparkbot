@@ -31,7 +31,7 @@ async def unity_level(
     await disable_not_main_window(data=await state.get_data(), message=message)
     data = await state.get_data()
     unity = await session.get(Unity, data["idpk_unity"])
-    data_for_text = await get_data_by_lvl_unity(unity.level)
+    data_for_text = await get_data_by_lvl_unity(session=session, lvl=unity.level)
     msg = await message.answer(
         text=await get_text_message(f"unity_level_{unity.level}", **data_for_text),
         reply_markup=await ik_update_level_unity(),

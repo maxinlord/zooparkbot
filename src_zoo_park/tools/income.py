@@ -1,6 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from db import User, Animal, Unity
+from db import User, Animal, Unity, Item
 import tools
 import json
 
@@ -11,6 +11,9 @@ async def income_(session: AsyncSession, user: User):
     income = await income_from_animal(
         session=session, animals=animals, unity_idpk=unity_idpk
     )
+    if await tools.get_status_item(items=user.items, code_name_item="item_1"):
+        item = await session.scalar(select(Item).where(Item.code_name == "item_1"))
+        income = income * (1 + item.value / 100)
     if unity_idpk:
         unity_data = await get_unity_data_for_income(
             session=session, idpk_unity=unity_idpk
@@ -24,11 +27,13 @@ async def income_from_animal(session: AsyncSession, animals: dict, unity_idpk: i
     income = 0
     for animal, quantity in animals.items():
         animal = await session.scalar(select(Animal).where(Animal.code_name == animal))
-        animal_income = await tools.get_income_animal(
-            session=session, animal=animal, unity_idpk=unity_idpk
+        animal_income = await tools._get_income_animal(
+            session=session,
+            animal=animal,
+            unity_idpk=unity_idpk,
         )
         income += animal_income * quantity
-    return income
+    return int(income)
 
 
 async def get_unity_data_for_income(session: AsyncSession, idpk_unity: int):
@@ -43,4 +48,3 @@ async def get_unity_data_for_income(session: AsyncSession, idpk_unity: int):
             session=session, value_name="BONUS_ADD_TO_INCOME_3RD_LVL"
         )
     return data
-

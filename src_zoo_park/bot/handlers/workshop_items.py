@@ -105,7 +105,7 @@ async def buy_item(
     await add_to_amount_expenses_currency(
         self=user, currency=item.currency, amount=item.price
     )
-    await add_item(self=user, code_name_item=item.code_name)
+    await add_item(session=session, self=user, code_name_item=item.code_name)
 
     await session.commit()
     await query.answer(

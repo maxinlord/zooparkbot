@@ -82,7 +82,9 @@ async def get_rarity_rshop(
     await state.update_data(
         animal_price=animal_price, animal=data["animal"], rarity=rarity
     )
-    animal_income = await get_income_animal(session=session,animal=animal, unity_idpk=unity_idpk)
+    animal_income = await get_income_animal(
+        session=session, animal=animal, unity_idpk=unity_idpk, items=user.items
+    )
     await query.message.edit_text(
         text=await get_text_message(
             "choice_quantity_rarity_shop_menu",
@@ -92,7 +94,9 @@ async def get_rarity_rshop(
             income=animal_income,
             usd=user.usd,
         ),
-        reply_markup=await ik_choice_quantity_animals_rshop(session=session, animal_price=animal_price),
+        reply_markup=await ik_choice_quantity_animals_rshop(
+            session=session, animal_price=animal_price
+        ),
     )
 
 
@@ -189,7 +193,9 @@ async def back_to_choice_quantity_rshop(
         select(Animal).where(Animal.code_name == data["animal"] + data["rarity"])
     )
     unity_idpk = int(user.current_unity.split(":")[-1]) if user.current_unity else None
-    animal_income = await get_income_animal(session=session, animal=animal, unity_idpk=unity_idpk)
+    animal_income = await get_income_animal(
+        session=session, animal=animal, unity_idpk=unity_idpk
+    )
     msg = await message.answer(
         text=await get_text_message(
             "choice_quantity_rarity_shop_menu",
@@ -198,8 +204,8 @@ async def back_to_choice_quantity_rshop(
             price=data["animal_price"],
             income=animal_income,
         ),
-        reply_markup=await ik_choice_quantity_animals_rshop(session=session,
-            animal_price=data["animal_price"]
+        reply_markup=await ik_choice_quantity_animals_rshop(
+            session=session, animal_price=data["animal_price"]
         ),
     )
     await state.update_data(active_window=msg.message_id)

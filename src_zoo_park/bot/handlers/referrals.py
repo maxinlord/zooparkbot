@@ -10,7 +10,8 @@ from tools import (
     get_total_number_seats,
     get_remain_seats,
     income_,
-    get_total_number_animals
+    get_total_number_animals,
+    get_referrals,
 )
 from bot.filters import GetTextButton
 from bot.states import UserState
@@ -26,10 +27,7 @@ async def referrals(
     state: FSMContext,
     user: User,
 ):
-    row_data = await session.scalars(
-        select(User.idpk).where(User.id_referrer == user.idpk)
-    )
-    quantity_referrals = len(row_data.all())
+    quantity_referrals = await get_referrals(session=session, user=user)
     await query.message.edit_text(
         text=await get_text_message(
             "info_about_referrals",
@@ -57,13 +55,16 @@ async def back_to_account_menu_r(
             pawc=user.paw_coins,
             animals=user.animals,
             aviaries=user.aviaries,
-            total_places=await get_total_number_seats(session=session, aviaries=user.aviaries),
-            remain_places=await get_remain_seats(session=session,
+            total_places=await get_total_number_seats(
+                session=session, aviaries=user.aviaries
+            ),
+            remain_places=await get_remain_seats(
+                session=session,
                 aviaries=user.aviaries,
                 amount_animals=await get_total_number_animals(self=user),
             ),
             items=user.items,
-            income=await income_(session=session,user=user),
+            income=await income_(session=session, user=user),
         ),
         reply_markup=await ik_account_menu(),
     )

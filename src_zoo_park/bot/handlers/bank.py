@@ -4,7 +4,7 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from db import User
-from tools import get_text_message, get_value
+from tools import get_text_message, get_value, get_rate
 from bot.states import UserState
 from bot.keyboards import (
     ik_bank,
@@ -25,7 +25,7 @@ async def bank(
     state: FSMContext,
     user: User,
 ):
-    rate = await get_value(session=session, value_name='RATE_RUB_USD', cache_=False)
+    rate = await get_rate(session=session, items=user.items)
     time_to_update_bank = 60 - datetime.now().second
     await message.answer(
         text=await get_text_message(
@@ -43,7 +43,7 @@ async def update_bank(
     user: User,
 ):
     await query.answer(cache_time=1)
-    rate = await get_value(session=session, value_name='RATE_RUB_USD', cache_=False)
+    rate = await get_rate(session=session, items=user.items)
     time_to_update_bank = 60 - datetime.now().second
     with contextlib.suppress(Exception):
         await query.message.edit_text(
@@ -61,7 +61,7 @@ async def exchange_bank(
     state: FSMContext,
     user: User,
 ):
-    rate = await get_value(session=session, value_name='RATE_RUB_USD', cache_=False)
+    rate = await get_rate(session=session, items=user.items)
     await state.update_data(rate=rate)
     if user.rub < rate:
         await query.answer(await get_text_message("no_money"), show_alert=True)
@@ -115,7 +115,7 @@ async def back_to_bank(
         text=await get_text_message("back_to_bank"), reply_markup=await rk_main_menu()
     )
     await state.set_state(UserState.main_menu)
-    rate = await get_value(session=session, value_name='RATE_RUB_USD', cache_=False)
+    rate = await get_rate(session=session, items=user.items)
     time_to_update_bank = 60 - datetime.now().second
     await message.answer(
         text=await get_text_message(
