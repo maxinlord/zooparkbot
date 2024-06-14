@@ -76,7 +76,7 @@ async def distribution_back_witems(
     match back_to:
         case "to_witems_menu":
             await query.message.edit_text(
-                text=await get_text_message("workshop_items_menu"),
+                text=await get_text_message("workshop_items_menu", usd=user.usd),
                 reply_markup=await ik_choice_item(session=session),
             )
 
