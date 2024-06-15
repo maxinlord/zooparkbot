@@ -95,15 +95,15 @@ async def gen_plot(
 
 async def get_plot(session: AsyncSession, type: str):
     config = {
-        "income": ("royalblue", "USD", "Income", get_top_income_data),
+        "income": ("royalblue", "Доход", "Игроки", get_top_income_data),
         "referrals": (
             "mediumpurple",
-            "Referrals",
-            "Referrals",
+            "Рефералы",
+            "Игроки",
             get_top_referrals_data,
         ),
-        "animals": ("indianred", "Animals", "Animals", get_top_animals_data),
-        "money": ("darkgreen", "USD", "Money", get_top_money_data),
+        "animals": ("indianred", "Животные", "Игроки", get_top_animals_data),
+        "money": ("darkgreen", "Доллары", "Игроки", get_top_money_data),
     }
 
     if type in config:
