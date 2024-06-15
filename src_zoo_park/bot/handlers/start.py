@@ -200,7 +200,7 @@ async def getting_nickname(
             text=await get_text_message("nickname_has_special_characters", chars=chars)
         )
         return
-    if not await is_unique_nickname(message.text):
+    if not await is_unique_nickname(session=session, nickname=message.text):
         await message.answer(text=await get_text_message("nickname_not_unique"))
         return
     data = await state.get_data()
