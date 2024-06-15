@@ -50,7 +50,7 @@ async def update_unity_level(
     unity = await session.get(Unity, data["idpk_unity"])
     match unity.level:
         case 0:
-            pass_to_up = await check_condition_1st_lvl(unity=unity)
+            pass_to_up = await check_condition_1st_lvl(session=session, unity=unity)
             if not pass_to_up:
                 await query.answer(
                     text=await get_text_message("conditions_are_not_met"),
@@ -59,7 +59,7 @@ async def update_unity_level(
                 return
             unity.level = 1
         case 1:
-            pass_to_up = await check_condition_2nd_lvl(unity=unity)
+            pass_to_up = await check_condition_2nd_lvl(session=session, unity=unity)
             if not pass_to_up:
                 await query.answer(
                     text=await get_text_message("conditions_are_not_met"),
@@ -68,7 +68,7 @@ async def update_unity_level(
                 return
             unity.level = 2
         case 2:
-            pass_to_up = await check_condition_3rd_lvl(unity=unity)
+            pass_to_up = await check_condition_3rd_lvl(session=session, unity=unity)
             if not pass_to_up:
                 await query.answer(
                     text=await get_text_message("conditions_are_not_met"),
@@ -84,7 +84,7 @@ async def update_unity_level(
             )
             return
     await session.commit()
-    data_for_text = await get_data_by_lvl_unity(unity.level)
+    data_for_text = await get_data_by_lvl_unity(session=session, lvl=unity.level)
     await query.message.edit_text(
         text=await get_text_message(f"unity_level_{unity.level}", **data_for_text),
         reply_markup=await ik_update_level_unity(),
