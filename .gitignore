@@ -156,3 +156,4 @@ tempCodeRunnerFile.py
 alembic.ini
 .vscode/
 alembic/
+*.png
