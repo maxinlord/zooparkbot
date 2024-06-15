@@ -116,7 +116,7 @@ async def get_size_unity_members(session: AsyncSession):
 
 
 async def count_page_unity_members(session: AsyncSession, idpk_unity: int) -> int:
-    size = await get_size_unity_members()
+    size = await get_size_unity_members(session=session)
     unity = await session.get(Unity, idpk_unity)
     len_unity = unity.get_number_members()
     remains = len_unity % size
