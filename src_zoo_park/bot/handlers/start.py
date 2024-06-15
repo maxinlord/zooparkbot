@@ -187,8 +187,8 @@ async def command_start(
 async def getting_nickname(
     message: Message, state: FSMContext, session: AsyncSession
 ) -> None:
-    LIMIT_LENGTH_MAX = await get_value(session=session, name="NICKNAME_LENGTH_MAX")
-    LIMIT_LENGTH_MIN = await get_value(session=session, name="NICKNAME_LENGTH_MIN")
+    LIMIT_LENGTH_MAX = await get_value(session=session, value_name="NICKNAME_LENGTH_MAX")
+    LIMIT_LENGTH_MIN = await get_value(session=session, value_name="NICKNAME_LENGTH_MIN")
     if len(message.text) > LIMIT_LENGTH_MAX:
         await message.answer(text=await get_text_message("nickname_too_long"))
         return
