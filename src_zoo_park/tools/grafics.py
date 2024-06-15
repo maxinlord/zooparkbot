@@ -23,9 +23,9 @@ async def remove_file_plot(pattern: str):
 async def get_top_income_data(session: AsyncSession):
     r = await session.scalars(select(User))
     data = [(i.nickname, await tools.income_(session=session, user=i)) for i in r.all()]
-    data.sort(key=lambda x: x[1])
+    data.sort(key=lambda x: x[1], reverse=True)
     data = [i for c, i in enumerate(data) if c < 10]
-    return data
+    return data[::-1]
 
 
 async def get_top_referrals_data(session: AsyncSession):
@@ -34,25 +34,25 @@ async def get_top_referrals_data(session: AsyncSession):
         (i.nickname, await tools.get_referrals(session=session, user=i))
         for i in r.all()
     ]
-    data.sort(key=lambda x: x[1])
+    data.sort(key=lambda x: x[1], reverse=True)
     data = [i for c, i in enumerate(data) if c < 10]
-    return data
+    return data[::-1]
 
 
 async def get_top_animals_data(session: AsyncSession):
     r = await session.scalars(select(User))
     data = [(i.nickname, await tools.get_total_number_animals(self=i)) for i in r.all()]
-    data.sort(key=lambda x: x[1])
+    data.sort(key=lambda x: x[1], reverse=True)
     data = [i for c, i in enumerate(data) if c < 10]
-    return data
+    return data[::-1]
 
 
 async def get_top_money_data(session: AsyncSession):
     r = await session.scalars(select(User))
     data = [(i.nickname, i.usd) for i in r.all()]
-    data.sort(key=lambda x: x[1])
+    data.sort(key=lambda x: x[1], reverse=True)
     data = [i for c, i in enumerate(data) if c < 10]
-    return data
+    return data[::-1]
 
 
 async def gen_plot(
