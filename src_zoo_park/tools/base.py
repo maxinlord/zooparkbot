@@ -1,5 +1,7 @@
+from sqlalchemy.ext.asyncio import AsyncSession
 import string
 import random
+import tools
 
 
 def gen_key(length):
@@ -8,4 +10,9 @@ def gen_key(length):
     )
 
 
-# def get_all_users()
+async def get_rates_calculator(session: AsyncSession):
+    rates = await tools.get_value(
+        session=session, value_name="RATES_CALCULATOR", value_type="str"
+    )
+    rates = [i.strip() for i in rates.split(",")]
+    return rates

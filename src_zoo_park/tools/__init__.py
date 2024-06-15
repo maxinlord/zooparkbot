@@ -25,7 +25,7 @@ from .aviaries import (
 )
 
 from .bank import get_rate
-from .base import gen_key
+from .base import gen_key, get_rates_calculator
 
 from .bonus import (
     referral_bonus,

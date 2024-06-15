@@ -30,7 +30,9 @@ async def ik_merchant_menu(
         text=await tools.get_text_button("second_offer", p=price),
         callback_data="2:offer",
     )
-    builder.button(text=await tools.get_text_button("third_offer"), callback_data="3:offer")
+    builder.button(
+        text=await tools.get_text_button("third_offer"), callback_data="3:offer"
+    )
     builder.adjust(1)
     return builder.as_markup()
 
@@ -99,7 +101,8 @@ async def ik_choice_rarity_rshop():
     for rarity, color_rarity in zip(rarities, colors_rarities):
         builder.button(text=color_rarity, callback_data=f"{rarity}:rshop_choice_rarity")
     builder.button(
-        text=await tools.get_text_button("back"), callback_data="to_choice_animal:back_rshop"
+        text=await tools.get_text_button("back"),
+        callback_data="to_choice_animal:back_rshop",
     )
     builder.adjust(4, 1)
     return builder.as_markup()
@@ -128,13 +131,15 @@ async def ik_choice_quantity_animals_rshop(session: AsyncSession, animal_price: 
     return builder.as_markup()
 
 
-
 async def ik_buy_item(bought: bool):
     builder = InlineKeyboardBuilder()
     if not bought:
-        builder.button(text=await tools.get_text_button("buy_item"), callback_data="buy_item")
+        builder.button(
+            text=await tools.get_text_button("buy_item"), callback_data="buy_item"
+        )
     builder.button(
-        text=await tools.get_text_button("back"), callback_data="to_witems_menu:back_witems"
+        text=await tools.get_text_button("back"),
+        callback_data="to_witems_menu:back_witems",
     )
     builder.adjust(1)
     return builder.as_markup()
@@ -191,7 +196,9 @@ async def ik_bank():
     builder.button(
         text=await tools.get_text_button("exchange"), callback_data="exchange_bank"
     )
-    builder.button(text=await tools.get_text_button("update"), callback_data="update_bank")
+    builder.button(
+        text=await tools.get_text_button("update"), callback_data="update_bank"
+    )
     builder.adjust(1)
     return builder.as_markup()
 
@@ -208,7 +215,8 @@ async def ik_account_menu():
     builder = InlineKeyboardBuilder()
     builder.button(text=await tools.get_text_button("items"), callback_data="items")
     builder.button(
-        text=await tools.get_text_button("referrals_system"), callback_data="referrals_system"
+        text=await tools.get_text_button("referrals_system"),
+        callback_data="referrals_system",
     )
     builder.adjust(1)
     return builder.as_markup()
@@ -257,9 +265,12 @@ async def ik_menu_items(
         text=await tools.get_text_button("arrow_left"),
         callback_data="left",
     )
-    builder.button(text=await tools.get_text_button("arrow_right"), callback_data="right")
     builder.button(
-        text=await tools.get_text_button("back"), callback_data="to_account:back_account"
+        text=await tools.get_text_button("arrow_right"), callback_data="right"
+    )
+    builder.button(
+        text=await tools.get_text_button("back"),
+        callback_data="to_account:back_account",
     )
     builder.adjust(*row, 2, 1)
 
@@ -345,7 +356,8 @@ async def ik_menu_unity_to_join(
         text=await tools.get_text_button("arrow_right"), callback_data="right:unity"
     )
     builder.button(
-        text=await tools.get_text_button("back"), callback_data="to_menu_unity:back_unity"
+        text=await tools.get_text_button("back"),
+        callback_data="to_menu_unity:back_unity",
     )
     builder.adjust(*row, 2, 1)
 
@@ -417,7 +429,8 @@ async def ik_menu_unity_members(
         callback_data="left:unity_member",
     )
     builder.button(
-        text=await tools.get_text_button("arrow_right"), callback_data="right:unity_member"
+        text=await tools.get_text_button("arrow_right"),
+        callback_data="right:unity_member",
     )
     builder.adjust(*row, 2, 1)
 
@@ -451,14 +464,17 @@ async def ik_get_bonus(sub_on_chat: bool, sub_on_channel: bool):
     builder = InlineKeyboardBuilder()
     if not sub_on_chat:
         builder.button(
-            text=await tools.get_text_button("get_bonus_chat"), callback_data="get_bonus_chat"
+            text=await tools.get_text_button("get_bonus_chat"),
+            callback_data="get_bonus_chat",
         )
     if not sub_on_channel:
         builder.button(
             text=await tools.get_text_button("get_bonus_channel"),
             callback_data="get_bonus_channel",
         )
-    builder.button(text=await tools.get_text_button("get_bonus"), callback_data="get_bonus")
+    builder.button(
+        text=await tools.get_text_button("get_bonus"), callback_data="get_bonus"
+    )
     builder.adjust(1)
     return builder.as_markup()
 
@@ -551,7 +567,9 @@ async def ik_button_play(game_type: str, total_moves: int, remain_moves: int):
 
 async def ik_watch_results_game(link_on_message: str):
     builder = InlineKeyboardBuilder()
-    builder.button(text=await tools.get_text_button("watch_result"), url=link_on_message)
+    builder.button(
+        text=await tools.get_text_button("watch_result"), url=link_on_message
+    )
     builder.adjust(1)
     return builder.as_markup()
 
@@ -562,13 +580,31 @@ async def ik_choice_type_top(chosen: str):
         ("top_income", "top_income"),
         ("top_money", "top_money"),
         ("top_animals", "top_animals"),
-        ("top_referrals", "top_referrals")
+        ("top_referrals", "top_referrals"),
     ]
-    
+
     for button_type, callback_data in button_types:
         if chosen != button_type:
             builder.button(
-                text=await tools.get_text_button(button_type), callback_data=callback_data
+                text=await tools.get_text_button(button_type),
+                callback_data=callback_data,
             )
     builder.adjust(1)
+    return builder.as_markup()
+
+
+async def ik_choice_rate_calculator(
+    session: AsyncSession, current_rate: str | int = None
+):
+    builder = InlineKeyboardBuilder()
+    emoji = "🔘"
+    for rate in await tools.get_rates_calculator(session=session):
+        is_chosen = emoji if current_rate and str(current_rate) == rate else ""
+        builder.button(
+            text=await tools.get_text_button(
+                "calculator", rate=int(rate), is_chosen=is_chosen
+            ),
+            callback_data=f"{rate}:calculator",
+        )
+    builder.adjust(3)
     return builder.as_markup()
