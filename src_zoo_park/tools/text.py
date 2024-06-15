@@ -100,7 +100,7 @@ def mention_html(id_user: int, name: str) -> str:
 
 
 def mention_html_by_username(username: str, name: str) -> str:
-    return f'<a href="http://t.me/{username}">{name}</a>'
+    return f'<a href="http://t.me/{username}">{name}</a>' if username else name
 
 
 async def factory_text_unity_top(session: AsyncSession) -> str:

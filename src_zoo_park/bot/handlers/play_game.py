@@ -27,6 +27,7 @@ import asyncio
 
 
 router = Router()
+petard_emoji_effect = "5046509860389126442"
 
 
 async def handle_game_end(
@@ -39,7 +40,7 @@ async def handle_game_end(
     await state.set_state(UserState.main_menu)
 
 
-async def handle_game_winner(query, session, game, data):
+async def handle_game_winner(query: CallbackQuery, session, game, data):
     idpk_winer = await get_user_where_max_score(session=session, game=game)
     winer = await session.get(User, idpk_winer)
     additional_text = (
@@ -57,6 +58,7 @@ async def handle_game_winner(query, session, game, data):
             "game_winer_message",
             award=data["award"],
         ),
+        message_effect_id=petard_emoji_effect,
     )
     return additional_text
 

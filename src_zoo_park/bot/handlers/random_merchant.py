@@ -33,7 +33,7 @@ import asyncio
 
 flags = {"throttling_key": "default"}
 router = Router()
-
+petard_emoji_effect = '5046509860389126442'
 
 @router.message(UserState.zoomarket_menu, GetTextButton("random_merchant"), flags=flags)
 async def random_merchant_menu(
@@ -173,7 +173,7 @@ async def buy_one_of_offer(
             merchant.price = await gen_price(session=session, user=user)
             await session.commit()
             await state.set_state(UserState.zoomarket_menu)
-            await query.message.answer(await get_text_message("you_lucky"))
+            await query.message.answer(await get_text_message("you_lucky"), message_effect_id=petard_emoji_effect)
         case "3":
             await query.message.edit_caption(
                 caption=await get_text_message("merchant_choice_animal"),

@@ -27,11 +27,12 @@ async def photo_catch(message: Message, session: AsyncSession) -> None:
 
 @router.message()
 async def any_unknown_message(message: Message, state: FSMContext) -> None:
+    print(message.effect_id)
     await message.answer(text=await get_text_message("answer_on_unknown_message"))
 
-@router.channel_post()
-async def any_unknown_channel_post(message: Message) -> None:
-    print(message.chat.id)
+# @router.channel_post()
+# async def any_unknown_channel_post(message: Message) -> None:
+#     print(message.chat.id)
 
 @router.callback_query()
 async def any_unknown_callback(query: CallbackQuery) -> None:

@@ -41,7 +41,7 @@ async def on_startup(_engine: AsyncEngine) -> None:
 async def on_shutdown(session: AsyncSession) -> None:
     await session.close_all()
 
-
+    
 async def scheduler() -> None:
     aioschedule.every(1).seconds.do(job_sec, bot=bot)
     aioschedule.every(1).seconds.do(job_minute, bot=bot)

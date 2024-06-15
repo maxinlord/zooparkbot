@@ -4,7 +4,7 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from db import User
-from tools import get_text_message, get_value, get_rate
+from tools import get_text_message, get_value, get_rate, mention_html_by_username
 from bot.states import UserState
 from bot.keyboards import (
     ik_bank,
@@ -88,20 +88,55 @@ async def exchange_all_amount(
 
     you_got, remains = divmod(user.rub, data["rate"])
     you_change = you_got * data["rate"]
-    user.usd += you_got
     user.rub = remains
 
-    await session.commit()
+    if not user.id_referrer:
+        user.usd += you_got
+        await message.answer(
+            await get_text_message(
+                "exchange_bank_success",
+                you_change=you_change,
+                you_got=you_got,
+                rate=data["rate"],
+            ),
+            reply_markup=await rk_main_menu(),
+        )
+        await state.set_state(UserState.main_menu)
+        await session.commit()
+        return
+
+    percent = await get_value(session=session, value_name="REFERRAL_PERCENT")
+    referrer_got = int(you_got * (percent / 100))
+    referrer = await session.get(User, user.id_referrer)
+    you_got -= referrer_got
+    referrer.usd += referrer_got
+    user.usd += you_got
+
+    if referrer_got > 0:
+        await message.bot.send_message(
+            chat_id=referrer.id_user,
+            text=await get_text_message(
+                "referral_bonus",
+                referral=mention_html_by_username(
+                    username=user.username, name=user.nickname
+                ),
+                amount=referrer_got,
+            ),
+            disable_notification=True,
+            disable_web_page_preview=True,
+        )
     await message.answer(
-        await get_text_message(
-            "exchange_bank_success",
+        text=await get_text_message(
+            "exchange_bank_success_ref",
             you_change=you_change,
             you_got=you_got,
+            referrer_got=referrer_got,
             rate=data["rate"],
         ),
         reply_markup=await rk_main_menu(),
     )
     await state.set_state(UserState.main_menu)
+    await session.commit()
 
 
 @router.message(UserState.exchange_bank_step, GetTextButton("back"))
@@ -151,17 +186,53 @@ async def get_amount(
 
     you_got, remains = divmod(amount, data["rate"])
     you_change = you_got * data["rate"]
-    user.usd += you_got
+    # user.usd += you_got
     user.rub -= amount - remains
 
-    await session.commit()
+    if not user.id_referrer:
+        user.usd += you_got
+        await message.answer(
+            await get_text_message(
+                "exchange_bank_success",
+                you_change=you_change,
+                you_got=you_got,
+                rate=rate,
+            ),
+            reply_markup=await rk_main_menu(),
+        )
+        await state.set_state(UserState.main_menu)
+        await session.commit()
+        return
+
+    percent = await get_value(session=session, value_name="REFERRAL_PERCENT")
+    referrer_got = int(you_got * (percent / 100))
+    referrer = await session.get(User, user.id_referrer)
+    you_got -= referrer_got
+    referrer.usd += referrer_got
+    user.usd += you_got
+
+    if referrer_got > 0:
+        await message.bot.send_message(
+            chat_id=referrer.id_user,
+            text=await get_text_message(
+                "referral_bonus",
+                referral=mention_html_by_username(
+                    username=user.username, name=user.nickname
+                ),
+                amount=referrer_got,
+            ),
+            disable_notification=True,
+            disable_web_page_preview=True,
+        )
     await message.answer(
-        await get_text_message(
-            "exchange_bank_success",
+        text=await get_text_message(
+            "exchange_bank_success_ref",
             you_change=you_change,
             you_got=you_got,
-            rate=rate,
+            referrer_got=referrer_got,
+            rate=data["rate"],
         ),
         reply_markup=await rk_main_menu(),
     )
     await state.set_state(UserState.main_menu)
+    await session.commit()
