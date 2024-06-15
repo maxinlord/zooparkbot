@@ -37,6 +37,7 @@ from .bonus import (
 
 from .deep_link import validate_command_arg
 from .game import get_amount_gamers, get_total_moves, get_user_where_max_score
+from .grafics import get_plot
 from .income import income_
 
 from .items import (

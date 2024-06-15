@@ -1,4 +1,5 @@
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, InputMediaPhoto
+from aiogram.types import FSInputFile
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,6 +12,7 @@ from tools import (
     factory_text_main_top_by_money,
     factory_text_main_top_by_animals,
     factory_text_main_top_by_referrals,
+    get_plot,
 )
 from bot.states import UserState
 from bot.filters import GetTextButton
@@ -28,8 +30,9 @@ async def main_top(
     user: User,
 ):
     text = await factory_text_main_top(session=session, idpk_user=user.idpk)
+    filename = await get_plot(session=session, type="income")
     await message.answer_photo(
-        photo=await get_photo(session=session, photo_name="plug_photo"),
+        photo=FSInputFile(path=filename),
         caption=await get_text_message("top_info", t=text),
         reply_markup=await ik_choice_type_top(chosen="top_income"),
     )
@@ -43,8 +46,12 @@ async def top_money(
     user: User,
 ):
     text = await factory_text_main_top_by_money(session=session, idpk_user=user.idpk)
-    await query.message.edit_caption(
-        caption=await get_text_message("top_info", t=text),
+    filename = await get_plot(session=session, type="money")
+    await query.message.edit_media(
+        media=InputMediaPhoto(
+            media=FSInputFile(path=filename),
+            caption=await get_text_message("top_info", t=text),
+        ),
         reply_markup=await ik_choice_type_top(chosen="top_money"),
     )
 
@@ -57,8 +64,12 @@ async def top_income(
     user: User,
 ):
     text = await factory_text_main_top(session=session, idpk_user=user.idpk)
-    await query.message.edit_caption(
-        caption=await get_text_message("top_info", t=text),
+    filename = await get_plot(session=session, type="income")
+    await query.message.edit_media(
+        media=InputMediaPhoto(
+            media=FSInputFile(path=filename),
+            caption=await get_text_message("top_info", t=text),
+        ),
         reply_markup=await ik_choice_type_top(chosen="top_income"),
     )
 
@@ -71,8 +82,12 @@ async def top_animals(
     user: User,
 ):
     text = await factory_text_main_top_by_animals(session=session, idpk_user=user.idpk)
-    await query.message.edit_caption(
-        caption=await get_text_message("top_info", t=text),
+    filename = await get_plot(session=session, type="animals")
+    await query.message.edit_media(
+        media=InputMediaPhoto(
+            media=FSInputFile(path=filename),
+            caption=await get_text_message("top_info", t=text),
+        ),
         reply_markup=await ik_choice_type_top(chosen="top_animals"),
     )
 
@@ -87,7 +102,11 @@ async def top_referrals(
     text = await factory_text_main_top_by_referrals(
         session=session, idpk_user=user.idpk
     )
-    await query.message.edit_caption(
-        caption=await get_text_message("top_info", t=text),
+    filename = await get_plot(session=session, type="referrals")
+    await query.message.edit_media(
+        media=InputMediaPhoto(
+            media=FSInputFile(path=filename),
+            caption=await get_text_message("top_info", t=text),
+        ),
         reply_markup=await ik_choice_type_top(chosen="top_referrals"),
     )

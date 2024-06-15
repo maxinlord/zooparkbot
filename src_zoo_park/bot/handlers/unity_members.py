@@ -32,7 +32,7 @@ async def unity_members(
 ):
     await disable_not_main_window(data=await state.get_data(), message=message)
     data = await state.get_data()
-    q_page = await count_page_unity_members(idpk_unity=data["idpk_unity"])
+    q_page = await count_page_unity_members(session=session, idpk_unity=data["idpk_unity"])
     msg = await message.answer(
         text=await get_text_message("menu_unity_members"),
         reply_markup=await ik_menu_unity_members(session=session, unity_idpk=data["idpk_unity"]),
@@ -107,7 +107,7 @@ async def process_back_to_menu_all_members(
     match back_to:
         case "to_all_members":
             data = await state.get_data()
-            q_page = await count_page_unity_members(idpk_unity=data["idpk_unity"])
+            q_page = await count_page_unity_members(session=session, idpk_unity=data["idpk_unity"])
             await state.update_data(q_page=q_page)
             await query.message.edit_text(
                 text=await get_text_message("menu_unity_members"),
