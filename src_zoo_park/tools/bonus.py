@@ -79,7 +79,9 @@ async def handle_animal_bonus(user: User, session):
     amount_to_add = random.randint(
         1,
         await tools.get_remain_seats(
-            user.aviaries, await tools.get_total_number_animals(self=user)
+            session=session,
+            aviaries=user.aviaries,
+            amount_animals=await tools.get_total_number_animals(self=user),
         ),
     )
     await tools.add_animal(

@@ -94,6 +94,7 @@ async def gen_plot(
     if not os.path.exists(name):
         await remove_file_plot(pattern=f"plot_{type}_*.png")
         plt.savefig(name, dpi=300, bbox_inches="tight")
+        plt.close('all')
     return name
 
 
