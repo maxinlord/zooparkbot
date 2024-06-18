@@ -1,5 +1,6 @@
+import json
 from sqlalchemy import select
-from db import Text, Button, Value, Unity, User, Game, Gamer
+from db import Text, Button, Value, Unity, User, Game, Gamer, Animal, Aviary
 from init_db import _sessionmaker_for_func
 from cache import text_cache, button_cache
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -106,7 +107,7 @@ def mention_html_by_username(username: str, name: str) -> str:
 async def factory_text_unity_top(session: AsyncSession) -> str:
     unites = await session.scalars(select(Unity))
     unites = unites.all()
-    unites_income = [await tools.count_income_unity(unity=unity) for unity in unites]
+    unites_income = [await tools.count_income_unity(session=session, unity=unity) for unity in unites]
     ls = list(zip(unites, unites_income))
     ls.sort(key=lambda x: x[1], reverse=True)
     text = ""
@@ -126,7 +127,7 @@ async def factory_text_main_top(session: AsyncSession, idpk_user: int) -> str:
     total_place_top = await tools.get_value(
         session=session, value_name="TOTAL_PLACE_TOP"
     )
-    users = await session.scalars(select(User))
+    users = await session.scalars(select(User).where(User.animals != "{}"))
     users = users.all()
     users_income = [
         (user, await tools.income_(session=session, user=user)) for user in users
@@ -174,7 +175,7 @@ async def factory_text_main_top_by_money(session: AsyncSession, idpk_user: int) 
     total_place_top = await tools.get_value(
         session=session, value_name="TOTAL_PLACE_TOP"
     )
-    users = await session.scalars(select(User))
+    users = await session.scalars(select(User).where(User.animals != "{}"))
     users = users.all()
     users.sort(key=lambda x: x.usd, reverse=True)
 
@@ -221,7 +222,7 @@ async def factory_text_main_top_by_animals(
     total_place_top = await tools.get_value(
         session=session, value_name="TOTAL_PLACE_TOP"
     )
-    users = await session.scalars(select(User))
+    users = await session.scalars(select(User).where(User.animals != "{}"))
     users = users.all()
     users_animals = [
         (user, await tools.get_total_number_animals(self=user)) for user in users
@@ -271,7 +272,7 @@ async def factory_text_main_top_by_referrals(
     total_place_top = await tools.get_value(
         session=session, value_name="TOTAL_PLACE_TOP"
     )
-    users = await session.scalars(select(User))
+    users = await session.scalars(select(User).where(User.animals != "{}"))
     users = users.all()
     users_referrals = [
         (user, await tools.get_referrals(session=session, user=user)) for user in users
@@ -332,5 +333,37 @@ async def factory_text_top_mini_game(session: AsyncSession, game: Game):
             name_=nickname,
             score=gamer.score,
             c=counter,
+        )
+    return text
+
+
+async def factory_text_account_animals(session: AsyncSession, animals: str) -> str:
+    text = ""
+    animals = json.loads(animals)
+    sorted_keys = sorted(animals, key=lambda x: animals[x], reverse=True)
+    for animal in sorted_keys:
+        name = await session.scalar(
+            select(Animal.name).where(Animal.code_name == animal)
+        )
+        text += await get_text_message(
+            "pattern_account_animals",
+            name_=name,
+            amount=animals[animal],
+        )
+    return text
+
+
+async def factory_text_account_aviaries(session: AsyncSession, aviaries: str) -> str:
+    text = ""
+    aviaries = json.loads(aviaries)
+    sorted_keys = sorted(aviaries, key=lambda x: aviaries[x]["quantity"], reverse=True)
+    for aviary in sorted_keys:
+        name = await session.scalar(
+            select(Aviary.name).where(Aviary.code_name == aviary)
+        )
+        text += await get_text_message(
+            "pattern_account_aviaries",
+            name_=name,
+            quantity=aviaries[aviary]["quantity"],
         )
     return text

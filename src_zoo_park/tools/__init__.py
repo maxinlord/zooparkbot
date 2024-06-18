@@ -72,7 +72,9 @@ from .text import (
     factory_text_top_mini_game,
     factory_text_main_top_by_money,
     factory_text_main_top_by_animals,
-    factory_text_main_top_by_referrals
+    factory_text_main_top_by_referrals,
+    factory_text_account_animals,
+    factory_text_account_aviaries
 )
 
 from .transfer import in_used, add_user_to_used

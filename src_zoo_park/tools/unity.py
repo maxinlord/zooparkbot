@@ -59,50 +59,79 @@ async def check_condition_1st_lvl(session: AsyncSession, unity: Unity) -> bool:
     return unity.get_number_members() >= AMOUNT_MEMBERS_1ST_LVL
 
 
-async def get_data_by_lvl_unity(session: AsyncSession, lvl: int) -> dict:
+async def get_data_by_lvl_unity(session: AsyncSession, lvl: int, unity: Unity) -> dict:
     data = {"lvl": lvl}
-    match lvl:
-        case 0:
-            data["amount_members"] = await tools.get_value(
-                session=session, value_name="AMOUNT_MEMBERS_1ST_LVL"
-            )
-            data["next_lvl"] = 1
-        case 1:
-            data["amount_income"] = await tools.get_value(
-                session=session, value_name="AMOUNT_INCOME_2ND_LVL"
-            )
-            data["amount_animals"] = await tools.get_value(
-                session=session, value_name="AMOUNT_ANIMALS_2ND_LVL"
-            )
-            data["bonus_add_to_income"] = await tools.get_value(
-                session=session, value_name="BONUS_ADD_TO_INCOME_1ST_LVL"
-            )
-            data["next_lvl"] = 2
-        case 2:
-            data["amount_income"] = await tools.get_value(
-                session=session, value_name="AMOUNT_INCOME_3RD_LVL"
-            )
-            data["amount_animals"] = await tools.get_value(
-                session=session, value_name="AMOUNT_ANIMALS_3RD_LVL"
-            )
-            data["amount_members"] = await tools.get_value(
-                session=session, value_name="AMOUNT_MEMBERS_3RD_LVL"
-            )
-            data["bonus_add_to_income"] = await tools.get_value(
-                session=session, value_name="BONUS_ADD_TO_INCOME_2ND_LVL"
-            )
-            data["bonus_discount_for_animal"] = await tools.get_value(
-                session=session, value_name="BONUS_DISCOUNT_FOR_ANIMAL_2ND_LVL"
-            )
-            data["next_lvl"] = 3
-        case 3:
-            data["bonus_add_to_income"] = await tools.get_value(
-                session=session, value_name="BONUS_ADD_TO_INCOME_3RD_LVL"
-            )
-            data["bonus_discount_for_animal"] = await tools.get_value(
-                session=session, value_name="BONUS_DISCOUNT_FOR_ANIMAL_3RD_LVL"
-            )
+
+    lvl_data = {
+        0: {
+            "values": [
+                ("amount_members", "AMOUNT_MEMBERS_1ST_LVL"),
+                ("f_amount_members", "-"),
+            ],
+            "next_lvl": 1,
+        },
+        1: {
+            "values": [
+                ("amount_income", "AMOUNT_INCOME_2ND_LVL"),
+                ("f_current_income", "-"),
+                ("amount_animals", "AMOUNT_ANIMALS_2ND_LVL"),
+                ("f_members_not_have_amount_animals", "-"),
+                ("bonus_add_to_income", "BONUS_ADD_TO_INCOME_1ST_LVL"),
+            ],
+            "next_lvl": 2,
+        },
+        2: {
+            "values": [
+                ("amount_income", "AMOUNT_INCOME_3RD_LVL"),
+                ("f_current_income", "-"),
+                ("amount_animals", "AMOUNT_ANIMALS_3RD_LVL"),
+                ("f_members_not_have_amount_animals", "-"),
+                ("amount_members", "AMOUNT_MEMBERS_3RD_LVL"),
+                ("f_amount_members", "-"),
+                ("bonus_add_to_income", "BONUS_ADD_TO_INCOME_1ST_LVL"),
+                ("bonus_discount_for_animal", "BONUS_DISCOUNT_FOR_ANIMAL_2ND_LVL"),
+            ],
+            "next_lvl": 3,
+        },
+        3: {
+            "values": [
+                ("bonus_add_to_income", "BONUS_ADD_TO_INCOME_3RD_LVL"),
+                ("bonus_discount_for_animal", "BONUS_DISCOUNT_FOR_ANIMAL_3RD_LVL"),
+            ]
+        },
+    }
+
+    if lvl in lvl_data:
+        for key, value_name in lvl_data[lvl]["values"]:
+            data[key] = await tools.get_value(session=session, value_name=value_name)
+            if key == "f_current_income":
+                data[key] = await tools.count_income_unity(session=session, unity=unity)
+            elif key == "f_amount_members":
+                data[key] = unity.get_number_members()
+            elif key == "f_members_not_have_amount_animals":
+                data[key] = await get_members_not_have_amount_animals(
+                    session=session,
+                    idpk_unity=unity.idpk,
+                    condition=data["amount_animals"],
+                )
+        if "next_lvl" in lvl_data[lvl]:
+            data["next_lvl"] = lvl_data[lvl]["next_lvl"]
     return data
+
+
+async def get_members_not_have_amount_animals(
+    session: AsyncSession, idpk_unity: int, condition: int
+) -> str:
+    unity = await session.get(Unity, idpk_unity)
+    members_idpk = unity.get_members_idpk()
+    members_not_have_amount_animals = []
+    for idpk in members_idpk:
+        user = await session.get(User, idpk)
+        animals = tools.get_numbers_animals(self=user)
+        is_have = all(i >= condition for i in animals) if animals else False
+        if not is_have:
+            members_not_have_amount_animals.append(user.nickname)
+    return ", ".join(members_not_have_amount_animals)
 
 
 async def get_row_unity_members(session: AsyncSession):
@@ -212,13 +241,11 @@ async def check_condition_3rd_lvl(session: AsyncSession, unity: Unity) -> bool:
             for num_animal in await tools.get_numbers_animals(user)
         )
 
-async def count_income_unity(unity: Unity) -> int:
-    async with _sessionmaker_for_func() as session:
-        total_income = 0
-        users = [
-            await session.get(User, int(idpk)) for idpk in unity.get_members_idpk()
-        ]
-        total_income = sum(
-            [await tools.income_(session=session, user=user) for user in users]
-        )
-        return total_income
+
+async def count_income_unity(session: AsyncSession, unity: Unity) -> int:
+    total_income = 0
+    users = [await session.get(User, int(idpk)) for idpk in unity.get_members_idpk()]
+    total_income = sum(
+        [await tools.income_(session=session, user=user) for user in users]
+    )
+    return total_income

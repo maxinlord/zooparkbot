@@ -213,12 +213,18 @@ async def rk_exchange_bank():
 
 async def ik_account_menu():
     builder = InlineKeyboardBuilder()
+    builder.button(
+        text=await tools.get_text_button("account_animals"), callback_data="account_animals"
+    )
+    builder.button(
+        text=await tools.get_text_button("account_aviaries"), callback_data="account_aviaries"
+    )
     builder.button(text=await tools.get_text_button("items"), callback_data="items")
     builder.button(
         text=await tools.get_text_button("referrals_system"),
         callback_data="referrals_system",
     )
-    builder.adjust(1)
+    builder.adjust(2, 2)
     return builder.as_markup()
 
 

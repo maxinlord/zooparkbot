@@ -2,9 +2,9 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 import tools
 
 
-async def ik_back():
+async def ik_back(custom_callback_data: str = 'back'):
     builder = InlineKeyboardBuilder()
-    builder.button(text=await tools.get_text_button("back"), callback_data="back")
+    builder.button(text=await tools.get_text_button("back"), callback_data=custom_callback_data)
     return builder.as_markup()
 
 
