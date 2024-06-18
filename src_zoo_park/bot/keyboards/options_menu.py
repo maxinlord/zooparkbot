@@ -491,7 +491,7 @@ async def ik_referrals_menu(promo_text: str):
         text=await tools.get_text_button("share_link"),
         switch_inline_query=promo_text,
     )
-    builder.button(text=await tools.get_text_button("back"), callback_data="back_ref")
+    builder.button(text=await tools.get_text_button("back"), callback_data="to_account:back_account")
     builder.adjust(1)
     return builder.as_markup()
 

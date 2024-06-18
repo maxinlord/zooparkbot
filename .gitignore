@@ -157,3 +157,4 @@ alembic.ini
 .vscode/
 alembic/
 *.png
+src_photos/
