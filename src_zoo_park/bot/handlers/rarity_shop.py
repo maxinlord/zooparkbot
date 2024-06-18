@@ -1,4 +1,4 @@
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, FSInputFile, InputMediaPhoto, InputFile
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,6 +12,7 @@ from tools import (
     get_income_animal,
     add_animal,
     get_total_number_animals,
+    get_photo
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -85,8 +86,13 @@ async def get_rarity_rshop(
     animal_income = await get_income_animal(
         session=session, animal=animal, unity_idpk=unity_idpk, items=user.items
     )
-    await query.message.edit_text(
-        text=await get_text_message(
+    await query.message.delete()
+    photo = FSInputFile(f"src_photos/{data.get('animal')}/{animal.code_name}.jpg")
+    if data["animal"] in ['animal2', 'animal6']:
+        photo = await get_photo(session=session, photo_name='plug_photo')
+    await query.message.answer_photo(
+        photo=photo,
+        caption=await get_text_message(
             "choice_quantity_rarity_shop_menu",
             name_=animal.name,
             description=animal.description,
@@ -115,7 +121,8 @@ async def back_to_rarity_shop_menu(
                 reply_markup=await ik_choice_animal_rshop(session=session),
             )
         case "to_choice_rarity":
-            return await query.message.edit_text(
+            await query.message.delete()
+            return await query.message.answer(
                 text=await get_text_message("choice_rarity_shop_menu"),
                 reply_markup=await ik_choice_rarity_rshop(),
             )
