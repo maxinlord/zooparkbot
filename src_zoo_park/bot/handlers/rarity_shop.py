@@ -103,6 +103,7 @@ async def get_rarity_rshop(
         reply_markup=await ik_choice_quantity_animals_rshop(
             session=session, animal_price=animal_price
         ),
+        protect_content=True,
     )
 
 
