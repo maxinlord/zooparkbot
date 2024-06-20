@@ -88,8 +88,6 @@ async def get_rarity_rshop(
     )
     await query.message.delete()
     photo = FSInputFile(f"src_photos/{data.get('animal')}/{animal.code_name}.jpg")
-    if data["animal"] in ['animal2', 'animal6']:
-        photo = await get_photo(session=session, photo_name='plug_photo')
     await query.message.answer_photo(
         photo=photo,
         caption=await get_text_message(
