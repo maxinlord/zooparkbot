@@ -88,7 +88,7 @@ async def get_rarity_rshop(
     )
     await query.message.delete()
     photo = FSInputFile(f"src_photos/{data.get('animal')}/{animal.code_name}.jpg")
-    await query.message.answer_photo(
+    msg = await query.message.answer_photo(
         photo=photo,
         caption=await get_text_message(
             "choice_quantity_rarity_shop_menu",
@@ -103,6 +103,7 @@ async def get_rarity_rshop(
         ),
         protect_content=True,
     )
+    await state.update_data(active_window=msg.message_id)
 
 
 @router.callback_query(UserState.zoomarket_menu, CompareDataByIndex("back_rshop"))
@@ -121,10 +122,11 @@ async def back_to_rarity_shop_menu(
             )
         case "to_choice_rarity":
             await query.message.delete()
-            return await query.message.answer(
+            msg =  await query.message.answer(
                 text=await get_text_message("choice_rarity_shop_menu"),
                 reply_markup=await ik_choice_rarity_rshop(),
             )
+            await state.update_data(active_window=msg.message_id)
 
 
 @router.callback_query(
