@@ -107,7 +107,9 @@ def mention_html_by_username(username: str, name: str) -> str:
 async def factory_text_unity_top(session: AsyncSession) -> str:
     unites = await session.scalars(select(Unity))
     unites = unites.all()
-    unites_income = [await tools.count_income_unity(session=session, unity=unity) for unity in unites]
+    unites_income = [
+        await tools.count_income_unity(session=session, unity=unity) for unity in unites
+    ]
     ls = list(zip(unites, unites_income))
     ls.sort(key=lambda x: x[1], reverse=True)
     text = ""
@@ -366,4 +368,24 @@ async def factory_text_account_aviaries(session: AsyncSession, aviaries: str) ->
             name_=name,
             quantity=aviaries[aviary]["quantity"],
         )
+    return text
+
+
+async def ft_bank_exchange_info(
+    you_change: int,
+    you_got: int,
+    rate: int,
+    bank_got: int = None,
+    referrer_got: int = None,
+):  # ft - factory text
+    text = ""
+    text += await get_text_message("pattern_bank_you_change", you_change=you_change)
+    if bank_got:
+        text += await get_text_message("pattern_bank_bank_got", bank_got=bank_got)
+    if referrer_got:
+        text += await get_text_message(
+            "pattern_bank_referrer_got", referrer_got=referrer_got
+        )
+    text += await get_text_message("pattern_bank_you_got", you_got=you_got)
+    text += await get_text_message("pattern_bank_rate", rate=rate)
     return text

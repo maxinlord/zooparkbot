@@ -171,3 +171,14 @@ async def gen_quantity_animals(session: AsyncSession, user: User) -> int:
         MAX_QUANTITY_ANIMALS = 2
     quantity_animals = random.randint(1, MAX_QUANTITY_ANIMALS)
     return quantity_animals
+
+
+async def get_average_price_animals(
+    session: AsyncSession, animals_code_name: set[str]
+):
+    result = await session.execute(
+        select(Animal.price).where(Animal.code_name.in_(animals_code_name))
+    )
+    prices = [row[0] for row in result]
+    return sum(prices) / len(prices)
+

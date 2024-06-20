@@ -13,6 +13,7 @@ from .animals import (
     get_animal_with_random_rarity,
     gen_quantity_animals,
     _get_income_animal,
+    get_average_price_animals
 )
 
 from .aviaries import (
@@ -24,7 +25,7 @@ from .aviaries import (
     get_price_aviaries
 )
 
-from .bank import get_rate
+from .bank import get_rate, update_bank_storage, exchange
 from .base import gen_key, get_rates_calculator
 
 from .bonus import (
@@ -74,7 +75,8 @@ from .text import (
     factory_text_main_top_by_animals,
     factory_text_main_top_by_referrals,
     factory_text_account_animals,
-    factory_text_account_aviaries
+    factory_text_account_aviaries,
+    ft_bank_exchange_info
 )
 
 from .transfer import in_used, add_user_to_used

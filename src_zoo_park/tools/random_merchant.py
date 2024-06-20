@@ -1,9 +1,11 @@
+import asyncio
 from sqlalchemy import select
 from db import RandomMerchant, Animal, User
 from faker import Faker
 import random
 import tools
 from sqlalchemy.ext.asyncio import AsyncSession
+import json
 
 # Создание экземпляра Faker для русского языка
 fake = Faker("ru_RU")
@@ -15,7 +17,9 @@ async def create_random_merchant(session: AsyncSession, user: User) -> RandomMer
     random_animal = await tools.get_random_animal(
         session=session, user_animals=user.animals
     )
-    random_quantity_animals = await tools.gen_quantity_animals(session=session, user=user)
+    random_quantity_animals = await tools.gen_quantity_animals(
+        session=session, user=user
+    )
     random_discount = random.randint(-MAX_DISCOUNT, MAX_DISCOUNT)
     price_with_discount = calculate_price_with_discount(
         price=random_animal.price * random_quantity_animals,
@@ -52,11 +56,24 @@ async def get_weights_rmerchant(session: AsyncSession) -> list:
     return weights
 
 
-async def gen_price(session: AsyncSession, user: User) -> int:
-    MIN_RANDOM_PRICE = await tools.get_value(
-        session=session, value_name="MIN_RANDOM_PRICE"
+async def gen_price(session: AsyncSession, animals: str) -> int:
+    animals_dict = json.loads(animals)
+    MAX_QUANTITY_ANIMALS, price = await asyncio.gather(
+        tools.get_value(session=session, value_name="MAX_QUANTITY_ANIMALS"),
+        (
+            tools.get_average_price_animals(
+                session=session, animals=set(animals_dict.keys())
+            )
+            if animals_dict
+            else session.scalar(
+                select(Animal.price).where(Animal.code_name == "animal1_rare")
+            )
+        ),
     )
-    i = await tools.income_(session=session, user=user)
-    MAX_RANDOM_PRICE = MIN_RANDOM_PRICE * 3 if i == 0 else i * 48 * 60 // 67
-    price = random.randint(MIN_RANDOM_PRICE, MAX_RANDOM_PRICE)
+
+    if animals_dict:
+        price = price * (MAX_QUANTITY_ANIMALS - 2)
+    else:
+        price = price * MAX_QUANTITY_ANIMALS
+
     return price
