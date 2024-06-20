@@ -25,7 +25,7 @@ async def create_random_merchant(session: AsyncSession, user: User) -> RandomMer
         price=random_animal.price * random_quantity_animals,
         discount=random_discount,
     )
-    random_price = await gen_price(session=session, user=user)
+    random_price = await gen_price(session=session, animals=user.animals)
     rm = RandomMerchant(
         id_user=user.id_user,
         name=fake.first_name_male(),
@@ -62,7 +62,7 @@ async def gen_price(session: AsyncSession, animals: str) -> int:
         tools.get_value(session=session, value_name="MAX_QUANTITY_ANIMALS"),
         (
             tools.get_average_price_animals(
-                session=session, animals=set(animals_dict.keys())
+                session=session, animals_code_name=set(animals_dict.keys())
             )
             if animals_dict
             else session.scalar(
@@ -76,4 +76,4 @@ async def gen_price(session: AsyncSession, animals: str) -> int:
     else:
         price = price * MAX_QUANTITY_ANIMALS
 
-    return price
+    return int(price)
