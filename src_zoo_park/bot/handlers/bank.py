@@ -122,7 +122,7 @@ async def exchange_all_amount(
         referrer.usd += referrer_got
 
     user.usd += you_got
-    if referrer_got > 0:
+    if referrer_got and referrer_got > 0:
         await message.bot.send_message(
             chat_id=referrer.id_user,
             text=await get_text_message(
@@ -209,7 +209,7 @@ async def get_amount(
         referrer.usd += referrer_got
 
     user.usd += you_got
-    if referrer_got > 0:
+    if referrer_got and referrer_got > 0:
         await message.bot.send_message(
             chat_id=referrer.id_user,
             text=await get_text_message(
