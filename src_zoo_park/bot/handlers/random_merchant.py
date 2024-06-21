@@ -170,7 +170,7 @@ async def buy_one_of_offer(
                             "you_got_this_animal", an=animal.name, aq=part_animals
                         )
                     )
-            merchant.price = await gen_price(session=session, user=user)
+            merchant.price = await gen_price(session=session, animals=user.animals)
             await session.commit()
             await state.set_state(UserState.zoomarket_menu)
             await query.message.answer(await get_text_message("you_lucky"), message_effect_id=petard_emoji_effect)
