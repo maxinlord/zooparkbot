@@ -46,8 +46,8 @@ async def handle_rub_bonus(user, session):
     income = await tools.income_(session=session, user=user)
     if income == 0:
         income = 12
-    income_for_3_min = income * 180
-    rub_to_add = random.randint(income_for_3_min // 3, income_for_3_min)
+    income_for_8_hour = income * 480
+    rub_to_add = random.randint(income_for_8_hour // 3, income_for_8_hour)
     user.rub += rub_to_add
     return {"rub_to_add": rub_to_add}
 
@@ -120,5 +120,4 @@ async def bonus_(session: AsyncSession, user: User):
         "item": handle_item_bonus,
     }
     data_about_bonus = {bonus_type: await handlers[bonus_type](user, session)}
-    await session.commit()
     return data_about_bonus
