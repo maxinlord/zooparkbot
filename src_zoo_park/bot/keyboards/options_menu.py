@@ -112,6 +112,14 @@ async def ik_choice_quantity_animals_rshop(session: AsyncSession, animal_price: 
     builder = InlineKeyboardBuilder()
     all_quantity_animals = await tools.get_quantity_animals_for_rshop(session)
     prices = [animal_price * q for q in all_quantity_animals]
+    builder.button(
+        text=await tools.get_text_button("prev_rarity"),
+        callback_data="prev_rarity:rshop_switch_rarity",
+    )
+    builder.button(
+        text=await tools.get_text_button("next_rarity"),
+        callback_data="next_rarity:rshop_switch_rarity",
+    )
     for quantity_animal, price in zip(all_quantity_animals, prices):
         builder.button(
             text=await tools.get_text_button(
@@ -127,7 +135,7 @@ async def ik_choice_quantity_animals_rshop(session: AsyncSession, animal_price: 
         text=await tools.get_text_button("back"),
         callback_data="to_choice_rarity:back_rshop",
     )
-    builder.adjust(1)
+    builder.adjust(2, *[1 for _ in range(len(all_quantity_animals))], 1, 1)
     return builder.as_markup()
 
 
@@ -214,10 +222,12 @@ async def rk_exchange_bank():
 async def ik_account_menu():
     builder = InlineKeyboardBuilder()
     builder.button(
-        text=await tools.get_text_button("account_animals"), callback_data="account_animals"
+        text=await tools.get_text_button("account_animals"),
+        callback_data="account_animals",
     )
     builder.button(
-        text=await tools.get_text_button("account_aviaries"), callback_data="account_aviaries"
+        text=await tools.get_text_button("account_aviaries"),
+        callback_data="account_aviaries",
     )
     builder.button(text=await tools.get_text_button("items"), callback_data="items")
     builder.button(
@@ -491,7 +501,10 @@ async def ik_referrals_menu(promo_text: str):
         text=await tools.get_text_button("share_link"),
         switch_inline_query=promo_text,
     )
-    builder.button(text=await tools.get_text_button("back"), callback_data="to_account:back_account")
+    builder.button(
+        text=await tools.get_text_button("back"),
+        callback_data="to_account:back_account",
+    )
     builder.adjust(1)
     return builder.as_markup()
 

@@ -1,4 +1,10 @@
-from aiogram.types import Message, CallbackQuery, FSInputFile, InputMediaPhoto, InputFile
+from aiogram.types import (
+    Message,
+    CallbackQuery,
+    FSInputFile,
+    InputMediaPhoto,
+    InputFile,
+)
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,7 +18,7 @@ from tools import (
     get_income_animal,
     add_animal,
     get_total_number_animals,
-    get_photo
+    get_photo,
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -23,6 +29,7 @@ from bot.keyboards import (
     ik_choice_quantity_animals_rshop,
 )
 from bot.filters import GetTextButton, CompareDataByIndex
+from config import rarities
 
 flags = {"throttling_key": "default"}
 router = Router()
@@ -81,7 +88,10 @@ async def get_rarity_rshop(
         select(Animal).where(Animal.code_name == data["animal"] + rarity)
     )
     await state.update_data(
-        animal_price=animal_price, animal=data["animal"], rarity=rarity
+        animal_price=animal_price,
+        animal=data["animal"],
+        rarity=rarity,
+        unity_idpk=unity_idpk,
     )
     animal_income = await get_income_animal(
         session=session, animal=animal, unity_idpk=unity_idpk, items=user.items
@@ -106,6 +116,61 @@ async def get_rarity_rshop(
     await state.update_data(active_window=msg.message_id)
 
 
+@router.callback_query(
+    UserState.zoomarket_menu, CompareDataByIndex("rshop_switch_rarity")
+)
+async def rshop_switch_rarity(
+    query: CallbackQuery,
+    session: AsyncSession,
+    state: FSMContext,
+    user: User,
+):
+    data = await state.get_data()
+    switch_to = query.data.split(":")[0]
+    if switch_to == "next_rarity":
+        rarity = (
+            rarities[rarities.index(data["rarity"]) + 1]
+            if data["rarity"] != rarities[-1]
+            else rarities[0]
+        )
+    elif switch_to == "prev_rarity":
+        rarity = (
+            rarities[rarities.index(data["rarity"]) - 1]
+            if data["rarity"] != rarities[0]
+            else rarities[-1]
+        )
+    animal_price = await get_price_animal(
+        session=session,
+        animal_code_name=data["animal"] + rarity,
+        unity_idpk=data["unity_idpk"],
+    )
+    animal = await session.scalar(
+        select(Animal).where(Animal.code_name == data["animal"] + rarity)
+    )
+    await state.update_data(rarity=rarity, animal_price=animal_price)
+    animal_income = await get_income_animal(
+        session=session, animal=animal, unity_idpk=data["unity_idpk"], items=user.items
+    )
+    photo = FSInputFile(f"src_photos/{data.get('animal')}/{animal.code_name}.jpg")
+    await query.message.edit_media(
+        media=InputMediaPhoto(
+            media=photo,
+            caption=await get_text_message(
+                "choice_quantity_rarity_shop_menu",
+                name_=animal.name,
+                description=animal.description,
+                price=animal_price,
+                income=animal_income,
+                usd=user.usd,
+            ),
+        ),
+        reply_markup=await ik_choice_quantity_animals_rshop(
+            session=session, animal_price=animal_price
+        ),
+        protect_content=True,
+    )
+
+
 @router.callback_query(UserState.zoomarket_menu, CompareDataByIndex("back_rshop"))
 async def back_to_rarity_shop_menu(
     query: CallbackQuery,
@@ -122,7 +187,7 @@ async def back_to_rarity_shop_menu(
             )
         case "to_choice_rarity":
             await query.message.delete()
-            msg =  await query.message.answer(
+            msg = await query.message.answer(
                 text=await get_text_message("choice_rarity_shop_menu"),
                 reply_markup=await ik_choice_rarity_rshop(),
             )
@@ -204,8 +269,10 @@ async def back_to_choice_quantity_rshop(
     animal_income = await get_income_animal(
         session=session, animal=animal, unity_idpk=unity_idpk, items=user.items
     )
-    msg = await message.answer(
-        text=await get_text_message(
+    photo = FSInputFile(f"src_photos/{data.get('animal')}/{animal.code_name}.jpg")
+    msg = await message.answer_photo(
+        photo=photo,
+        caption=await get_text_message(
             "choice_quantity_rarity_shop_menu",
             name_=animal.name,
             description=animal.description,
