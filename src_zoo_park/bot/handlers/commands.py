@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from db import User
 from aiogram.filters import StateFilter
 from aiogram.fsm.state import any_state
-from tools import mention_html, income_, get_text_message
+from tools import mention_html, income_, get_text_message, get_photo
 from bot.keyboards import ik_choice_rate_calculator
 from bot.filters import CompareDataByIndex
 
@@ -169,3 +169,22 @@ async def small_calculator(
             i=income_custom_min,
         )
     )
+
+
+@router.message(Command(commands="p"), StateFilter(any_state))
+async def photo_view(
+    message: Message,
+    state: FSMContext,
+    command: CommandObject,
+    session: AsyncSession,
+    user: User | None,
+) -> None:
+    if not command.args:
+        await message.answer(text=await get_text_message("error_args"))
+        return
+    try:
+        photo = await get_photo(session=session, photo_name=command.args.strip())
+    except Exception:
+        await message.answer(text=await get_text_message("error_photo"))
+        return
+    await message.answer_photo(photo=photo)
