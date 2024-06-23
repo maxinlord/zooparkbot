@@ -104,7 +104,9 @@ async def handle_item_bonus(user: User, session):
         }
         dict_currencies[item_to_add.currency] += amount
         return {f"{item_to_add.currency}_to_add": amount}
-    await tools.add_item(self=user, code_name_item=item_to_add.code_name)
+    await tools.add_item(
+        session=session, self=user, code_name_item=item_to_add.code_name
+    )
     return {"item_to_add": item_to_add.name}
 
 
