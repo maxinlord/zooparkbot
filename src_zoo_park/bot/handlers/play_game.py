@@ -14,7 +14,9 @@ from tools import (
     factory_text_top_mini_game,
     get_total_moves,
     get_user_where_max_score,
+    get_first_three_places,
     add_to_currency,
+    get_percent_places_award,
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -24,7 +26,7 @@ from bot.keyboards import (
     ik_start_created_game,
 )
 import asyncio
-
+from config import dict_tr_currencys, CHAT_ID
 
 router = Router()
 petard_emoji_effect = "5046509860389126442"
@@ -63,8 +65,34 @@ async def handle_game_winner(query: CallbackQuery, session, game, data):
     return additional_text
 
 
+async def handle_game_winners(query: CallbackQuery, session, game):
+    gamers_winer: list[Gamer] = await get_first_three_places(session=session, game=game)
+    additional_text = ""
+    award_percent = iter(await get_percent_places_award(session=session))
+    emoji_places = iter(["🏆", "🥈", "🥉"])
+    for gamer in gamers_winer:
+        gamer: User = await session.get(User, gamer.idpk_gamer)
+        additional_text += f"\n\n{await get_text_message('game_pattern_winer', nickname=gamer.nickname, emoji_places=next(emoji_places))}"
+        amount = game.amount_award * (next(award_percent) / 100)
+        award = f"{int(amount):,d}{dict_tr_currencys[game.currency_award]}"
+        await add_to_currency(
+            self=gamer,
+            currency=game.currency_award,
+            amount=int(amount),
+        )
+        await query.bot.send_message(
+            chat_id=gamer.id_user,
+            text=await get_text_message(
+                "game_winer_message",
+                award=award,
+            ),
+            message_effect_id=petard_emoji_effect,
+        )
+    return additional_text
+
+
 @router.callback_query(UserState.game, F.data == "dice")
-async def buy_one_of_offer(
+async def play_game(
     query: CallbackQuery,
     session: AsyncSession,
     state: FSMContext,
@@ -110,9 +138,17 @@ async def buy_one_of_offer(
         await get_amount_gamers(session=session, game=game) == game.amount_gamers
         and await get_total_moves(session=session, game=game) == 0
     ):
-        additional_text = await handle_game_winner(query, session, game, data)
-        game.end = True
+        if game.idpk_user == 0:
+            additional_text = await handle_game_winners(query, session, game)
+        else:
+            additional_text = await handle_game_winner(query, session, game, data)
         is_end_game = True
+        game.end = True
+    mess_data = (
+        {"chat_id": CHAT_ID, "message_id": game.id_mess}
+        if game.id_mess.isdigit()
+        else {"inline_message_id": game.id_mess}
+    )
     with contextlib.suppress(Exception):
         t = await factory_text_top_mini_game(session=session, game=game)
         await query.message.bot.edit_message_text(
@@ -126,13 +162,13 @@ async def buy_one_of_offer(
                 award=data["award"],
             )
             + additional_text,
-            inline_message_id=game.id_mess,
             reply_markup=await ik_start_created_game(
                 link=await create_start_link(bot=query.bot, payload=game.id_game),
                 total_gamers=data["amount_gamers"],
                 current_gamers=await get_amount_gamers(session=session, game=game),
             ),
             disable_web_page_preview=True,
+            **mess_data,
         )
         if is_end_game:
             game.last_update_mess = is_end_game

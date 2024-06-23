@@ -1,3 +1,4 @@
+import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 from db import User, Value, Aviary, Item
 from sqlalchemy import select, update
@@ -27,7 +28,9 @@ async def update_bank_storage(session: AsyncSession, amount: int):
     )
 
 
-async def exchange(session: AsyncSession, user: User, amount: int, rate: int, all: bool = True):
+async def exchange(
+    session: AsyncSession, user: User, amount: int, rate: int, all: bool = True
+):
     BANK_PERCENT_FEE = await tools.get_value(
         session=session, value_name="BANK_PERCENT_FEE"
     )
@@ -43,3 +46,20 @@ async def exchange(session: AsyncSession, user: User, amount: int, rate: int, al
     else:
         user.rub -= amount - remains
     return you_change, bank_fee if bank_fee > 0 else None, you_got
+
+
+async def get_weight_rate_bank(session: AsyncSession) -> list[float]:
+    weight_rate = await tools.get_value(session=session, value_name="WEIGHT_RATE_BANK", value_type='str')
+    return [float(i.strip()) for i in weight_rate.split(",")]
+
+
+async def get_increase_rate_bank(
+    session: AsyncSession,
+) -> tuple[list[int], list[int]]:
+    increase_rate_plus, increase_rate_minus = await asyncio.gather(
+        tools.get_value(session=session, value_name="INCREASE_PLUS_RATE_BANK", value_type='str'),
+        tools.get_value(session=session, value_name="INCREASE_MINUS_RATE_BANK", value_type='str'),
+    )
+    increase_rate_plus = [int(i.strip()) for i in increase_rate_plus.split(", ")]
+    increase_rate_minus = [int(i.strip()) for i in increase_rate_minus.split(", ")]
+    return increase_rate_plus, increase_rate_minus

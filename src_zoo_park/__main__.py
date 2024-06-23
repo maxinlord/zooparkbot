@@ -26,6 +26,7 @@ from jobs import (
     job_minute,
     job_sec,
     add_bonus_to_users,
+    create_game_for_chat,
 )
 
 bot: Bot = Bot(
@@ -41,13 +42,16 @@ async def on_startup(_engine: AsyncEngine) -> None:
 async def on_shutdown(session: AsyncSession) -> None:
     await session.close_all()
 
-    
+
 async def scheduler() -> None:
     aioschedule.every(1).seconds.do(job_sec, bot=bot)
     aioschedule.every(1).seconds.do(job_minute, bot=bot)
     aioschedule.every().day.at("11:00").do(reset_first_offer_bought)
     aioschedule.every().day.at("11:00").do(add_bonus_to_users)
+    aioschedule.every().day.at("13:00").do(create_game_for_chat, bot=bot)
+    aioschedule.every().day.at("16:30").do(create_game_for_chat, bot=bot)
     aioschedule.every().day.at("20:00").do(verification_referrals, bot=bot)
+    aioschedule.every().day.at("20:00").do(create_game_for_chat, bot=bot)
     while True:
         await aioschedule.run_pending()
         await asyncio.sleep(1)

@@ -17,11 +17,12 @@ from tools import (
     get_amount_gamers,
     factory_text_top_mini_game,
     mention_html_by_username,
-    get_value
+    get_value,
+    get_nickname_owner_game,
 )
 from bot.states import UserState
 from bot.keyboards import rk_main_menu, ik_start_created_game, ik_button_play
-from config import dict_tr_currencys
+from config import dict_tr_currencys, CHAT_ID
 
 
 router = Router()
@@ -74,14 +75,13 @@ async def command_start_game(
     )
     session.add(gamer)
     await session.commit()
-    owner_game = await session.get(User, game.idpk_user)
-    nickname = (
-        mention_html_by_username(username=owner_game.username, name=owner_game.nickname)
-        if owner_game.nickname
-        else owner_game.nickname
+    nickname = await get_nickname_owner_game(session=session, game=game, bot=message.bot)
+    award = f"{game.amount_award:,d}{dict_tr_currencys.get(game.currency_award)}"
+    mess_data = (
+        {"chat_id": CHAT_ID, "message_id": game.id_mess}
+        if game.id_mess.isdigit()
+        else {"inline_message_id": game.id_mess}
     )
-    c = dict_tr_currencys[game.currency_award]
-    award = f"{game.amount_award:,d}{c}"
     with contextlib.suppress(Exception):
         t = await factory_text_top_mini_game(session=session, game=game)
         await message.bot.edit_message_text(
@@ -94,13 +94,13 @@ async def command_start_game(
                 amount_moves=game.amount_moves,
                 award=award,
             ),
-            inline_message_id=game.id_mess,
             reply_markup=await ik_start_created_game(
                 link=await create_start_link(bot=message.bot, payload=game.id_game),
                 total_gamers=game.amount_gamers,
                 current_gamers=await get_amount_gamers(session=session, game=game),
             ),
             disable_web_page_preview=True,
+            **mess_data,
         )
     await state.set_state(UserState.game)
     await state.update_data(
@@ -187,8 +187,12 @@ async def command_start(
 async def getting_nickname(
     message: Message, state: FSMContext, session: AsyncSession
 ) -> None:
-    LIMIT_LENGTH_MAX = await get_value(session=session, value_name="NICKNAME_LENGTH_MAX")
-    LIMIT_LENGTH_MIN = await get_value(session=session, value_name="NICKNAME_LENGTH_MIN")
+    LIMIT_LENGTH_MAX = await get_value(
+        session=session, value_name="NICKNAME_LENGTH_MAX"
+    )
+    LIMIT_LENGTH_MIN = await get_value(
+        session=session, value_name="NICKNAME_LENGTH_MIN"
+    )
     if len(message.text) > LIMIT_LENGTH_MAX:
         await message.answer(text=await get_text_message("nickname_too_long"))
         return
