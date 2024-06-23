@@ -163,7 +163,7 @@ async def create_game_for_chat(bot: Bot):
             amount_award=award,
             currency_award="usd",
             end_date=datetime.now() + timedelta(seconds=SEC_TO_EXPIRE_GAME),
-            amount_moves=random.randint(1, 2),
+            amount_moves=random.randint(10, 20),
         )
         session.add(game)
         await session.execute(
