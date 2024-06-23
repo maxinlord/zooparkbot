@@ -340,13 +340,12 @@ async def award_winners(bot: Bot, session: AsyncSession, game: Game):
     emoji_places = iter(["🏆", "🥈", "🥉"])
     for gamer in gamers_winer:
         gamer: User = await session.get(User, gamer.idpk_gamer)
+        award = game.amount_award * (next(award_percent) / 100)
         await add_to_currency(
             self=gamer,
             currency=game.currency_award,
-            amount=game.amount_award,
+            amount=award,
         )
-
-        award = game.amount_award * (next(award_percent) / 100)
         award = f"{int(award):,d}{dict_tr_currencys.get(game.currency_award)}"
         await bot.send_message(
             chat_id=gamer.id_user,
