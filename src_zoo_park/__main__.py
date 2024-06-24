@@ -72,13 +72,14 @@ async def main() -> None:
 
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
+    
+    dp.message.middleware(ThrottlingMiddleware())
 
     dp.message.middleware(DBSessionMiddleware(session_pool=_sessionmaker))
     dp.callback_query.middleware(DBSessionMiddleware(session_pool=_sessionmaker))
     dp.inline_query.middleware(DBSessionMiddleware(session_pool=_sessionmaker))
     dp.update.middleware(DBSessionMiddleware(session_pool=_sessionmaker))
 
-    dp.message.middleware(ThrottlingMiddleware())
 
     dp.message.middleware(CheckUser())
     dp.callback_query.middleware(CheckUser())
