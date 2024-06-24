@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import bot.keyboards as kb
 from db import User
 
+
 async def disable_not_main_window(data: dict, message: Message):
     if data.get("active_window"):
         with contextlib.suppress(Exception):
@@ -33,3 +34,5 @@ async def m_choice_quantity_avi(
             session=session, aviary_price=aviary_price
         ),
     )
+
+

@@ -230,6 +230,28 @@ async def get_quantity_rshop(
         await get_text_message("offer_bought_successfully"), show_alert=True
     )
     await session.commit()
+    animal = await session.scalar(
+        select(Animal).where(Animal.code_name == data["animal"] + data["rarity"])
+    )
+    await query.message.edit_caption(
+        caption=await get_text_message(
+            "choice_quantity_rarity_shop_menu",
+            name_=animal.name,
+            description=animal.description,
+            price=data["animal_price"],
+            income=await get_income_animal(
+                session=session,
+                animal=animal,
+                unity_idpk=data["unity_idpk"],
+                items=user.items,
+            ),
+            usd=user.usd,
+        ),
+        reply_markup=await ik_choice_quantity_animals_rshop(
+            session=session, animal_price=data["animal_price"]
+        ),
+        protect_content=True,
+    )
 
 
 @router.callback_query(UserState.zoomarket_menu, F.data == "cqa_rshop")

@@ -5,7 +5,7 @@ from aiogram.dispatcher.flags import get_flag
 from aiogram.types import Message
 from cachetools import TTLCache
 
-THROTTLE_TIME = 1
+THROTTLE_TIME = 0.5
 
 
 class ThrottlingMiddleware(BaseMiddleware):
