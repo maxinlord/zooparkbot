@@ -19,6 +19,7 @@ from tools import (
     add_animal,
     get_total_number_animals,
     get_photo,
+    get_dict_animals,
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -107,6 +108,7 @@ async def get_rarity_rshop(
             price=animal_price,
             income=animal_income,
             usd=user.usd,
+            quantity_animals=(await get_dict_animals(user)).get(animal.code_name, 0),
         ),
         reply_markup=await ik_choice_quantity_animals_rshop(
             session=session, animal_price=animal_price
@@ -162,6 +164,7 @@ async def rshop_switch_rarity(
                 price=animal_price,
                 income=animal_income,
                 usd=user.usd,
+                quantity_animals=(await get_dict_animals(user)).get(animal.code_name, 0)
             ),
         ),
         reply_markup=await ik_choice_quantity_animals_rshop(
@@ -246,6 +249,7 @@ async def get_quantity_rshop(
                 items=user.items,
             ),
             usd=user.usd,
+            quantity_animals=(await get_dict_animals(user)).get(animal.code_name, 0)
         ),
         reply_markup=await ik_choice_quantity_animals_rshop(
             session=session, animal_price=data["animal_price"]
@@ -301,6 +305,7 @@ async def back_to_choice_quantity_rshop(
             price=data["animal_price"],
             income=animal_income,
             usd=user.usd,
+            quantity_animals=(await get_dict_animals(user)).get(animal.code_name, 0)
         ),
         reply_markup=await ik_choice_quantity_animals_rshop(
             session=session, animal_price=data["animal_price"]
