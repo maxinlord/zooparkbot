@@ -14,5 +14,6 @@ from .models import (
     RequestToUnity,
     TransferMoney,
     Game,
-    Gamer
+    Gamer,
+    MessageToSupport
 )

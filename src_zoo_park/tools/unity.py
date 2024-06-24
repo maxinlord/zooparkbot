@@ -206,11 +206,12 @@ async def check_condition_2nd_lvl(session: AsyncSession, unity: Unity) -> bool:
         )
         if total_income < AMOUNT_INCOME_2ND_LVL:
             return False
-        return all(
+        animals_num = [
             num_animal >= AMOUNT_ANIMALS_2ND_LVL
             for user in users
             for num_animal in await tools.get_numbers_animals(user)
-        )
+        ]
+        return all(animals_num)
 
 
 async def check_condition_3rd_lvl(session: AsyncSession, unity: Unity) -> bool:

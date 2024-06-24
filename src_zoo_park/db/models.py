@@ -166,6 +166,18 @@ class Gamer(Base):
     score: Mapped[int] = mapped_column(default=0)
 
 
+class MessageToSupport(Base):
+    __tablename__ = "messages_to_support"
+
+    id_message: Mapped[int] = mapped_column(nullable=True)
+    idpk_user: Mapped[int] = mapped_column()
+    text: Mapped[str] = mapped_column(String(length=4096))
+    photo_id: Mapped[str] = mapped_column(String(length=200), nullable=True)
+    send_date: Mapped[str] = mapped_column(DateTime)
+    answer: Mapped[str] = mapped_column(String(length=4096), nullable=True)
+    answer_date: Mapped[str] = mapped_column(DateTime, nullable=True)
+
+
 class Text(Base):
     __tablename__ = "texts"
 

@@ -14,6 +14,8 @@ class UserState(StatesGroup):
     avi_enter_custom_qa_step = State()
     exchange_bank_step = State()
     game = State()
+    send_mess_to_support = State()
+    answer_on_question = State()
 
 class AdminState(StatesGroup):
     main = State()

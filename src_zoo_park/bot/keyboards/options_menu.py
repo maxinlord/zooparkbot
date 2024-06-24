@@ -627,3 +627,13 @@ async def ik_choice_rate_calculator(
         )
     builder.adjust(3)
     return builder.as_markup()
+
+
+async def ik_im_take(idpk_message_to_support: int):
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text=await tools.get_text_button("im_take"),
+        callback_data=f"{idpk_message_to_support}:im_take",
+    )
+    builder.adjust(1)
+    return builder.as_markup()

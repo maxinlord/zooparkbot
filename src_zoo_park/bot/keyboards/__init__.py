@@ -1,4 +1,4 @@
-from .base import rk_back, ik_back, ik_start_game, ik_start_created_game
+from .base import rk_back, ik_back, ik_start_game, ik_start_created_game, rk_cancel
 from .menu import rk_main_menu, rk_zoomarket_menu, rk_unity_menu
 from .options_menu import (
     ik_merchant_menu,
@@ -31,5 +31,6 @@ from .options_menu import (
     ik_button_play,
     ik_watch_results_game,
     ik_choice_type_top,
-    ik_choice_rate_calculator
+    ik_choice_rate_calculator,
+    ik_im_take
 )

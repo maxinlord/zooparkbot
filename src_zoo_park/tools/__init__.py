@@ -72,7 +72,7 @@ from .nickname import (
     shorten_whitespace_nickname,
     has_special_characters_nickname,
 )
-from .photo import get_photo
+from .photo import get_photo, get_photo_from_message
 from .random_merchant import create_random_merchant, get_weights_rmerchant, gen_price
 from .referrals import get_referrals
 

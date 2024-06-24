@@ -4,14 +4,24 @@ from aiogram import Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from db import User
+from db import User, MessageToSupport
 from aiogram.filters import StateFilter
 from aiogram.fsm.state import any_state
-from tools import mention_html, income_, get_text_message, get_photo
-from bot.keyboards import ik_choice_rate_calculator
-from bot.filters import CompareDataByIndex
+from tools import (
+    mention_html,
+    income_,
+    get_text_message,
+    get_photo,
+    get_photo_from_message,
+)
+from bot.keyboards import ik_choice_rate_calculator, rk_cancel, rk_main_menu, ik_im_take
+from bot.filters import CompareDataByIndex, GetTextButton
+from bot.states import UserState
+from datetime import datetime
+from config import CHAT_SUPPORT_ID
 
 router = Router()
+flags = {"throttling_key": "default"}
 
 
 @router.message(Command(commands="usd"), StateFilter(any_state))
@@ -188,3 +198,83 @@ async def photo_view(
         await message.answer(text=await get_text_message("error_photo"))
         return
     await message.answer_photo(photo=photo)
+
+
+@router.message(UserState.main_menu, Command(commands="support"))
+async def support(
+    message: Message,
+    state: FSMContext,
+    command: CommandObject,
+    session: AsyncSession,
+    user: User | None,
+) -> None:
+    await message.answer(
+        text=await get_text_message("send_mess_to_support"),
+        reply_markup=await rk_cancel(),
+    )
+    await state.set_state(UserState.send_mess_to_support)
+
+
+@router.message(Command(commands="support"))
+async def support_error(
+    message: Message,
+    state: FSMContext,
+    command: CommandObject,
+    session: AsyncSession,
+    user: User | None,
+) -> None:
+    await message.answer(text=await get_text_message("support_call_from_main_menu"))
+
+
+@router.message(UserState.send_mess_to_support, GetTextButton("cancel"), flags=flags)
+async def cancel_send_mess_to_supp(
+    message: Message,
+    session: AsyncSession,
+    state: FSMContext,
+    user: User,
+):
+    await state.set_state(UserState.main_menu)
+    await message.answer(
+        text=await get_text_message("canceled"), reply_markup=await rk_main_menu()
+    )
+
+
+@router.message(UserState.send_mess_to_support)
+async def get_sended_message(
+    message: Message,
+    session: AsyncSession,
+    state: FSMContext,
+    user: User,
+):
+    photo_id = await get_photo_from_message(message)
+    time = datetime.now()
+    message_to_support = MessageToSupport(
+        idpk_user=user.idpk,
+        text=message.caption if photo_id else message.text,
+        photo_id=photo_id,
+        send_date=time,
+    )
+    session.add(message_to_support)
+    await session.flush()
+    await state.set_state(UserState.main_menu)
+    await message.answer(
+        text=await get_text_message("wait_answer"), reply_markup=await rk_main_menu()
+    )
+    func = {
+        False: message.bot.send_message,
+        True: message.bot.send_photo,
+    }
+    text = await get_text_message(
+        "new_mess_to_support",
+        user=mention_html(id_user=user.id_user, name=user.nickname),
+        text=message_to_support.text,
+        send_date=time.strftime("%d.%m.%Y %H:%M:%S"),
+    )
+    mess_data = {"photo": photo_id, "caption": text} if photo_id else {"text": text}
+    msg: Message = await func[bool(photo_id)](
+        chat_id=CHAT_SUPPORT_ID,
+        **mess_data,
+        reply_markup=await ik_im_take(idpk_message_to_support=message_to_support.idpk),
+    )
+    message_to_support.id_message = msg.message_id
+    await session.commit()

@@ -23,6 +23,7 @@ def setup_message_routers() -> Router:
         workshop_items,
         aviaries,
         account,
+        im_take,
         any_unknown_message,
         errors,
     )
@@ -48,6 +49,7 @@ def setup_message_routers() -> Router:
     router.include_router(rarity_shop.router)
     router.include_router(workshop_items.router)
     router.include_router(aviaries.router)
+    router.include_router(im_take.router)
 
     router.include_router(any_unknown_message.router)
 
