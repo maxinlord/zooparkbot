@@ -88,12 +88,17 @@ class Item(Base):
     __tablename__ = "items"
 
     code_name: Mapped[str] = mapped_column(String(64))
+    emoji: Mapped[str] = mapped_column(String(length=10))
     name: Mapped[str] = mapped_column(String(length=64))
-    description: Mapped[str] = mapped_column(String(length=4096))
+    description: Mapped[str] = mapped_column(Text)
     price: Mapped[int] = mapped_column(BigInteger)
     currency: Mapped[str] = mapped_column(String(length=64))
     value: Mapped[float] = mapped_column(Float)
     quantity: Mapped[int] = mapped_column(default=0)
+
+    @property
+    def name_with_emoji(self) -> str:
+        return f"{self.name} {self.emoji}"
 
 
 class Animal(Base):
@@ -171,11 +176,10 @@ class MessageToSupport(Base):
 
     id_message: Mapped[int] = mapped_column(nullable=True)
     idpk_user: Mapped[int] = mapped_column()
-    text: Mapped[str] = mapped_column(String(length=4096))
+    question: Mapped[str] = mapped_column(Text)
+    id_message_question: Mapped[int] = mapped_column()
     photo_id: Mapped[str] = mapped_column(String(length=200), nullable=True)
-    send_date: Mapped[str] = mapped_column(DateTime)
-    answer: Mapped[str] = mapped_column(String(length=4096), nullable=True)
-    answer_date: Mapped[str] = mapped_column(DateTime, nullable=True)
+    id_message_answer: Mapped[int] = mapped_column(nullable=True)
 
 
 class Text(Base):

@@ -247,12 +247,11 @@ async def get_sended_message(
     user: User,
 ):
     photo_id = await get_photo_from_message(message)
-    time = datetime.now()
     message_to_support = MessageToSupport(
         idpk_user=user.idpk,
-        text=message.caption if photo_id else message.text,
+        question=message.caption if photo_id else message.text,
+        id_message_question=message.message_id,
         photo_id=photo_id,
-        send_date=time,
     )
     session.add(message_to_support)
     await session.flush()
@@ -267,8 +266,8 @@ async def get_sended_message(
     text = await get_text_message(
         "new_mess_to_support",
         user=mention_html(id_user=user.id_user, name=user.nickname),
-        text=message_to_support.text,
-        send_date=time.strftime("%d.%m.%Y %H:%M:%S"),
+        text=message_to_support.question,
+        idpk_user=user.idpk,
     )
     mess_data = {"photo": photo_id, "caption": text} if photo_id else {"text": text}
     msg: Message = await func[bool(photo_id)](

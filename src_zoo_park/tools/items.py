@@ -7,8 +7,8 @@ import math
 
 
 async def get_all_name_items(session: AsyncSession):
-    name_items = await session.execute(select(Item.name, Item.code_name))
-    return name_items.all()
+    items = await session.scalars(select(Item))
+    return [(item.name_with_emoji, item.code_name) for item in items.all()]
 
 
 async def get_items_data_to_kb(
@@ -20,7 +20,9 @@ async def get_items_data_to_kb(
         session=session, value_name="EMOJI_FOR_ACTIVATE_ITEM", value_type="str"
     )
     for key, value in decoded_dict.items():
-        name_item = await session.scalar(select(Item.name).where(Item.code_name == key))
+        name_item = (
+            await session.scalar(select(Item).where(Item.code_name == key))
+        ).name_with_emoji
         value = EMOJI_FOR_ACTIVATE_ITEM if value == True else ""
         data.append((name_item, key, value))
     return data
@@ -45,6 +47,18 @@ async def count_page_items(session: AsyncSession, items: str) -> int:
 async def get_status_item(items: str, code_name_item: str):
     decoded_dict: dict = json.loads(items)
     return decoded_dict.get(code_name_item)
+
+
+async def get_activated_items(session: AsyncSession, items: str):
+    decoded_dict: dict = json.loads(items)
+    activated_items = []
+    for key, value in decoded_dict.items():
+        if value == True:
+            emoji = await session.scalar(
+                select(Item.emoji).where(Item.code_name == key)
+            )
+            activated_items.append(emoji)
+    return activated_items
 
 
 async def add_item(

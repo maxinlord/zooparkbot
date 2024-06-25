@@ -637,3 +637,26 @@ async def ik_im_take(idpk_message_to_support: int):
     )
     builder.adjust(1)
     return builder.as_markup()
+
+
+async def ik_confirm_or_cancel(idpk_message_to_support: int):
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text=await tools.get_text_button("confirm"),
+        callback_data=f"{idpk_message_to_support}:confirm_im_take",
+    )
+    builder.button(
+        text=await tools.get_text_button("cancel"),
+        callback_data=f"{idpk_message_to_support}:cancel_im_take",
+    )
+    builder.adjust(1)
+    return builder.as_markup()
+
+async def ik_link_on_member_support(link: str, name: str):
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text=await tools.get_text_button("link_on_member_support", name_=name),
+        url=link,
+    )
+    builder.adjust(1)
+    return builder.as_markup()

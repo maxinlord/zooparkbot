@@ -62,7 +62,7 @@ async def set_default_commands(bot: Bot):
         [
             BotCommand(command="start", description="-"),
             BotCommand(command="calculator", description="-"),
-            # BotCommand(command="support", description="-"),
+            BotCommand(command="support", description="-"),
         ]
     )
 

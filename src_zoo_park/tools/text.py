@@ -144,7 +144,7 @@ async def factory_text_main_top(session: AsyncSession, idpk_user: int) -> str:
         )
         return await tools.get_text_message(
             pattern,
-            n=user.nickname,
+            n=await tools.view_nickname(session=session, user=user),
             i=income,
             c=counter,
             u=unity_name or "",
@@ -189,7 +189,7 @@ async def factory_text_main_top_by_money(session: AsyncSession, idpk_user: int) 
         )
         return await tools.get_text_message(
             pattern,
-            n=user.nickname,
+            n=await tools.view_nickname(session=session, user=user),
             m=money,
             c=counter,
             u=unity_name or "",
@@ -211,7 +211,7 @@ async def factory_text_main_top_by_money(session: AsyncSession, idpk_user: int) 
     if self_place > total_place_top:
         text += await tools.get_text_message(
             "pattern_line_not_in_top_money",
-            n=user.nickname,
+            n=await tools.view_nickname(session=session, user=user),
             m=user.usd,
             c=self_place,
         )
@@ -239,7 +239,7 @@ async def factory_text_main_top_by_animals(
         )
         return await tools.get_text_message(
             pattern,
-            n=user.nickname,
+            n=await tools.view_nickname(session=session, user=user),
             a=animals,
             c=counter,
             u=unity_name or "",
@@ -289,7 +289,7 @@ async def factory_text_main_top_by_referrals(
         )
         return await tools.get_text_message(
             pattern,
-            n=user.nickname,
+            n=await tools.view_nickname(session=session, user=user),
             r=ref,
             c=counter,
             u=unity_name or "",
@@ -326,7 +326,7 @@ async def factory_text_top_mini_game(session: AsyncSession, game: Game):
     for counter, gamer in enumerate(gamers_sorted, start=1):
         user = await session.get(User, gamer.idpk_gamer)
         nickname = (
-            mention_html_by_username(username=user.username, name=user.nickname)
+            mention_html_by_username(username=user.username, name=await tools.view_nickname(session=session, user=user))
             if user.nickname
             else user.nickname
         )

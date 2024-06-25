@@ -64,6 +64,7 @@ from .items import (
     add_item,
     activate_item,
     deactivate_all_items,
+    get_activated_items
 )
 
 from .message import disable_not_main_window, m_choice_quantity_avi
@@ -71,6 +72,7 @@ from .nickname import (
     is_unique_nickname,
     shorten_whitespace_nickname,
     has_special_characters_nickname,
+    view_nickname
 )
 from .photo import get_photo, get_photo_from_message
 from .random_merchant import create_random_merchant, get_weights_rmerchant, gen_price
