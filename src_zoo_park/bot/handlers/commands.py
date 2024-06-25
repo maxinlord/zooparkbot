@@ -247,6 +247,11 @@ async def get_sended_message(
     user: User,
 ):
     photo_id = await get_photo_from_message(message)
+    if photo_id and not message.caption:
+        await message.answer(
+            text=await get_text_message("error_message_without_caption"),
+        )
+        return
     message_to_support = MessageToSupport(
         idpk_user=user.idpk,
         question=message.caption if photo_id else message.text,
