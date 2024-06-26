@@ -162,7 +162,7 @@ async def inline_game_three_pm(
         amount_award=award,
         currency_award=split_query[3],
         end_date=datetime.now() + timedelta(seconds=SEC_TO_EXPIRE_GAME),
-        amount_moves=random.randint(1, 2),
+        amount_moves=random.randint(1, 10),
     )
     session.add(game)
     await session.commit()
