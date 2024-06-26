@@ -10,6 +10,7 @@ from tools import (
     add_aviary,
     get_price_aviaries,
     m_choice_quantity_avi,
+    find_integers
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -165,14 +166,15 @@ async def get_custom_quantity_aviary(
     state: FSMContext,
     user: User,
 ):
-    if not message.text.isdigit():
+    num = await find_integers(message.text)
+    if not num:
         await message.answer(text=await get_text_message("enter_digit"))
         return
-    if int(message.text) < 1:
+    if num < 1:
         await message.answer(text=await get_text_message("enter_digit"))
         return
     data = await state.get_data()
-    finite_price = int(message.text) * data["aviary_price"]
+    finite_price = num * data["aviary_price"]
     if user.usd < finite_price:
         await message.answer(text=await get_text_message("not_enough_money"))
         return
@@ -182,7 +184,7 @@ async def get_custom_quantity_aviary(
         session=session,
         self=user,
         code_name_aviary=data["code_name_aviary"],
-        quantity=int(message.text),
+        quantity=num,
     )
     await session.commit()
     await message.answer(

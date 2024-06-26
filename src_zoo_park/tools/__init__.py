@@ -32,7 +32,7 @@ from .bank import (
     get_weight_rate_bank,
     get_increase_rate_bank,
 )
-from .base import gen_key, get_rates_calculator
+from .base import gen_key, get_rates_calculator, find_integers
 
 from .bonus import (
     referral_bonus,
@@ -45,7 +45,7 @@ from .bonus import (
 from .deep_link import validate_command_arg
 from .game import (
     get_amount_gamers,
-    get_total_moves,
+    get_total_moves_game,
     get_user_where_max_score,
     get_nickname_owner_game,
     get_first_three_places,

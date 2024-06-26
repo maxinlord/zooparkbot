@@ -18,6 +18,7 @@ from tools import (
     get_total_number_animals,
     get_value,
     get_photo,
+    find_integers
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -33,7 +34,8 @@ import asyncio
 
 flags = {"throttling_key": "default"}
 router = Router()
-petard_emoji_effect = '5046509860389126442'
+petard_emoji_effect = "5046509860389126442"
+
 
 @router.message(UserState.zoomarket_menu, GetTextButton("random_merchant"), flags=flags)
 async def random_merchant_menu(
@@ -53,9 +55,8 @@ async def random_merchant_menu(
     animal_name = await session.scalar(
         select(Animal.name).where(Animal.code_name == merchant.code_name_animal)
     )
-    msg = await message.answer_photo(
-        photo=await get_photo(session=session, photo_name="plug_photo"),
-        caption=await get_text_message(
+    msg = await message.answer(
+        text=await get_text_message(
             "random_merchant_menu", n=merchant.name, usd=user.usd
         ),
         reply_markup=await ik_merchant_menu(
@@ -173,10 +174,13 @@ async def buy_one_of_offer(
             merchant.price = await gen_price(session=session, animals=user.animals)
             await session.commit()
             await state.set_state(UserState.zoomarket_menu)
-            await query.message.answer(await get_text_message("you_lucky"), message_effect_id=petard_emoji_effect)
+            await query.message.answer(
+                await get_text_message("you_lucky"),
+                message_effect_id=petard_emoji_effect,
+            )
         case "3":
-            await query.message.edit_caption(
-                caption=await get_text_message("merchant_choice_animal"),
+            await query.message.edit_text(
+                text=await get_text_message("merchant_choice_animal"),
                 reply_markup=await ik_choice_animal_rmerchant(session=session),
             )
 
@@ -196,8 +200,8 @@ async def choice_animal_to_buy(
         select(Animal.price).where(Animal.code_name == f"{animal}-")
     )
     await state.update_data(code_name_animal=animal, animal_price=animal_price)
-    await query.message.edit_caption(
-        caption=await get_text_message("merchant_choise_quantity_animal"),
+    await query.message.edit_text(
+        text=await get_text_message("merchant_choise_quantity_animal"),
         reply_markup=await ik_choice_quantity_animals_rmerchant(
             session=session, animal_price=animal_price
         ),
@@ -297,8 +301,8 @@ async def back_distributor(
             )
             data = await state.get_data()
             animal_name = data["animal_name"]
-            await query.message.edit_caption(
-                caption=await get_text_message(
+            await query.message.edit_text(
+                text=await get_text_message(
                     "random_merchant_menu", n=merchant.name, usd=user.usd
                 ),
                 reply_markup=await ik_merchant_menu(
@@ -311,8 +315,8 @@ async def back_distributor(
                 ),
             )
         case "to_choice_animal":
-            await query.message.edit_caption(
-                caption=await get_text_message("merchant_choise_animal"),
+            await query.message.edit_text(
+                text=await get_text_message("merchant_choise_animal"),
                 reply_markup=await ik_choice_animal_rmerchant(session=session),
             )
 
@@ -348,9 +352,8 @@ async def back_to_choice_quantity(
     await message.answer(
         text=await get_text_message("backed"), reply_markup=await rk_zoomarket_menu()
     )
-    msg = await message.answer_photo(
-        photo=await get_photo(session=session, photo_name="plug_photo"),
-        caption=await get_text_message("merchant_choise_quantity_animal"),
+    msg = await message.answer(
+        text=await get_text_message("merchant_choise_quantity_animal"),
         reply_markup=await ik_choice_quantity_animals_rmerchant(
             session=session, animal_price=data["animal_price"]
         ),
@@ -366,10 +369,11 @@ async def get_custom_quantity_animals(
     state: FSMContext,
     user: User,
 ):
-    if not message.text.isdigit():
+    num = await find_integers(message.text)
+    if not num:
         await message.answer(text=await get_text_message("enter_digit"))
         return
-    if int(message.text) < 1:
+    if num < 1:
         await message.answer(text=await get_text_message("enter_digit"))
         return
     remain_seats = await get_remain_seats(
@@ -377,19 +381,19 @@ async def get_custom_quantity_animals(
         aviaries=user.aviaries,
         amount_animals=await get_total_number_animals(self=user),
     )
-    if remain_seats < int(message.text):
+    if remain_seats < num:
         await message.answer(
             await get_text_message("not_enough_seats"), show_alert=True
         )
         return
     data = await state.get_data()
-    finite_price = int(message.text) * data["animal_price"]
+    finite_price = num * data["animal_price"]
     if user.usd < finite_price:
         await message.answer(text=await get_text_message("not_enough_money"))
         return
     user.usd -= finite_price
     user.amount_expenses_usd += finite_price
-    quantity = int(message.text)
+    quantity = num
     await message.answer(
         text=await get_text_message("you_paid", fp=finite_price),
         reply_markup=ReplyKeyboardRemove(),

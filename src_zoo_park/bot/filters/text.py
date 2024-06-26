@@ -1,6 +1,6 @@
 from aiogram.filters import Filter
-from aiogram.types import Message, CallbackQuery
-from tools import get_text_button
+from aiogram.types import Message, CallbackQuery, InlineQuery
+from tools import get_text_button, find_integers
 
 
 class GetTextButton(Filter):
@@ -22,3 +22,9 @@ class CompareDataByIndex(Filter):
         query: CallbackQuery,
     ) -> bool:
         return query.data.split(self.sep)[self.index] == self.compare
+
+
+class FindIntegers(Filter):
+
+    async def __call__(self, inline_query: InlineQuery) -> bool:
+        return bool(await find_integers(inline_query.query.split()[0]))

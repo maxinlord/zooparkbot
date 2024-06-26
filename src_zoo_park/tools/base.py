@@ -1,3 +1,4 @@
+import re
 from sqlalchemy.ext.asyncio import AsyncSession
 import string
 import random
@@ -16,3 +17,9 @@ async def get_rates_calculator(session: AsyncSession):
     )
     rates = [i.strip() for i in rates.split(",")]
     return rates
+
+
+async def find_integers(text: str) -> int | None:
+    numbers = re.sub(r"[^\d\s]", " ", text)
+    integers = re.findall(r"\d+", numbers)
+    return int("".join(integers)) if integers else None

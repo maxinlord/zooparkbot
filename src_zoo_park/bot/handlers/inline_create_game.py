@@ -20,7 +20,8 @@ from tools import (
     add_to_amount_expenses_currency,
     get_currency,
     mention_html_by_username,
-    get_value
+    get_value,
+    find_integers
 )
 from config import dict_tr_currencys, games
 from datetime import datetime, timedelta
@@ -101,13 +102,13 @@ async def inline_game_three_pm(
         )
         return await inline_query.answer(results=[r], cache_time=0)
 
-    if not split_query[2].isdigit() or int(split_query[2]) < 1:
+    if not await find_integers(split_query[2]) or await find_integers(split_query[2]) < 1:
         description_key = (
-            "enter_prise_small" if split_query[2].isdigit() else "enter_prise_for_win"
+            "enter_prise_small" if await find_integers(split_query[2]) else "enter_prise_for_win"
         )
         message_text_key = (
             "error_enter_prise_small"
-            if split_query[2].isdigit()
+            if await find_integers(split_query[2])
             else "error_enter_prise_for_win"
         )
         r = await create_inline_query_result(
@@ -136,8 +137,9 @@ async def inline_game_three_pm(
         )
         return await inline_query.answer(results=[r], cache_time=0)
 
+    award = await find_integers(split_query[2])
     currency = await get_currency(self=user, currency=split_query[3])
-    if currency < int(split_query[2]):
+    if currency < award:
         r = InlineQueryResultArticle(
             id=str(random.randint(1, 100000)),
             title=await get_text_message("attention"),
@@ -157,10 +159,10 @@ async def inline_game_three_pm(
         idpk_user=user.idpk,
         type_game=split_query[0],
         amount_gamers=gamers,
-        amount_award=int(split_query[2]),
+        amount_award=award,
         currency_award=split_query[3],
         end_date=datetime.now() + timedelta(seconds=SEC_TO_EXPIRE_GAME),
-        amount_moves=random.randint(1, 15),
+        amount_moves=random.randint(1, 2),
     )
     session.add(game)
     await session.commit()

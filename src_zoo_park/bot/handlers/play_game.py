@@ -12,7 +12,6 @@ from tools import (
     get_text_message,
     get_amount_gamers,
     factory_text_top_mini_game,
-    get_total_moves,
     get_user_where_max_score,
     get_first_three_places,
     add_to_currency,
@@ -42,55 +41,6 @@ async def handle_game_end(
     await state.set_state(UserState.main_menu)
 
 
-async def handle_game_winner(query: CallbackQuery, session, game, data):
-    idpk_winer = await get_user_where_max_score(session=session, game=game)
-    winer = await session.get(User, idpk_winer)
-    additional_text = (
-        f"\n\n{await get_text_message('game_winer', nickname=winer.nickname)}"
-    )
-    await add_to_currency(
-        self=winer,
-        currency=game.currency_award,
-        amount=game.amount_award,
-    )
-    # await session.commit()
-    await query.bot.send_message(
-        chat_id=winer.id_user,
-        text=await get_text_message(
-            "game_winer_message",
-            award=data["award"],
-        ),
-        message_effect_id=petard_emoji_effect,
-    )
-    return additional_text
-
-
-async def handle_game_winners(query: CallbackQuery, session, game):
-    gamers_winer: list[Gamer] = await get_first_three_places(session=session, game=game)
-    additional_text = ""
-    award_percent = iter(await get_percent_places_award(session=session))
-    emoji_places = iter(["🏆", "🥈", "🥉"])
-    for gamer in gamers_winer:
-        gamer: User = await session.get(User, gamer.idpk_gamer)
-        additional_text += f"\n\n{await get_text_message('game_pattern_winer', nickname=gamer.nickname, emoji_places=next(emoji_places))}"
-        amount = game.amount_award * (next(award_percent) / 100)
-        award = f"{int(amount):,d}{dict_tr_currencys[game.currency_award]}"
-        await add_to_currency(
-            self=gamer,
-            currency=game.currency_award,
-            amount=int(amount),
-        )
-        await query.bot.send_message(
-            chat_id=gamer.id_user,
-            text=await get_text_message(
-                "game_winer_message",
-                award=award,
-            ),
-            message_effect_id=petard_emoji_effect,
-        )
-    return additional_text
-
-
 @router.callback_query(UserState.game, F.data == "dice")
 async def play_game(
     query: CallbackQuery,
@@ -113,8 +63,18 @@ async def play_game(
     gamer.score += value_dice
     gamer.moves -= 1
 
-    await session.commit()
+    await session.flush()
+
     if gamer.moves == 0:
+        await query.message.answer(
+            text=await get_text_message("you_got", value_dice=value_dice)
+        )
+        await query.message.answer(
+            text=await get_text_message(
+                "play_game",
+                score=gamer.score,
+            )
+        )
         await handle_game_end(query, state, session)
     else:
         await query.message.answer(
@@ -132,18 +92,6 @@ async def play_game(
             ),
         )
 
-    additional_text = ""
-    is_end_game = False
-    if (
-        await get_amount_gamers(session=session, game=game) == game.amount_gamers
-        and await get_total_moves(session=session, game=game) == 0
-    ):
-        if game.idpk_user == 0:
-            additional_text = await handle_game_winners(query, session, game)
-        else:
-            additional_text = await handle_game_winner(query, session, game, data)
-        is_end_game = True
-        game.end = True
     mess_data = (
         {"chat_id": CHAT_ID, "message_id": game.id_mess}
         if game.id_mess.isdigit()
@@ -160,8 +108,7 @@ async def play_game(
                 amount_gamers=data["amount_gamers"],
                 amount_moves=data["amount_moves"],
                 award=data["award"],
-            )
-            + additional_text,
+            ),
             reply_markup=await ik_start_created_game(
                 link=await create_start_link(bot=query.bot, payload=game.id_game),
                 total_gamers=data["amount_gamers"],
@@ -170,6 +117,4 @@ async def play_game(
             disable_web_page_preview=True,
             **mess_data,
         )
-        if is_end_game:
-            game.last_update_mess = is_end_game
     await session.commit()

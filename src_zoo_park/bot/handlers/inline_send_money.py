@@ -19,38 +19,34 @@ from tools import (
     add_user_to_used,
     add_to_amount_expenses_currency,
     get_currency,
+    find_integers,
 )
-from bot.filters import CompareDataByIndex
+from bot.filters import CompareDataByIndex, FindIntegers
 from config import dict_tr_currencys
 
 router = Router()
 
 
-@router.inline_query(F.query.isdigit())
-async def inline_send_money_one_pm(
-    inline_query: InlineQuery,
-    session: AsyncSession,
-    user: User | None,
-):
-    r = InlineQueryResultArticle(
-        id=str(random.randint(1, 100000)),
-        title=await get_text_message("point_1"),
-        description=await get_text_message("enter_currency_to_send"),
-        thumbnail_url="https://www.clipartmax.com/png/full/219-2197586_organization-training-business-learning-technology-no-1-icon-png.png",
-        input_message_content=InputTextMessageContent(
-            message_text=await get_text_message("error_enter_currency_to_send")
-        ),
-    )
-    await inline_query.answer(results=[r], cache_time=0)
-
-
-@router.inline_query(F.query.split()[0].isdigit(), F.query.split().len() == 2)
-async def inline_send_money_two_pm(
+@router.inline_query(FindIntegers())
+async def inline_send_money(
     inline_query: InlineQuery,
     session: AsyncSession,
     user: User | None,
 ):
     split_query = inline_query.query.split()
+    num = await find_integers(split_query[0])
+    amount_params = len(split_query)
+    if amount_params == 1:
+        r = InlineQueryResultArticle(
+            id=str(random.randint(1, 100000)),
+            title=await get_text_message("point_1"),
+            description=await get_text_message("enter_currency_to_send"),
+            thumbnail_url="https://www.clipartmax.com/png/full/219-2197586_organization-training-business-learning-technology-no-1-icon-png.png",
+            input_message_content=InputTextMessageContent(
+                message_text=await get_text_message("error_enter_currency_to_send")
+            ),
+        )
+        return await inline_query.answer(results=[r], cache_time=0)
     if split_query[1] not in ["rub", "usd"]:
         r = InlineQueryResultArticle(
             id=str(random.randint(1, 100000)),
@@ -63,7 +59,7 @@ async def inline_send_money_two_pm(
         )
         return await inline_query.answer(results=[r], cache_time=0)
     currency = await get_currency(self=user, currency=split_query[1])
-    if currency < int(split_query[0]):
+    if currency < num:
         r = InlineQueryResultArticle(
             id=str(random.randint(1, 100000)),
             title=await get_text_message("attention"),
@@ -76,57 +72,19 @@ async def inline_send_money_two_pm(
             ),
         )
         return await inline_query.answer(results=[r], cache_time=0)
-    r = InlineQueryResultArticle(
-        id=str(random.randint(1, 100000)),
-        title=await get_text_message("point_2"),
-        description=await get_text_message("enter_split_to_send"),
-        thumbnail_url="https://cdn-ru.bitrix24.ru/b9251457/landing/7b7/7b7c7b41a9e0c33f1867fea82a8d5c08/Resurs_20_s_1x.png",
-        input_message_content=InputTextMessageContent(
-            message_text=await get_text_message("error_enter_split_to_send")
-        ),
-    )
-    await inline_query.answer(results=[r], cache_time=0)
-
-
-@router.inline_query(
-    F.query.split()[0].isdigit(),
-    F.query.split()[2].isdigit(),
-    F.query.split().len() == 3,
-)
-async def inline_send_money_three_pm(
-    inline_query: InlineQuery,
-    session: AsyncSession,
-    user: User | None,
-):
-    split_query = inline_query.query.split()
-    if split_query[1] not in ["rub", "usd"]:
+    if amount_params == 2:
         r = InlineQueryResultArticle(
             id=str(random.randint(1, 100000)),
-            title=await get_text_message("attention"),
-            description=await get_text_message("enter_usd_or_rub"),
-            thumbnail_url="https://avatars.yandex.net/get-music-content/2433207/64c60238.a.12011003-1/m1000x1000?webp=false",
+            title=await get_text_message("point_2"),
+            description=await get_text_message("enter_split_to_send"),
+            thumbnail_url="https://cdn-ru.bitrix24.ru/b9251457/landing/7b7/7b7c7b41a9e0c33f1867fea82a8d5c08/Resurs_20_s_1x.png",
             input_message_content=InputTextMessageContent(
-                message_text=await get_text_message("error_enter_usd_or_rub")
+                message_text=await get_text_message("error_enter_split_to_send")
             ),
         )
         return await inline_query.answer(results=[r], cache_time=0)
-    d = {"sum": int(split_query[0])}
-    currency = await get_currency(self=user, currency=split_query[1])
-    if currency < d["sum"]:
-        r = InlineQueryResultArticle(
-            id=str(random.randint(1, 100000)),
-            title=await get_text_message("attention"),
-            description=await get_text_message(
-                "not_enough_money_to_send", money=currency
-            ),
-            thumbnail_url="https://avatars.yandex.net/get-music-content/2433207/64c60238.a.12011003-1/m1000x1000?webp=false",
-            input_message_content=InputTextMessageContent(
-                message_text=await get_text_message("error_not_enough_money_to_send")
-            ),
-        )
-        return await inline_query.answer(results=[r], cache_time=0)
-    pieces = int(split_query[2])
-    if pieces <= 0:
+    pieces = await find_integers(split_query[2])
+    if pieces == 0:
         r = InlineQueryResultArticle(
             id=str(random.randint(1, 100000)),
             title=await get_text_message("attention"),
@@ -137,7 +95,7 @@ async def inline_send_money_three_pm(
             ),
         )
         return await inline_query.answer(results=[r], cache_time=0)
-    if pieces > d["sum"] or pieces > 500:
+    if pieces > num or pieces > 500:
         r = InlineQueryResultArticle(
             id=str(random.randint(1, 100000)),
             title=await get_text_message("attention"),
@@ -148,8 +106,7 @@ async def inline_send_money_three_pm(
             ),
         )
         return await inline_query.answer(results=[r], cache_time=0)
-
-    one_piece = d["sum"] // pieces
+    one_piece = num // pieces
     key = gen_key(length=10)
     tr = TransferMoney(
         id_transfer=key,
@@ -164,9 +121,12 @@ async def inline_send_money_three_pm(
         "https://imgimg.co/files/images/meshok-s-dengami/meshok-s-dengami-9.webp"
     )
     invisible_char = "&#8203;"
-    d["invisible"] = f'<a href="{photo_url}">{invisible_char}</a>'
-    d["nickname"] = user.nickname
-    d["ps"] = pieces
+    d = {
+        "sum": num,
+        "invisible": f'<a href="{photo_url}">{invisible_char}</a>',
+        "nickname": user.nickname,
+        "ps": pieces,
+    }
     c = dict_tr_currencys[split_query[1]]
     d["currency"] = c
     one_piece = f"{one_piece:,d}{c}"
@@ -199,30 +159,6 @@ async def inline_send_money_three_pm(
         reply_markup=keyboard,
     )
     await inline_query.answer(results=[r], cache_time=0)
-
-
-@router.chosen_inline_result(F.result_id.split(":")[-1] == "activate_tr")
-async def pagination_demo(chosen_result: ChosenInlineResult, session: AsyncSession):
-    idpk_tr = int(chosen_result.result_id.split(":")[0])
-    tr = await session.get(TransferMoney, idpk_tr)
-    user = await session.scalar(
-        select(User).where(User.id_user == chosen_result.from_user.id)
-    )
-
-    await add_to_currency(
-        self=user,
-        currency=tr.currency,
-        amount=-tr.pieces * tr.one_piece_sum,
-    )
-    await add_to_amount_expenses_currency(
-        self=user,
-        currency=tr.currency,
-        amount=tr.pieces * tr.one_piece_sum,
-    )
-    tr.status = True
-    await session.flush()
-    await session.execute(delete(TransferMoney).where(TransferMoney.status == False))
-    await session.commit()
 
 
 @router.callback_query(CompareDataByIndex("activate_tr"))
@@ -260,8 +196,7 @@ async def activate_tr(
         )
         return
     await add_user_to_used(session=session, idpk_tr=tr.idpk, idpk_user=user.idpk)
-    await add_to_currency(self=user, currency=tr.currency, amount=tr.one_piece_sum
-    )
+    await add_to_currency(self=user, currency=tr.currency, amount=tr.one_piece_sum)
     tr.pieces -= 1
     await session.commit()
     c = dict_tr_currencys[tr.currency]

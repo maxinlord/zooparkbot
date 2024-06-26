@@ -10,7 +10,7 @@ async def get_amount_gamers(session: AsyncSession, game: Game):
     return len(gamers.all())
 
 
-async def get_total_moves(session: AsyncSession, game: Game):
+async def get_total_moves_game(session: AsyncSession, game: Game):
     gamers = await session.scalars(select(Gamer).where(Gamer.id_game == game.id_game))
     return sum(gamer.moves for gamer in gamers)
 

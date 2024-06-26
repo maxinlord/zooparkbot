@@ -20,6 +20,7 @@ from tools import (
     get_total_number_animals,
     get_photo,
     get_dict_animals,
+    find_integers
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -322,13 +323,13 @@ async def get_custom_quantity_animals_rshop(
     state: FSMContext,
     user: User,
 ):
-    if not message.text.isdigit():
+    quantity_animal = await find_integers(message.text)
+    if not quantity_animal:
         await message.answer(text=await get_text_message("enter_digit"))
         return
-    if int(message.text) < 1:
+    if quantity_animal < 1:
         await message.answer(text=await get_text_message("enter_digit"))
         return
-    quantity_animal = int(message.text)
     remain_seats = await get_remain_seats(
         session=session,
         aviaries=user.aviaries,

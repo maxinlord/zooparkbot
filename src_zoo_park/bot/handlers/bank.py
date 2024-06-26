@@ -12,6 +12,7 @@ from tools import (
     ft_bank_exchange_info,
     update_bank_storage,
     exchange,
+    find_integers
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -179,12 +180,12 @@ async def get_amount(
     state: FSMContext,
     user: User,
 ):
-    if not message.text.isdigit():
+    amount = await find_integers(message.text)
+    if not amount:
         await message.answer(await get_text_message("enter_amount_to_exchange"))
         return
     data = await state.get_data()
     rate = data["rate"]
-    amount = int(message.text)
     if amount < rate:
         await message.answer(await get_text_message("no_money"))
         return

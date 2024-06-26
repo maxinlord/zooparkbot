@@ -13,6 +13,7 @@ from tools import (
     get_text_message,
     get_photo,
     get_photo_from_message,
+    find_integers
 )
 from bot.keyboards import ik_choice_rate_calculator, rk_cancel, rk_main_menu, ik_im_take
 from bot.filters import CompareDataByIndex, GetTextButton
@@ -150,14 +151,14 @@ async def small_calculator(
         )
         return
     args = command.args.split(" ")
-    if not args[0].isdigit():
+    if not await find_integers(args[0]):
         return await message.answer(text=await get_text_message("error_min"))
-    if len(args) == 2 and not args[1].isdigit():
+    if len(args) == 2 and not await find_integers(args[1]):
         return await message.answer(text=await get_text_message("error_rate"))
     if len(args) > 2:
         return await message.answer(text=await get_text_message("error_args"))
-    min = int(args[0])
-    rate = int(args[1]) if len(args) == 2 else None
+    min = await find_integers(args[0])
+    rate = await find_integers(args[1]) if len(args) == 2 else None
     income_1_min = await income_(session=session, user=user)
     income_custom_min = income_1_min * min
     if rate:
