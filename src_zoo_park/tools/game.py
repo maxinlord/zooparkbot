@@ -58,10 +58,9 @@ async def get_gamer(session: AsyncSession, idpk_gamer: int, id_game: str):
 
 
 async def gamer_have_active_game(session: AsyncSession, idpk_gamer: int):
-    # sourcery skip: boolean-if-exp-identity
     gamer = await session.scalar(
         select(Gamer).where(
             and_(Gamer.idpk_gamer == idpk_gamer, Gamer.game_end == False)
         )
     )
-    return True if gamer else False
+    return bool(gamer)

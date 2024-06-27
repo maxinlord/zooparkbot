@@ -61,7 +61,7 @@ async def command_start_game(
     ):
         await message.answer(text=await get_text_message("game_already_started"))
         return
-    if gamer_have_active_game(session=session, idpk_gamer=user.idpk):
+    if await gamer_have_active_game(session=session, idpk_gamer=user.idpk):
         await message.answer(text=await get_text_message("finished_active_game"))
         return
     if game.amount_gamers == await get_amount_gamers(session=session, game=game):
