@@ -235,6 +235,8 @@ async def updater_mess_minigame(session: AsyncSession, bot: Bot):
 
 async def award_winner(bot: Bot, session: AsyncSession, game: Game):
     idpk_gamer = await get_user_where_max_score(session=session, game=game)
+    if not idpk_gamer:
+        return
     winner = await session.get(User, idpk_gamer)
     await add_to_currency(
         self=winner,
@@ -256,6 +258,8 @@ async def award_winner(bot: Bot, session: AsyncSession, game: Game):
 
 async def award_winners(bot: Bot, session: AsyncSession, game: Game):
     gamers_winer: list[Gamer] = await get_first_three_places(session=session, game=game)
+    if not gamers_winer:
+        return
     award_percent = iter(await get_percent_places_award(session=session))
     for gamer in gamers_winer:
         gamer: User = await session.get(User, gamer.idpk_gamer)
