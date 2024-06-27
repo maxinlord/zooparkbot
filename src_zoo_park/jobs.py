@@ -137,6 +137,7 @@ async def deleter_request_to_unity(session: AsyncSession):
         delete(RequestToUnity).where(RequestToUnity.date_request_end < datetime.now())
     )
 
+MAX_AMOUNT_GAMERS = 80
 
 async def create_game_for_chat(bot: Bot):
     async with _sessionmaker_for_func() as session: 
@@ -151,7 +152,7 @@ async def create_game_for_chat(bot: Bot):
             id_game=f"game_{gen_key(length=12)}",
             idpk_user=0,
             type_game=random.choice(list(games.keys())),
-            amount_gamers=members // 2,
+            amount_gamers=min(members // 2, MAX_AMOUNT_GAMERS),
             amount_award=award,
             currency_award="usd",
             end_date=datetime.now() + timedelta(seconds=SEC_TO_EXPIRE_GAME),

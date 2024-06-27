@@ -27,7 +27,7 @@ from config import dict_tr_currencys, games
 from datetime import datetime, timedelta
 
 router = Router()
-
+MAX_AMOUNT_GAMERS = 80
 
 async def create_inline_query_result(
     title_key: str,
@@ -84,7 +84,7 @@ async def inline_game_three_pm(
         return await inline_query.answer(results=[r], cache_time=0)
 
     gamers = int(split_query[1])
-    if gamers > 100:
+    if gamers > MAX_AMOUNT_GAMERS:
         r = await create_inline_query_result(
             title_key="attention",
             description_key="amount_gamers_too_big",
