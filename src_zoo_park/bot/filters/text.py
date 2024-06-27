@@ -27,4 +27,7 @@ class CompareDataByIndex(Filter):
 class FindIntegers(Filter):
 
     async def __call__(self, inline_query: InlineQuery) -> bool:
-        return bool(await find_integers(inline_query.query.split()[0]))
+        try:
+            return bool(await find_integers(inline_query.query.split()[0]))
+        except Exception:
+            return False
