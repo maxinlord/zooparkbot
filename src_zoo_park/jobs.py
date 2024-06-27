@@ -50,51 +50,55 @@ async def job_minute(bot) -> None:
             await session.commit()
 
 
-async def verification_referrals(session: AsyncSession, bot: Bot):
-    users = await session.scalars(
-        select(User).where(
-            and_(User.id_referrer != None, User.referral_verification == False)
+async def verification_referrals(bot: Bot):
+    async with _sessionmaker_for_func() as session: 
+        users = await session.scalars(
+            select(User).where(
+                and_(User.id_referrer != None, User.referral_verification == False)
+            )
         )
-    )
-    users = users.all()
-    QUANTITY_MOVES_TO_PASS = await get_value(
-        session=session, value_name="QUANTITY_MOVES_TO_PASS"
-    )
-    QUANTITY_RUB_TO_PASS = await get_value(
-        session=session, value_name="QUANTITY_RUB_TO_PASS"
-    )
-    QUANTITY_USD_TO_PASS = await get_value(
-        session=session, value_name="QUANTITY_USD_TO_PASS"
-    )
-    for user in users:
-        if user.moves < QUANTITY_MOVES_TO_PASS:
-            continue
-        if user.amount_expenses_rub < QUANTITY_RUB_TO_PASS:
-            continue
-        if user.amount_expenses_usd < QUANTITY_USD_TO_PASS:
-            continue
-        referrer: User = await session.get(User, user.id_referrer)
-        bonus = await referrer_bonus(referrer=referrer)
-        await bot.send_message(
-            chat_id=referrer.id_user,
-            text=await get_text_message("you_got_bonus_referrer", bonus=bonus),
+        users = users.all()
+        QUANTITY_MOVES_TO_PASS = await get_value(
+            session=session, value_name="QUANTITY_MOVES_TO_PASS"
         )
-        bonus = await referral_bonus(session=session, referral=user)
-        await bot.send_message(
-            chat_id=user.id_user,
-            text=await get_text_message("you_got_bonus_referral", bonus=bonus),
+        QUANTITY_RUB_TO_PASS = await get_value(
+            session=session, value_name="QUANTITY_RUB_TO_PASS"
         )
-        user.referral_verification = True
+        QUANTITY_USD_TO_PASS = await get_value(
+            session=session, value_name="QUANTITY_USD_TO_PASS"
+        )
+        for user in users:
+            if user.moves < QUANTITY_MOVES_TO_PASS:
+                continue
+            if user.amount_expenses_rub < QUANTITY_RUB_TO_PASS:
+                continue
+            if user.amount_expenses_usd < QUANTITY_USD_TO_PASS:
+                continue
+            referrer: User = await session.get(User, user.id_referrer)
+            bonus = await referrer_bonus(referrer=referrer)
+            await bot.send_message(
+                chat_id=referrer.id_user,
+                text=await get_text_message("you_got_bonus_referrer", bonus=bonus),
+            )
+            bonus = await referral_bonus(session=session, referral=user)
+            await bot.send_message(
+                chat_id=user.id_user,
+                text=await get_text_message("you_got_bonus_referral", bonus=bonus),
+            )
+            user.referral_verification = True
+        await session.commit()
 
 
-async def reset_first_offer_bought(session: AsyncSession) -> None:
-    await session.execute(delete(RandomMerchant))
+async def reset_first_offer_bought() -> None:
+    async with _sessionmaker_for_func() as session:
+        await session.execute(delete(RandomMerchant))
+        await session.commit()
 
 
-async def add_bonus_to_users(
-    session: AsyncSession,
-) -> None:
-    await session.execute(update(User).where(User.bonus == False).values(bonus=1))
+async def add_bonus_to_users() -> None:
+    async with _sessionmaker_for_func() as session:
+        await session.execute(update(User).where(User.bonus == False).values(bonus=1))
+        await session.commit()
 
 
 async def update_rate_bank(session: AsyncSession):
@@ -134,48 +138,50 @@ async def deleter_request_to_unity(session: AsyncSession):
     )
 
 
-async def create_game_for_chat(session: AsyncSession, bot: Bot):
-    members = await bot.get_chat_member_count(chat_id=CHAT_ID)
-    award = await get_value(session=session, value_name="BANK_STORAGE", cache_=False)
-    if award == 0:
-        return
-    SEC_TO_EXPIRE_GAME = await get_value(
-        session=session, value_name="SEC_TO_EXPIRE_GAME"
-    )
-    game = Game(
-        id_game=f"game_{gen_key(length=12)}",
-        idpk_user=0,
-        type_game=random.choice(list(games.keys())),
-        amount_gamers=members // 2,
-        amount_award=award,
-        currency_award="usd",
-        end_date=datetime.now() + timedelta(seconds=SEC_TO_EXPIRE_GAME),
-        amount_moves=random.randint(10, 20),
-    )
-    session.add(game)
-    await session.execute(
-        update(Value).where(Value.name == "BANK_STORAGE").values(value_int=0)
-    )
-    award = f"{award:,d}{dict_tr_currencys.get(game.currency_award)}"
-    msg = await bot.send_message(
-        chat_id=CHAT_ID,
-        text=await get_text_message(
-            "info_game",
-            nickname=(await bot.get_my_name()).name,
-            game_type=game.type_game,
-            amount_gamers=game.amount_gamers,
-            amount_moves=game.amount_moves,
-            award=award,
-        ),
-        disable_web_page_preview=True,
-        reply_markup=await ik_start_created_game(
-            link=await create_start_link(bot=bot, payload=game.id_game),
-            total_gamers=game.amount_gamers,
-            current_gamers=0,
-        ),
-    )
-    game.id_mess = msg.message_id
-    game.activate = True
+async def create_game_for_chat(bot: Bot):
+    async with _sessionmaker_for_func() as session: 
+        members = await bot.get_chat_member_count(chat_id=CHAT_ID)
+        award = await get_value(session=session, value_name="BANK_STORAGE", cache_=False)
+        if award == 0:
+            return
+        SEC_TO_EXPIRE_GAME = await get_value(
+            session=session, value_name="SEC_TO_EXPIRE_GAME"
+        )
+        game = Game(
+            id_game=f"game_{gen_key(length=12)}",
+            idpk_user=0,
+            type_game=random.choice(list(games.keys())),
+            amount_gamers=members // 2,
+            amount_award=award,
+            currency_award="usd",
+            end_date=datetime.now() + timedelta(seconds=SEC_TO_EXPIRE_GAME),
+            amount_moves=random.randint(10, 20),
+        )
+        session.add(game)
+        await session.execute(
+            update(Value).where(Value.name == "BANK_STORAGE").values(value_int=0)
+        )
+        award = f"{award:,d}{dict_tr_currencys.get(game.currency_award)}"
+        msg = await bot.send_message(
+            chat_id=CHAT_ID,
+            text=await get_text_message(
+                "info_game",
+                nickname=(await bot.get_my_name()).name,
+                game_type=game.type_game,
+                amount_gamers=game.amount_gamers,
+                amount_moves=game.amount_moves,
+                award=award,
+            ),
+            disable_web_page_preview=True,
+            reply_markup=await ik_start_created_game(
+                link=await create_start_link(bot=bot, payload=game.id_game),
+                total_gamers=game.amount_gamers,
+                current_gamers=0,
+            ),
+        )
+        game.id_mess = msg.message_id
+        game.activate = True
+        await session.commit()
 
 
 async def ender_minigames(session: AsyncSession, bot: Bot):

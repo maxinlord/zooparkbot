@@ -7,7 +7,7 @@ from tools import get_text_button
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.types import BotCommand
-from init_db import _sessionmaker, _engine
+from init_db import _sessionmaker, _sessionmaker_for_func, _engine
 from bot.handlers import setup_message_routers
 from aiogram.fsm.storage.redis import RedisStorage
 from bot.middlewares import (
@@ -73,14 +73,13 @@ async def main() -> None:
 
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
-    
+
     dp.message.middleware(ThrottlingMiddleware())
 
     dp.message.middleware(DBSessionMiddleware(session_pool=_sessionmaker))
     dp.callback_query.middleware(DBSessionMiddleware(session_pool=_sessionmaker))
     dp.inline_query.middleware(DBSessionMiddleware(session_pool=_sessionmaker))
     dp.update.middleware(DBSessionMiddleware(session_pool=_sessionmaker))
-
 
     dp.message.middleware(CheckUser())
     dp.callback_query.middleware(CheckUser())
