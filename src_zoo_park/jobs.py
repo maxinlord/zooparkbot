@@ -235,27 +235,6 @@ async def updater_mess_minigame(session: AsyncSession, bot: Bot):
 
 async def award_winner(bot: Bot, session: AsyncSession, game: Game):
     idpk_gamer = await get_user_where_max_score(session=session, game=game)
-    nickname = await get_nickname_owner_game(session=session, game=game, bot=bot)
-    if not idpk_gamer:
-        top_mini_game_text = await factory_text_top_mini_game(
-            session=session, game=game
-        )
-        await bot.edit_message_text(
-            text=await get_text_message(
-                "game_start",
-                t=top_mini_game_text,
-                nickname=nickname,
-                game_type=game.type_game,
-                amount_gamers=game.amount_gamers,
-                amount_moves=game.amount_moves,
-                award=f"{game.amount_award:,d}{translated_currencies[game.currency_award]}",
-            )
-            + await get_text_message("no_result_game"),
-            inline_message_id=game.id_mess,
-            reply_markup=None,
-            disable_web_page_preview=True,
-        )
-        return
     winner = await session.get(User, idpk_gamer)
     await add_to_currency(
         self=winner,
@@ -277,27 +256,6 @@ async def award_winner(bot: Bot, session: AsyncSession, game: Game):
 
 async def award_winners(bot: Bot, session: AsyncSession, game: Game):
     gamers_winer: list[Gamer] = await get_first_three_places(session=session, game=game)
-    nickname = await get_nickname_owner_game(session=session, game=game, bot=bot)
-    if not gamers_winer:
-        top_mini_game_text = await factory_text_top_mini_game(
-            session=session, game=game
-        )
-        await bot.edit_message_text(
-            text=await get_text_message(
-                "game_start",
-                t=top_mini_game_text,
-                nickname=nickname,
-                game_type=game.type_game,
-                amount_gamers=game.amount_gamers,
-                amount_moves=game.amount_moves,
-                award=f"{game.amount_award:,d}{translated_currencies[game.currency_award]}",
-            )
-            + await get_text_message("no_result_game"),
-            inline_message_id=game.id_mess,
-            reply_markup=None,
-            disable_web_page_preview=True,
-        )
-        return
     award_percent = iter(await get_percent_places_award(session=session))
     for gamer in gamers_winer:
         gamer: User = await session.get(User, gamer.idpk_gamer)
@@ -331,21 +289,22 @@ async def gen_text_winner(bot: Bot, session: AsyncSession, game: Game):
         text_top_mini_game = await factory_text_top_mini_game(
             session=session, game=game
         )
-        await bot.edit_message_text(
-            text=await get_text_message(
-                "game_start",
-                t=text_top_mini_game,
-                nickname=nickname,
-                game_type=game.type_game,
-                amount_gamers=game.amount_gamers,
-                amount_moves=game.amount_moves,
-                award=f"{game.amount_award:,d}{translated_currencies[game.currency_award]}",
+        with contextlib.suppress(Exception):
+            await bot.edit_message_text(
+                text=await get_text_message(
+                    "game_start",
+                    t=text_top_mini_game,
+                    nickname=nickname,
+                    game_type=game.type_game,
+                    amount_gamers=game.amount_gamers,
+                    amount_moves=game.amount_moves,
+                    award=f"{game.amount_award:,d}{translated_currencies[game.currency_award]}",
+                )
+                + await get_text_message("no_result_game"),
+                inline_message_id=game.id_mess,
+                reply_markup=None,
+                disable_web_page_preview=True,
             )
-            + await get_text_message("no_result_game"),
-            inline_message_id=game.id_mess,
-            reply_markup=None,
-            disable_web_page_preview=True,
-        )
         return
     winner = await session.get(User, idpk_gamer)
     additional_text = (
@@ -378,21 +337,22 @@ async def gen_text_winners(bot: Bot, session: AsyncSession, game: Game):
         text_top_mini_game = await factory_text_top_mini_game(
             session=session, game=game
         )
-        await bot.edit_message_text(
-            text=await get_text_message(
-                "game_start",
-                t=text_top_mini_game,
-                nickname=nickname,
-                game_type=game.type_game,
-                amount_gamers=game.amount_gamers,
-                amount_moves=game.amount_moves,
-                award=f"{game.amount_award:,d}{translated_currencies[game.currency_award]}",
+        with contextlib.suppress(Exception):
+            await bot.edit_message_text(
+                text=await get_text_message(
+                    "game_start",
+                    t=text_top_mini_game,
+                    nickname=nickname,
+                    game_type=game.type_game,
+                    amount_gamers=game.amount_gamers,
+                    amount_moves=game.amount_moves,
+                    award=f"{game.amount_award:,d}{translated_currencies[game.currency_award]}",
+                )
+                + await get_text_message("no_result_game"),
+                inline_message_id=game.id_mess,
+                reply_markup=None,
+                disable_web_page_preview=True,
             )
-            + await get_text_message("no_result_game"),
-            inline_message_id=game.id_mess,
-            reply_markup=None,
-            disable_web_page_preview=True,
-        )
         return
     additional_text = ""
     award_percent = iter(await get_percent_places_award(session=session))

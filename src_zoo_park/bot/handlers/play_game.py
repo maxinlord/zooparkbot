@@ -35,9 +35,9 @@ async def handle_game_end(
     message_id: int,
     chat_username: str,
 ):
-    link = create_telegram_link(chat_username, str(message_id)) if chat_username else ""
+    # link = create_telegram_link(chat_username, str(message_id)) if chat_username else ""
     await query.message.answer(
-        text=await get_text_message("game_end", link_on_message=link),
+        text=await get_text_message("game_end"),
         reply_markup=await rk_main_menu(),
         disable_web_page_preview=False,
     )

@@ -111,13 +111,13 @@ async def command_start_game(
         type_game=game.type_game,
         amount_gamers=game.amount_gamers,
         amount_moves=game.amount_moves,
-        message_id=message.message_id,
-        chat_username=message.chat.username
+        # message_id=game.id_mess,
+        # chat_username=await message.bot.get_chat(chat_id=CHAT_ID)
     )
     await message.answer(
         text=await get_text_message("begin_game"), reply_markup=ReplyKeyboardRemove()
     )
-    await message.answer(
+    m = await message.answer(
         text=await get_text_message("play_game", score=gamer.score),
         reply_markup=await ik_button_play(
             game_type=game.type_game,
