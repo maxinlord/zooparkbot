@@ -32,8 +32,6 @@ async def handle_game_end(
     query: CallbackQuery,
     state: FSMContext,
     session: AsyncSession,
-    message_id: int,
-    chat_username: str,
 ):
     # link = create_telegram_link(chat_username, str(message_id)) if chat_username else ""
     await query.message.answer(
@@ -87,8 +85,6 @@ async def play_game(
             query=query,
             state=state,
             session=session,
-            message_id=data["message_id"],
-            chat_username=data["chat_username"],
         )
     else:
         await query.message.answer(
