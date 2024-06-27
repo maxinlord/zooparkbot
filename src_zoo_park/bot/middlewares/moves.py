@@ -5,6 +5,7 @@ from aiogram import BaseMiddleware
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 from db import User
+from tools import get_value
 
 
 class RegMove(BaseMiddleware):
@@ -17,8 +18,10 @@ class RegMove(BaseMiddleware):
     ) -> Any:
         user: User = data["user"]
         if user:
-            LIMIT_ON_WRITE_MOVES = 20
             session: AsyncSession = data["session"]
+            LIMIT_ON_WRITE_MOVES = await get_value(
+                session=session, value_name="LIMIT_ON_WRITE_MOVES"
+            )
             decoded_dict: dict = json.loads(user.history_moves)
             key = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
             decoded_dict[key] = event.text
