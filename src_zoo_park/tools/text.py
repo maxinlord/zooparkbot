@@ -118,7 +118,7 @@ async def factory_text_unity_top(session: AsyncSession) -> str:
         i = ls_obj[1]
         text += (
             await tools.get_text_message(
-                "pattern_line_top_unity", n=unity.name, i=i, c=counter
+                "pattern_line_top_unity", n=unity.name, i=i, c=counter, lvl=unity.level
             )
             + "\n"
         )
@@ -335,6 +335,7 @@ async def factory_text_top_mini_game(session: AsyncSession, game: Game):
             name_=nickname,
             score=gamer.score,
             c=counter,
+            m=gamer.moves
         )
     return text
 

@@ -7,35 +7,39 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import and_, select
 from aiogram.utils.deep_linking import create_start_link
-from db import User, Game, Gamer
+from aiogram.utils.link import create_telegram_link
+from db import User, Game, Gamer, Item
 from tools import (
     get_text_message,
     get_amount_gamers,
     factory_text_top_mini_game,
-    get_user_where_max_score,
-    get_first_three_places,
-    add_to_currency,
-    get_percent_places_award,
+    get_status_item,
 )
 from bot.states import UserState
 from bot.keyboards import (
-    rk_zoomarket_menu,
     rk_main_menu,
     ik_button_play,
     ik_start_created_game,
 )
 import asyncio
-from config import dict_tr_currencys, CHAT_ID
+from config import CHAT_ID
 
 router = Router()
 petard_emoji_effect = "5046509860389126442"
 
 
 async def handle_game_end(
-    query: CallbackQuery, state: FSMContext, session: AsyncSession
+    query: CallbackQuery,
+    state: FSMContext,
+    session: AsyncSession,
+    message_id: int,
+    chat_username: str,
 ):
+    link = create_telegram_link(chat_username, str(message_id)) if chat_username else ""
     await query.message.answer(
-        text=await get_text_message("game_end"), reply_markup=await rk_main_menu()
+        text=await get_text_message("game_end", link_on_message=link),
+        reply_markup=await rk_main_menu(),
+        disable_web_page_preview=False,
     )
     await state.clear()
     await state.set_state(UserState.main_menu)
@@ -63,19 +67,29 @@ async def play_game(
     gamer.score += value_dice
     gamer.moves -= 1
 
-    await session.flush()
-
     if gamer.moves == 0:
         await query.message.answer(
             text=await get_text_message("you_got", value_dice=value_dice)
         )
+        if await get_status_item(user.items, code_name_item="item_4"):
+            item = await session.scalar(select(Item).where(Item.code_name == "item_4"))
+            gamer.score += item.value
+            await query.message.answer(
+                text=await get_text_message("you_got_bonus_item_4", value=item.value)
+            )
         await query.message.answer(
             text=await get_text_message(
                 "play_game",
                 score=gamer.score,
             )
         )
-        await handle_game_end(query, state, session)
+        await handle_game_end(
+            query=query,
+            state=state,
+            session=session,
+            message_id=data["message_id"],
+            chat_username=data["chat_username"],
+        )
     else:
         await query.message.answer(
             text=await get_text_message("you_got", value_dice=value_dice)

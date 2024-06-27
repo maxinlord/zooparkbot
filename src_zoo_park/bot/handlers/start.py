@@ -19,10 +19,12 @@ from tools import (
     mention_html_by_username,
     get_value,
     get_nickname_owner_game,
+    get_gamer,
+    gamer_have_active_game
 )
 from bot.states import UserState
 from bot.keyboards import rk_main_menu, ik_start_created_game, ik_button_play
-from config import dict_tr_currencys, CHAT_ID
+from config import translated_currencies, CHAT_ID
 
 
 router = Router()
@@ -48,22 +50,19 @@ async def command_start_game(
     user.username = message.from_user.username
     id_game = command.args
     game = await session.scalar(select(Game).where(Game.id_game == id_game))
-    data = await state.get_data()
     if not game:
         await message.answer(text=await get_text_message("game_not_found"))
         return
-    if await session.scalar(
-        select(Gamer).where(
-            and_(Gamer.id_game == id_game, Gamer.idpk_gamer == user.idpk)
-        )
+    if game.end:
+        await message.answer(text=await get_text_message("game_expired"))
+        return
+    if await get_gamer(
+        session=session, id_game=id_game, idpk_gamer=user.idpk
     ):
         await message.answer(text=await get_text_message("game_already_started"))
         return
-    if data.get("idpk_game"):
+    if gamer_have_active_game(session=session, idpk_gamer=user.idpk):
         await message.answer(text=await get_text_message("finished_active_game"))
-        return
-    if game.end:
-        await message.answer(text=await get_text_message("game_expired"))
         return
     if game.amount_gamers == await get_amount_gamers(session=session, game=game):
         await message.answer(text=await get_text_message("game_full"))
@@ -75,8 +74,10 @@ async def command_start_game(
     )
     session.add(gamer)
     await session.commit()
-    nickname = await get_nickname_owner_game(session=session, game=game, bot=message.bot)
-    award = f"{game.amount_award:,d}{dict_tr_currencys.get(game.currency_award)}"
+    nickname = await get_nickname_owner_game(
+        session=session, game=game, bot=message.bot
+    )
+    award = f"{game.amount_award:,d}{translated_currencies.get(game.currency_award)}"
     mess_data = (
         {"chat_id": CHAT_ID, "message_id": game.id_mess}
         if game.id_mess.isdigit()
@@ -110,6 +111,8 @@ async def command_start_game(
         type_game=game.type_game,
         amount_gamers=game.amount_gamers,
         amount_moves=game.amount_moves,
+        message_id=message.message_id,
+        chat_username=message.chat.username
     )
     await message.answer(
         text=await get_text_message("begin_game"), reply_markup=ReplyKeyboardRemove()

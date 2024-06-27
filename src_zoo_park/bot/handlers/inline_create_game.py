@@ -23,7 +23,7 @@ from tools import (
     get_value,
     find_integers
 )
-from config import dict_tr_currencys, games
+from config import translated_currencies, games
 from datetime import datetime, timedelta
 
 router = Router()
@@ -171,7 +171,7 @@ async def inline_game_three_pm(
         if user.nickname
         else user.nickname
     )
-    c = dict_tr_currencys[game.currency_award]
+    c = translated_currencies[game.currency_award]
     award = f"{game.amount_award:,d}{c}"
     r = InlineQueryResultArticle(
         id=f"{game.idpk}:game",

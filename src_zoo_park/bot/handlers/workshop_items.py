@@ -18,7 +18,7 @@ from bot.keyboards import (
     ik_buy_item,
 )
 from bot.filters import GetTextButton, CompareDataByIndex
-from config import dict_tr_currencys
+from config import translated_currencies
 
 flags = {"throttling_key": "default"}
 router = Router()
@@ -59,7 +59,7 @@ async def witems_menu_choice_item(
             name_=item.name_with_emoji,
             description=item.description,
             price=item.price,
-            currency=dict_tr_currencys[item.currency],
+            currency=translated_currencies[item.currency],
         ),
         reply_markup=await ik_buy_item(bought=bought),
     )

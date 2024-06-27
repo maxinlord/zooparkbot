@@ -27,7 +27,7 @@ from tools import (
 from bot.keyboards import rk_main_menu, ik_start_created_game
 import random
 from datetime import datetime, timedelta
-from config import dict_tr_currencys, games, CHAT_ID
+from config import translated_currencies, games, CHAT_ID
 
 petard_emoji_effect = "5046509860389126442"
 
@@ -51,7 +51,7 @@ async def job_minute(bot) -> None:
 
 
 async def verification_referrals(bot: Bot):
-    async with _sessionmaker_for_func() as session: 
+    async with _sessionmaker_for_func() as session:
         users = await session.scalars(
             select(User).where(
                 and_(User.id_referrer != None, User.referral_verification == False)
@@ -137,12 +137,16 @@ async def deleter_request_to_unity(session: AsyncSession):
         delete(RequestToUnity).where(RequestToUnity.date_request_end < datetime.now())
     )
 
+
 MAX_AMOUNT_GAMERS = 80
 
+
 async def create_game_for_chat(bot: Bot):
-    async with _sessionmaker_for_func() as session: 
+    async with _sessionmaker_for_func() as session:
         members = await bot.get_chat_member_count(chat_id=CHAT_ID)
-        award = await get_value(session=session, value_name="BANK_STORAGE", cache_=False)
+        award = await get_value(
+            session=session, value_name="BANK_STORAGE", cache_=False
+        )
         if award == 0:
             return
         SEC_TO_EXPIRE_GAME = await get_value(
@@ -162,7 +166,7 @@ async def create_game_for_chat(bot: Bot):
         await session.execute(
             update(Value).where(Value.name == "BANK_STORAGE").values(value_int=0)
         )
-        award = f"{award:,d}{dict_tr_currencys.get(game.currency_award)}"
+        award = f"{award:,d}{translated_currencies.get(game.currency_award)}"
         msg = await bot.send_message(
             chat_id=CHAT_ID,
             text=await get_text_message(
@@ -195,6 +199,10 @@ async def ender_minigames(session: AsyncSession, bot: Bot):
             await award_winners(bot, session, game)
         else:
             await award_winner(bot, session, game)
+        await session.execute(
+            update(Gamer).where(Gamer.id_game == game.id_game).values(game_end=True)
+        )
+    await session.commit()
 
 
 async def updater_mess_minigame(session: AsyncSession, bot: Bot):
@@ -212,7 +220,7 @@ async def updater_mess_minigame(session: AsyncSession, bot: Bot):
             await gen_text_winners(bot, session, game)
         else:
             await gen_text_winner(bot, session, game)
-    await session.flush()
+    await session.commit()
 
 
 # async def test():
@@ -240,7 +248,7 @@ async def award_winner(bot: Bot, session: AsyncSession, game: Game):
                 game_type=game.type_game,
                 amount_gamers=game.amount_gamers,
                 amount_moves=game.amount_moves,
-                award=f"{game.amount_award:,d}{dict_tr_currencys[game.currency_award]}",
+                award=f"{game.amount_award:,d}{translated_currencies[game.currency_award]}",
             )
             + await get_text_message("no_result_game"),
             inline_message_id=game.id_mess,
@@ -254,8 +262,7 @@ async def award_winner(bot: Bot, session: AsyncSession, game: Game):
         currency=game.currency_award,
         amount=game.amount_award,
     )
-
-    currency_translation = dict_tr_currencys[game.currency_award]
+    currency_translation = translated_currencies[game.currency_award]
     award = f"{game.amount_award:,d}{currency_translation}"
     await bot.send_message(
         chat_id=winner.id_user,
@@ -266,29 +273,6 @@ async def award_winner(bot: Bot, session: AsyncSession, game: Game):
         message_effect_id=petard_emoji_effect,
         reply_markup=await rk_main_menu(),
     )
-    additional_text = (
-        f"\n\n{await get_text_message('game_winer', nickname=winner.nickname)}"
-    )
-
-    with contextlib.suppress(Exception):
-        top_mini_game_text = await factory_text_top_mini_game(
-            session=session, game=game
-        )
-        await bot.edit_message_text(
-            text=await get_text_message(
-                "game_start",
-                t=top_mini_game_text,
-                nickname=nickname,
-                game_type=game.type_game,
-                amount_gamers=game.amount_gamers,
-                amount_moves=game.amount_moves,
-                award=f"{game.amount_award:,d}{dict_tr_currencys[game.currency_award]}",
-            )
-            + additional_text,
-            inline_message_id=game.id_mess,
-            reply_markup=None,
-            disable_web_page_preview=True,
-        )
 
 
 async def award_winners(bot: Bot, session: AsyncSession, game: Game):
@@ -306,7 +290,7 @@ async def award_winners(bot: Bot, session: AsyncSession, game: Game):
                 game_type=game.type_game,
                 amount_gamers=game.amount_gamers,
                 amount_moves=game.amount_moves,
-                award=f"{game.amount_award:,d}{dict_tr_currencys[game.currency_award]}",
+                award=f"{game.amount_award:,d}{translated_currencies[game.currency_award]}",
             )
             + await get_text_message("no_result_game"),
             inline_message_id=game.id_mess,
@@ -314,9 +298,7 @@ async def award_winners(bot: Bot, session: AsyncSession, game: Game):
             disable_web_page_preview=True,
         )
         return
-    additional_text = ""
     award_percent = iter(await get_percent_places_award(session=session))
-    emoji_places = iter(["🏆", "🥈", "🥉"])
     for gamer in gamers_winer:
         gamer: User = await session.get(User, gamer.idpk_gamer)
         award = game.amount_award * (next(award_percent) / 100)
@@ -325,7 +307,7 @@ async def award_winners(bot: Bot, session: AsyncSession, game: Game):
             currency=game.currency_award,
             amount=award,
         )
-        award = f"{int(award):,d}{dict_tr_currencys.get(game.currency_award)}"
+        award = f"{int(award):,d}{translated_currencies.get(game.currency_award)}"
         await bot.send_message(
             chat_id=gamer.id_user,
             text=await get_text_message(
@@ -334,32 +316,6 @@ async def award_winners(bot: Bot, session: AsyncSession, game: Game):
             ),
             message_effect_id=petard_emoji_effect,
             reply_markup=await rk_main_menu(),
-        )
-        additional_text += f"\n\n{await get_text_message('game_pattern_winer', nickname=gamer.nickname, emoji_places=next(emoji_places))}"
-
-    mess_data = (
-        {"chat_id": CHAT_ID, "message_id": game.id_mess}
-        if game.id_mess.isdigit()
-        else {"inline_message_id": game.id_mess}
-    )
-    with contextlib.suppress(Exception):
-        top_mini_game_text = await factory_text_top_mini_game(
-            session=session, game=game
-        )
-        await bot.edit_message_text(
-            text=await get_text_message(
-                "game_start",
-                t=top_mini_game_text,
-                nickname=nickname,
-                game_type=game.type_game,
-                amount_gamers=game.amount_gamers,
-                amount_moves=game.amount_moves,
-                award=f"{game.amount_award:,d}{dict_tr_currencys[game.currency_award]}",
-            )
-            + additional_text,
-            reply_markup=None,
-            disable_web_page_preview=True,
-            **mess_data,
         )
 
 
@@ -383,7 +339,7 @@ async def gen_text_winner(bot: Bot, session: AsyncSession, game: Game):
                 game_type=game.type_game,
                 amount_gamers=game.amount_gamers,
                 amount_moves=game.amount_moves,
-                award=f"{game.amount_award:,d}{dict_tr_currencys[game.currency_award]}",
+                award=f"{game.amount_award:,d}{translated_currencies[game.currency_award]}",
             )
             + await get_text_message("no_result_game"),
             inline_message_id=game.id_mess,
@@ -406,7 +362,7 @@ async def gen_text_winner(bot: Bot, session: AsyncSession, game: Game):
                 game_type=game.type_game,
                 amount_gamers=game.amount_gamers,
                 amount_moves=game.amount_moves,
-                award=f"{game.amount_award:,d}{dict_tr_currencys[game.currency_award]}",
+                award=f"{game.amount_award:,d}{translated_currencies[game.currency_award]}",
             )
             + additional_text,
             inline_message_id=game.id_mess,
@@ -430,7 +386,7 @@ async def gen_text_winners(bot: Bot, session: AsyncSession, game: Game):
                 game_type=game.type_game,
                 amount_gamers=game.amount_gamers,
                 amount_moves=game.amount_moves,
-                award=f"{game.amount_award:,d}{dict_tr_currencys[game.currency_award]}",
+                award=f"{game.amount_award:,d}{translated_currencies[game.currency_award]}",
             )
             + await get_text_message("no_result_game"),
             inline_message_id=game.id_mess,
@@ -444,7 +400,7 @@ async def gen_text_winners(bot: Bot, session: AsyncSession, game: Game):
     for gamer in gamers_winer:
         gamer: User = await session.get(User, gamer.idpk_gamer)
         award = game.amount_award * (next(award_percent) / 100)
-        award = f"{int(award):,d}{dict_tr_currencys.get(game.currency_award)}"
+        award = f"{int(award):,d}{translated_currencies.get(game.currency_award)}"
         await bot.send_message(
             chat_id=gamer.id_user,
             text=await get_text_message(
@@ -470,7 +426,7 @@ async def gen_text_winners(bot: Bot, session: AsyncSession, game: Game):
                 game_type=game.type_game,
                 amount_gamers=game.amount_gamers,
                 amount_moves=game.amount_moves,
-                award=f"{game.amount_award:,d}{dict_tr_currencys[game.currency_award]}",
+                award=f"{game.amount_award:,d}{translated_currencies[game.currency_award]}",
             )
             + additional_text,
             reply_markup=None,

@@ -22,7 +22,7 @@ from tools import (
     find_integers,
 )
 from bot.filters import CompareDataByIndex, FindIntegers
-from config import dict_tr_currencys
+from config import translated_currencies
 
 router = Router()
 
@@ -127,7 +127,7 @@ async def inline_send_money(
         "nickname": user.nickname,
         "ps": pieces,
     }
-    c = dict_tr_currencys[split_query[1]]
+    c = translated_currencies[split_query[1]]
     d["currency"] = c
     one_piece = f"{one_piece:,d}{c}"
     text = (
@@ -199,7 +199,7 @@ async def activate_tr(
     await add_to_currency(self=user, currency=tr.currency, amount=tr.one_piece_sum)
     tr.pieces -= 1
     await session.commit()
-    c = dict_tr_currencys[tr.currency]
+    c = translated_currencies[tr.currency]
     await query.bot.send_message(
         chat_id=user.id_user,
         text=await get_text_message(

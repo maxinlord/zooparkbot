@@ -49,7 +49,9 @@ from .game import (
     get_user_where_max_score,
     get_nickname_owner_game,
     get_first_three_places,
-    get_percent_places_award
+    get_percent_places_award,
+    get_gamer,
+    gamer_have_active_game
 )
 from .grafics import get_plot
 from .income import income_

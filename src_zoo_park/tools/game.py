@@ -1,5 +1,5 @@
 from aiogram import Bot
-from sqlalchemy import select
+from sqlalchemy import and_, select
 from db import Game, Gamer, User
 from sqlalchemy.ext.asyncio import AsyncSession
 import tools
@@ -42,6 +42,25 @@ async def get_nickname_owner_game(session: AsyncSession, game: Game, bot: Bot):
 
 
 async def get_percent_places_award(session: AsyncSession):
-    percents = await tools.get_value(session=session, value_name='PERCENT_PLACES_AWARD', value_type='str')
-    return [int(i.strip()) for i in percents.split(',')]
+    percents = await tools.get_value(
+        session=session, value_name="PERCENT_PLACES_AWARD", value_type="str"
+    )
+    return [int(i.strip()) for i in percents.split(",")]
 
+
+async def get_gamer(session: AsyncSession, idpk_gamer: int, id_game: str):
+    gamer = await session.scalar(
+        select(Gamer).where(
+            and_(Gamer.id_game == id_game, Gamer.idpk_gamer == idpk_gamer)
+        )
+    )
+    return gamer
+
+
+async def gamer_have_active_game(session: AsyncSession, idpk_gamer: int):
+    gamer = await session.scalar(
+        select(Gamer).where(
+            and_(Gamer.idpk_gamer == idpk_gamer, Gamer.game_end == False)
+        )
+    )
+    return bool(gamer)

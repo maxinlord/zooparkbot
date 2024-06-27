@@ -93,7 +93,7 @@ class Item(Base):
     description: Mapped[str] = mapped_column(Text)
     price: Mapped[int] = mapped_column(BigInteger)
     currency: Mapped[str] = mapped_column(String(length=64))
-    value: Mapped[float] = mapped_column(Float)
+    value: Mapped[int] = mapped_column()
     quantity: Mapped[int] = mapped_column(default=0)
 
     @property
@@ -169,6 +169,7 @@ class Gamer(Base):
     idpk_gamer: Mapped[int] = mapped_column()
     moves: Mapped[int] = mapped_column()
     score: Mapped[int] = mapped_column(default=0)
+    game_end: Mapped[bool] = mapped_column(default=False)
 
 
 class MessageToSupport(Base):
