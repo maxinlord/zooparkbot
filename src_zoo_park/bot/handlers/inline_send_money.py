@@ -161,6 +161,30 @@ async def inline_send_money(
     await inline_query.answer(results=[r], cache_time=0)
 
 
+@router.chosen_inline_result(F.result_id.split(":")[-1] == "activate_tr")
+async def pagination_demo(chosen_result: ChosenInlineResult, session: AsyncSession):
+    idpk_tr = int(chosen_result.result_id.split(":")[0])
+    tr = await session.get(TransferMoney, idpk_tr)
+    user = await session.scalar(
+        select(User).where(User.id_user == chosen_result.from_user.id)
+    )
+
+    await add_to_currency(
+        self=user,
+        currency=tr.currency,
+        amount=-tr.pieces * tr.one_piece_sum,
+    )
+    await add_to_amount_expenses_currency(
+        self=user,
+        currency=tr.currency,
+        amount=tr.pieces * tr.one_piece_sum,
+    )
+    tr.status = True
+    await session.flush()
+    await session.execute(delete(TransferMoney).where(TransferMoney.status == False))
+    await session.commit()
+
+
 @router.callback_query(CompareDataByIndex("activate_tr"))
 async def activate_tr(
     query: CallbackQuery,
