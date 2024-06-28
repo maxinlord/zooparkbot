@@ -28,7 +28,7 @@ async def photo_catch(message: Message, session: AsyncSession) -> None:
 @router.message()
 async def any_unknown_message(message: Message, state: FSMContext) -> None:
     await message.answer(text=await get_text_message("answer_on_unknown_message"))
-    print(message.chat.id)
+    # print(message.effect_id)
 
 
 

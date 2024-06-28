@@ -40,7 +40,7 @@ async def job_sec(bot) -> None:
 
 
 async def job_minute(bot) -> None:
-    if datetime.now().second == 59:
+    if datetime.now().second == 00:
         async with _sessionmaker_for_func() as session:
             await accrual_of_income(session=session)
             await update_rate_bank(session=session)
