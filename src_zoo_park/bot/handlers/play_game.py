@@ -146,6 +146,7 @@ async def play_game_autopilot(
         )
     )
     while gamer.moves > 0:
+        await session.flush()
         msg = await query.message.answer_dice(
             emoji=game.type_game, disable_notification=True
         )
