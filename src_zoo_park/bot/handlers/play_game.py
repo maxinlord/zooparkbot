@@ -146,7 +146,6 @@ async def play_game_autopilot(
         )
     )
     while gamer.moves > 0:
-        await session.flush()
         msg = await query.message.answer_dice(
             emoji=game.type_game, disable_notification=True
         )
@@ -164,6 +163,8 @@ async def play_game_autopilot(
             if game.id_mess.isdigit()
             else {"inline_message_id": game.id_mess}
         )
+        await session.flush()
+        await session.refresh(game)
         with contextlib.suppress(Exception):
             t = await factory_text_top_mini_game(session=session, game=game)
             await query.message.bot.edit_message_text(
