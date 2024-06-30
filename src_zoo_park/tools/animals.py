@@ -145,7 +145,11 @@ async def get_random_animal(session: AsyncSession, user_animals: str) -> Animal:
 async def get_animal_with_random_rarity(session: AsyncSession, animal: str) -> Animal:
     rarity = random.choices(
         population=game_variables.rarities,
-        weights=await tools.get_weights_rmerchant(session=session),
+        weights=await tools.fetch_and_parse_str_value(
+            session=session,
+            value_name="WEIGHTS_FOR_RANDOM_MERCHANT",
+            func_to_element=float,
+        ),
     )
     animal = await session.scalar(
         select(Animal).where(Animal.code_name == animal + rarity[0])
