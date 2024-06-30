@@ -104,8 +104,7 @@ async def account_aviaries(
         get_total_number_seats(session=session, aviaries=user.aviaries),
         get_remain_seats(
             session=session,
-            aviaries=user.aviaries,
-            amount_animals=await get_total_number_animals(self=user),
+            user=user,
         ),
     )
     await query.message.edit_text(
