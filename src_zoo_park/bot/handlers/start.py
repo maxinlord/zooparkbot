@@ -219,6 +219,7 @@ async def getting_nickname(
     data_user = data["data_user"]
     data_user["nickname"] = await shorten_whitespace_nickname(message.text)
     data_user["date_reg"] = datetime.now()
+    data_user["usd"] = await get_value(session=session, value_name="START_USD") 
     session.add(User(**data_user))
     await session.commit()
     await message.answer(
