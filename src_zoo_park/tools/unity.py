@@ -191,10 +191,10 @@ async def get_top_unity_by_animal(session: AsyncSession) -> tuple[int, dict]:
 
 async def check_condition_2nd_lvl(session: AsyncSession, unity: Unity) -> bool:
     async with _sessionmaker_for_func() as session:
-        AMOUNT_INCOME_2ND_LVL = await tools.tools.get_value(
+        AMOUNT_INCOME_2ND_LVL = await tools.get_value(
             session=session, value_name="AMOUNT_INCOME_2ND_LVL"
         )
-        AMOUNT_ANIMALS_2ND_LVL = await tools.tools.get_value(
+        AMOUNT_ANIMALS_2ND_LVL = await tools.get_value(
             session=session, value_name="AMOUNT_ANIMALS_2ND_LVL"
         )
         total_income = 0
@@ -215,13 +215,13 @@ async def check_condition_2nd_lvl(session: AsyncSession, unity: Unity) -> bool:
 
 async def check_condition_3rd_lvl(session: AsyncSession, unity: Unity) -> bool:
     async with _sessionmaker_for_func() as session:
-        AMOUNT_INCOME_3RD_LVL = await tools.tools.get_value(
+        AMOUNT_INCOME_3RD_LVL = await tools.get_value(
             session=session, value_name="AMOUNT_INCOME_3RD_LVL"
         )
-        AMOUNT_ANIMALS_3RD_LVL = await tools.tools.get_value(
+        AMOUNT_ANIMALS_3RD_LVL = await tools.get_value(
             session=session, value_name="AMOUNT_ANIMALS_3RD_LVL"
         )
-        AMOUNT_MEMBERS_3RD_LVL = await tools.tools.get_value(
+        AMOUNT_MEMBERS_3RD_LVL = await tools.get_value(
             session=session, value_name="AMOUNT_MEMBERS_3RD_LVL"
         )
         if unity.get_number_members() < AMOUNT_MEMBERS_3RD_LVL:
