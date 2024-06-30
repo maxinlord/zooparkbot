@@ -138,20 +138,28 @@ async def play_game_autopilot(
     user: User,
 ):
     data = await state.get_data()
-    game = await session.get(Game, data["idpk_game"])
     await query.message.delete_reply_markup()
-    gamer = await session.scalar(
-        select(Gamer).where(
+    game = await session.get(Game, data["idpk_game"])
+    gamer_moves = await session.scalar(
+        select(Gamer.moves).where(
             and_(Gamer.idpk_gamer == user.idpk, Gamer.id_game == game.id_game)
         )
     )
-    while gamer.moves > 0:
+    while gamer_moves > 0:
+        game = await session.get(Game, data["idpk_game"])
+        gamer = await session.scalar(
+            select(Gamer).where(
+                and_(Gamer.idpk_gamer == user.idpk, Gamer.id_game == game.id_game)
+            )
+        )
         msg = await query.message.answer_dice(
             emoji=game.type_game, disable_notification=True
         )
         value_dice = msg.dice.value
         gamer.score += value_dice
         gamer.moves -= 1
+        gamer_moves = gamer.moves
+        await session.commit()
         await asyncio.sleep(4)
         await query.message.answer(
             text=await get_text_message("you_got", value_dice=value_dice),
@@ -163,8 +171,6 @@ async def play_game_autopilot(
             if game.id_mess.isdigit()
             else {"inline_message_id": game.id_mess}
         )
-        await session.flush()
-        await session.refresh(game)
         with contextlib.suppress(Exception):
             t = await factory_text_top_mini_game(session=session, game=game)
             await query.message.bot.edit_message_text(
