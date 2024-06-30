@@ -170,10 +170,10 @@ async def ik_choice_aviary(
     session: AsyncSession,
 ):
     builder = InlineKeyboardBuilder()
-    all_aviaries = await tools.get_all_name_and_size_aviaries(session)
-    for name, code_name, size in all_aviaries:
+    all_aviaries = await tools.get_name_and_code_name(session)
+    for name, code_name in all_aviaries:
         builder.button(
-            text=f"{name} [{size}]",
+            text=f"{name}",
             callback_data=f"{code_name}:choice_aviary_aviaries",
         )
     builder.adjust(1)

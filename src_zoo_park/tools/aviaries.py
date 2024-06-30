@@ -7,11 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import tools
 
 
-async def get_all_name_and_size_aviaries(session: AsyncSession):
-    name_items = await session.execute(
-        select(Aviary.name, Aviary.code_name, Aviary.size)
-    )
-    return name_items.all()
+async def get_name_and_code_name(session: AsyncSession):
+    aviaries = await session.scalars(select(Aviary))
+    return [(aviary.name_with_size, aviary.code_name) for aviary in aviaries]
 
 
 async def get_total_number_seats(session: AsyncSession, aviaries: str) -> int:

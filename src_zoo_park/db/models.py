@@ -119,6 +119,10 @@ class Aviary(Base):
     size: Mapped[int] = mapped_column()
     price: Mapped[int] = mapped_column()
 
+    @property
+    def name_with_size(self) -> str:
+        return f"{self.name} [{self.size}]"
+
 
 class RandomMerchant(Base):
     __tablename__ = "random_merchants"
@@ -151,6 +155,7 @@ class Donate(Base):
     idpk_user: Mapped[int] = mapped_column()
     amount: Mapped[int] = mapped_column()
     refund_id: Mapped[str] = mapped_column(String(length=64), nullable=True)
+
 
 class Game(Base):
     __tablename__ = "games"

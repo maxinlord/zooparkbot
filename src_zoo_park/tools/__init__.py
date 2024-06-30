@@ -15,7 +15,7 @@ from .animals import (
 )
 
 from .aviaries import (
-    get_all_name_and_size_aviaries,
+    get_name_and_code_name,
     get_total_number_seats,
     get_remain_seats,
     add_aviary,
