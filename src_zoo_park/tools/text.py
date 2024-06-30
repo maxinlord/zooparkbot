@@ -326,7 +326,10 @@ async def factory_text_top_mini_game(session: AsyncSession, game: Game):
     for counter, gamer in enumerate(gamers_sorted, start=1):
         user = await session.get(User, gamer.idpk_gamer)
         nickname = (
-            mention_html_by_username(username=user.username, name=await tools.view_nickname(session=session, user=user))
+            mention_html_by_username(
+                username=user.username,
+                name=await tools.view_nickname(session=session, user=user),
+            )
             if user.nickname
             else user.nickname
         )
@@ -335,7 +338,7 @@ async def factory_text_top_mini_game(session: AsyncSession, game: Game):
             name_=nickname,
             score=gamer.score,
             c=counter,
-            m=gamer.moves
+            m=gamer.moves,
         )
     return text
 
@@ -389,4 +392,41 @@ async def ft_bank_exchange_info(
         )
     text += await get_text_message("pattern_bank_you_got", you_got=you_got)
     text += await get_text_message("pattern_bank_rate", rate=rate)
+    return text
+
+
+async def ft_bonus_info(
+    data_bonus: tools.DataBonus,
+):
+    text = ""
+    match data_bonus.bonus_type:
+        case "rub":
+            text = await get_text_message("bonus_rub", rub=data_bonus.result_func)
+        case "usd":
+            text = await get_text_message("bonus_usd", usd=data_bonus.result_func)
+        case "aviary":
+            text = await get_text_message(
+                "bonus_aviary",
+                aviary=data_bonus.result_func[0]["name"],
+                amount=data_bonus.result_func[1],
+            )
+        case "animal":
+            text = await get_text_message(
+                "bonus_animal",
+                animal=data_bonus.result_func[0]["name"],
+                amount=data_bonus.result_func[1],
+            )
+        case "item":
+            text = await get_text_message(
+                "bonus_item", item=data_bonus.result_func["name_with_emoji"]
+            )
+        case "paw_coins":
+            text = await get_text_message(
+                "bonus_paw_coin",
+                amount=data_bonus.result_func,
+            )
+    text = await get_text_message(
+        "bonus_received",
+        text=text,
+    )
     return text

@@ -1,8 +1,6 @@
-import tools.animals
+
 from .animals import (
     get_all_animals,
-    get_quantity_animals_for_rmerchant,
-    get_quantity_animals_for_rshop,
     get_price_animal,
     get_income_animal,
     get_dict_animals,
@@ -12,13 +10,12 @@ from .animals import (
     get_random_animal,
     get_animal_with_random_rarity,
     gen_quantity_animals,
-    _get_income_animal,
     get_average_price_animals,
+    _get_income_animal
 )
 
 from .aviaries import (
     get_all_name_and_size_aviaries,
-    get_quantity_animals_for_avi,
     get_total_number_seats,
     get_remain_seats,
     add_aviary,
@@ -32,14 +29,16 @@ from .bank import (
     get_weight_rate_bank,
     get_increase_rate_bank,
 )
-from .base import gen_key, get_rates_calculator, find_integers
+from .base import gen_key, find_integers, fetch_and_parse_str_value
 
 from .bonus import (
     referral_bonus,
     referrer_bonus,
     bonus_for_sub_on_channel,
     bonus_for_sub_on_chat,
-    bonus_,
+    get_bonus,
+    apply_bonus,
+    DataBonus
 )
 
 from .deep_link import validate_command_arg
@@ -49,7 +48,6 @@ from .game import (
     get_user_where_max_score,
     get_nickname_owner_game,
     get_first_three_places,
-    get_percent_places_award,
     get_gamer,
     gamer_have_active_game
 )
@@ -66,7 +64,10 @@ from .items import (
     add_item,
     activate_item,
     deactivate_all_items,
-    get_activated_items
+    get_activated_items,
+    add_value_to_item,
+    get_value_from_item,
+    get_values_from_item
 )
 
 from .message import disable_not_main_window, m_choice_quantity_avi
@@ -77,7 +78,7 @@ from .nickname import (
     view_nickname
 )
 from .photo import get_photo, get_photo_from_message
-from .random_merchant import create_random_merchant, get_weights_rmerchant, gen_price
+from .random_merchant import create_random_merchant, gen_price
 from .referrals import get_referrals
 
 from .text import (
@@ -94,6 +95,7 @@ from .text import (
     factory_text_account_animals,
     factory_text_account_aviaries,
     ft_bank_exchange_info,
+    ft_bonus_info
 )
 
 from .transfer import in_used, add_user_to_used

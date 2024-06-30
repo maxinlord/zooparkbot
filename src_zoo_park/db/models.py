@@ -145,6 +145,13 @@ class TransferMoney(Base):
     status: Mapped[bool] = mapped_column(default=False)
 
 
+class Donate(Base):
+    __tablename__ = "donates"
+
+    idpk_user: Mapped[int] = mapped_column()
+    amount: Mapped[int] = mapped_column()
+    refund_id: Mapped[str] = mapped_column(String(length=64), nullable=True)
+
 class Game(Base):
     __tablename__ = "games"
 
@@ -211,7 +218,7 @@ class Value(Base):
     __tablename__ = "values"
 
     name: Mapped[str] = mapped_column(String(length=100))  # Название значения
-    value_int: Mapped[int] = mapped_column(default=0)  # Значение целое
+    value_int: Mapped[int] = mapped_column(BigInteger, default=0)  # Значение целое
     value_str: Mapped[str] = mapped_column(
         String(length=4096), default="не установлено"
     )  # Значение строка

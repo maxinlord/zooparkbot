@@ -48,12 +48,6 @@ def calculate_price_with_discount(price: int, discount: int) -> int:
     return round(price)
 
 
-async def get_weights_rmerchant(session: AsyncSession) -> list:
-    w_str = await tools.get_value(
-        session=session, value_name="WEIGHTS_FOR_RANDOM_MERCHANT", value_type="str"
-    )
-    weights = [float(w.strip()) for w in w_str.split(",")]
-    return weights
 
 
 async def gen_price(session: AsyncSession, animals: str) -> int:

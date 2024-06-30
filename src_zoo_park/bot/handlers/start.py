@@ -6,8 +6,8 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from aiogram.utils.deep_linking import create_start_link
-from sqlalchemy import and_, select
-from db import User, Value, Game, Gamer
+from sqlalchemy import select
+from db import User, Game, Gamer, Item
 from tools import (
     get_text_message,
     has_special_characters_nickname,
@@ -16,15 +16,16 @@ from tools import (
     validate_command_arg,
     get_amount_gamers,
     factory_text_top_mini_game,
-    mention_html_by_username,
     get_value,
     get_nickname_owner_game,
     get_gamer,
-    gamer_have_active_game
+    gamer_have_active_game,
+    get_status_item,
 )
 from bot.states import UserState
 from bot.keyboards import rk_main_menu, ik_start_created_game, ik_button_play
-from config import translated_currencies, CHAT_ID
+from game_variables import translated_currencies
+from config import CHAT_ID
 
 
 router = Router()
@@ -56,9 +57,7 @@ async def command_start_game(
     if game.end:
         await message.answer(text=await get_text_message("game_expired"))
         return
-    if await get_gamer(
-        session=session, id_game=id_game, idpk_gamer=user.idpk
-    ):
+    if await get_gamer(session=session, id_game=id_game, idpk_gamer=user.idpk):
         await message.answer(text=await get_text_message("game_already_started"))
         return
     if await gamer_have_active_game(session=session, idpk_gamer=user.idpk):
@@ -72,6 +71,9 @@ async def command_start_game(
         idpk_gamer=user.idpk,
         moves=game.amount_moves,
     )
+    if await get_status_item(items=user.items, code_name_item="item_7"):
+        item = await session.scalar(select(Item).where(Item.code_name == "item_7"))
+        gamer.moves += item.value
     session.add(gamer)
     await session.commit()
     nickname = await get_nickname_owner_game(
@@ -111,19 +113,22 @@ async def command_start_game(
         type_game=game.type_game,
         amount_gamers=game.amount_gamers,
         amount_moves=game.amount_moves,
-        # message_id=game.id_mess,
-        # chat_username=await message.bot.get_chat(chat_id=CHAT_ID)
     )
     await message.answer(
         text=await get_text_message("begin_game"), reply_markup=ReplyKeyboardRemove()
     )
-    m = await message.answer(
+    keyboard_data = {
+        "game_type": game.type_game,
+        "total_moves": game.amount_moves,
+        "remain_moves": gamer.moves,
+    }
+    if await get_status_item(items=user.items, code_name_item="item_8"):
+        item = await session.scalar(select(Item).where(Item.code_name == "item_8"))
+        keyboard_data["autopilot"] = True
+        await state.update_data(delay_autopilot=item.value)
+    await message.answer(
         text=await get_text_message("play_game", score=gamer.score),
-        reply_markup=await ik_button_play(
-            game_type=game.type_game,
-            total_moves=game.amount_moves,
-            remain_moves=gamer.moves,
-        ),
+        reply_markup=await ik_button_play(**keyboard_data),
     )
 
 

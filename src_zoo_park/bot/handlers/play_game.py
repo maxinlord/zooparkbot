@@ -128,3 +128,70 @@ async def play_game(
             **mess_data,
         )
     await session.commit()
+
+
+@router.callback_query(UserState.game, F.data == "dice_autopilot")
+async def play_game_autopilot(
+    query: CallbackQuery,
+    session: AsyncSession,
+    state: FSMContext,
+    user: User,
+):
+    data = await state.get_data()
+    game = await session.get(Game, data["idpk_game"])
+    await query.message.delete_reply_markup()
+    gamer = await session.scalar(
+        select(Gamer).where(
+            and_(Gamer.idpk_gamer == user.idpk, Gamer.id_game == game.id_game)
+        )
+    )
+    while gamer.moves > 0:
+        msg = await query.message.answer_dice(
+            emoji=game.type_game, disable_notification=True
+        )
+        value_dice = msg.dice.value
+        gamer.score += value_dice
+        gamer.moves -= 1
+        await asyncio.sleep(4)
+        await query.message.answer(
+            text=await get_text_message("you_got", value_dice=value_dice),
+            disable_notification=True,
+        )
+        await asyncio.sleep(data["delay_autopilot"])
+        mess_data = (
+            {"chat_id": CHAT_ID, "message_id": game.id_mess}
+            if game.id_mess.isdigit()
+            else {"inline_message_id": game.id_mess}
+        )
+        with contextlib.suppress(Exception):
+            t = await factory_text_top_mini_game(session=session, game=game)
+            await query.message.bot.edit_message_text(
+                text=await get_text_message(
+                    "game_start",
+                    t=t,
+                    nickname=data["nickname"],
+                    game_type=data["type_game"],
+                    amount_gamers=data["amount_gamers"],
+                    amount_moves=data["amount_moves"],
+                    award=data["award"],
+                ),
+                reply_markup=await ik_start_created_game(
+                    link=await create_start_link(bot=query.bot, payload=game.id_game),
+                    total_gamers=data["amount_gamers"],
+                    current_gamers=await get_amount_gamers(session=session, game=game),
+                ),
+                disable_web_page_preview=True,
+                **mess_data,
+            )
+    await query.message.answer(
+        text=await get_text_message(
+            "play_game",
+            score=gamer.score,
+        )
+    )
+    await handle_game_end(
+        query=query,
+        state=state,
+        session=session,
+    )
+    await session.commit()

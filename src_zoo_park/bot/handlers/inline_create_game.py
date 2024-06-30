@@ -23,7 +23,7 @@ from tools import (
     get_value,
     find_integers
 )
-from config import translated_currencies, games
+from game_variables import translated_currencies, games
 from datetime import datetime, timedelta
 
 router = Router()

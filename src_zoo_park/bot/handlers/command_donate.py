@@ -1,30 +1,17 @@
 from aiogram.filters import CommandObject, Command
-from aiogram.types import Message, CallbackQuery, LabeledPrice, PreCheckoutQuery
+from aiogram.types import Message, LabeledPrice, PreCheckoutQuery
 from aiogram.exceptions import TelegramBadRequest
 from aiogram import F, Bot, Router
 from aiogram.fsm.context import FSMContext
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from db import User, MessageToSupport
-from aiogram.filters import StateFilter
-from aiogram.utils.keyboard import InlineKeyboardBuilder
-from aiogram.fsm.state import any_state
+from db import User, Donate
 from tools import (
-    mention_html,
-    income_,
     get_text_message,
-    get_photo,
-    get_photo_from_message,
     find_integers,
     get_value,
     add_to_currency,
     find_integers,
 )
-from bot.keyboards import ik_choice_rate_calculator, rk_cancel, rk_main_menu, ik_im_take
-from bot.filters import CompareDataByIndex, GetTextButton
-from bot.states import UserState
-from datetime import datetime
-from config import CHAT_SUPPORT_ID
 
 router = Router()
 flags = {"throttling_key": "default"}
@@ -78,6 +65,13 @@ async def on_successful_payment(
     ONE_STAR_IS = await get_value(session=session, value_name="ONE_STAR_IS")
     paw_coins_to_add = message.successful_payment.total_amount * ONE_STAR_IS
     await add_to_currency(self=user, currency="paw_coins", amount=paw_coins_to_add)
+    session.add(
+        Donate(
+            user_id=message.from_user.id,
+            amount=message.successful_payment.total_amount,
+            refund_id=message.successful_payment.telegram_payment_charge_id,
+        )
+    )
     await session.commit()
     await message.answer(
         text=await get_text_message(

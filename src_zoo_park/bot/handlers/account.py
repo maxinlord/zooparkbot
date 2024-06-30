@@ -213,7 +213,7 @@ async def process_viewing_item(
     await query.message.edit_text(
         text=await get_text_message(
             "description_item",
-            name_=item.description,
+            name_=item.name_with_emoji,
             description=item.description,
         ),
         reply_markup=await ik_item_activate_menu(
@@ -234,13 +234,10 @@ async def process_viewing_recipes(
     data = await state.get_data()
     match query.data:
         case "item_activate":
-            await deactivate_all_items(session=session, self=user)
-            await activate_item(
-                session=session, self=user, code_name_item=data["code_name_item"]
-            )
+            await deactivate_all_items(self=user)
+            await activate_item(self=user, code_name_item=data["code_name_item"])
         case "item_deactivate":
             await activate_item(
-                session=session,
                 self=user,
                 code_name_item=data["code_name_item"],
                 is_active=False,
@@ -252,7 +249,7 @@ async def process_viewing_recipes(
     await query.message.edit_text(
         text=await get_text_message(
             "description_item",
-            name_=item.description,
+            name_=item.name_with_emoji,
             description=item.description,
         ),
         reply_markup=await ik_item_activate_menu(

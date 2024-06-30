@@ -1,7 +1,7 @@
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from aiogram.types import SwitchInlineQueryChosenChat
 import tools
-from config import rarities, colors_rarities
+from game_variables import rarities, colors_rarities
 from itertools import islice
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -64,7 +64,9 @@ async def ik_choice_quantity_animals_rmerchant(
     session: AsyncSession, animal_price: int
 ):
     builder = InlineKeyboardBuilder()
-    all_quantity_animals = await tools.get_quantity_animals_for_rmerchant(session)
+    all_quantity_animals = await tools.fetch_and_parse_str_value(
+        session=session, value_name="QUANTITIES_FOR_RANDOM_MERCHANT"
+    )
     prices = [animal_price * q for q in all_quantity_animals]
     for quantity_animal, price in zip(all_quantity_animals, prices):
         builder.button(
@@ -110,7 +112,9 @@ async def ik_choice_rarity_rshop():
 
 async def ik_choice_quantity_animals_rshop(session: AsyncSession, animal_price: int):
     builder = InlineKeyboardBuilder()
-    all_quantity_animals = await tools.get_quantity_animals_for_rshop(session)
+    all_quantity_animals = await tools.fetch_and_parse_str_value(
+        session=session, value_name="QUANTITIES_FOR_RARITY_SHOP"
+    )
     prices = [animal_price * q for q in all_quantity_animals]
     builder.button(
         text=await tools.get_text_button("prev_rarity"),
@@ -158,7 +162,7 @@ async def ik_choice_item(session: AsyncSession):
     all_items = await tools.get_all_name_items(session=session)
     for name, code_name in all_items:
         builder.button(text=name, callback_data=f"{code_name}:choice_item_witems")
-    builder.adjust(1)
+    builder.adjust(2)
     return builder.as_markup()
 
 
@@ -178,7 +182,9 @@ async def ik_choice_aviary(
 
 async def ik_choice_quantity_aviary_avi(session: AsyncSession, aviary_price: int):
     builder = InlineKeyboardBuilder()
-    all_quantity_aviaries = await tools.get_quantity_animals_for_avi(session=session)
+    all_quantity_aviaries = await tools.fetch_and_parse_str_value(
+        session=session, value_name="QUANTITIES_FOR_AVIARIES"
+    )
     prices = [aviary_price * q for q in all_quantity_aviaries]
     for quantity_aviary, price in zip(all_quantity_aviaries, prices):
         builder.button(
@@ -201,6 +207,22 @@ async def ik_choice_quantity_aviary_avi(session: AsyncSession, aviary_price: int
 
 async def ik_bank():
     builder = InlineKeyboardBuilder()
+    builder.button(
+        text=await tools.get_text_button("exchange"), callback_data="exchange_bank"
+    )
+    builder.button(
+        text=await tools.get_text_button("update"), callback_data="update_bank"
+    )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+async def ik_bank_modify():
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text=await tools.get_text_button("market_collapse"),
+        callback_data="market_collapse",
+    )
     builder.button(
         text=await tools.get_text_button("exchange"), callback_data="exchange_bank"
     )
@@ -532,8 +554,11 @@ async def ik_get_money_one_piece(idpk_tr: int):
     return builder.as_markup()
 
 
-async def ik_button_play(game_type: str, total_moves: int, remain_moves: int):
+async def ik_button_play(
+    game_type: str, total_moves: int, remain_moves: int, autopilot: bool = False
+):
     builder = InlineKeyboardBuilder()
+    callback_data = "dice_autopilot" if autopilot else "dice"
     match game_type:
         case "🎯":
             builder.button(
@@ -542,7 +567,7 @@ async def ik_button_play(game_type: str, total_moves: int, remain_moves: int):
                     total_moves=total_moves,
                     remain_moves=remain_moves,
                 ),
-                callback_data="dice",
+                callback_data=callback_data,
             )
         case "🎳":
             builder.button(
@@ -551,7 +576,7 @@ async def ik_button_play(game_type: str, total_moves: int, remain_moves: int):
                     total_moves=total_moves,
                     remain_moves=remain_moves,
                 ),
-                callback_data="dice",
+                callback_data=callback_data,
             )
         case "🎲":
             builder.button(
@@ -560,7 +585,7 @@ async def ik_button_play(game_type: str, total_moves: int, remain_moves: int):
                     total_moves=total_moves,
                     remain_moves=remain_moves,
                 ),
-                callback_data="dice",
+                callback_data=callback_data,
             )
         case "⚽️":
             builder.button(
@@ -569,7 +594,7 @@ async def ik_button_play(game_type: str, total_moves: int, remain_moves: int):
                     total_moves=total_moves,
                     remain_moves=remain_moves,
                 ),
-                callback_data="dice",
+                callback_data=callback_data,
             )
         case "🏀":
             builder.button(
@@ -578,7 +603,7 @@ async def ik_button_play(game_type: str, total_moves: int, remain_moves: int):
                     total_moves=total_moves,
                     remain_moves=remain_moves,
                 ),
-                callback_data="dice",
+                callback_data=callback_data,
             )
     builder.adjust(1)
     return builder.as_markup()
@@ -617,7 +642,9 @@ async def ik_choice_rate_calculator(
 ):
     builder = InlineKeyboardBuilder()
     emoji = "🔘"
-    for rate in await tools.get_rates_calculator(session=session):
+    for rate in await tools.fetch_and_parse_str_value(
+        session=session, value_name="RATES_CALCULATOR", func_to_element=str
+    ):
         is_chosen = emoji if current_rate and str(current_rate) == rate else ""
         builder.button(
             text=await tools.get_text_button(
@@ -652,11 +679,25 @@ async def ik_confirm_or_cancel(idpk_message_to_support: int):
     builder.adjust(1)
     return builder.as_markup()
 
+
 async def ik_link_on_member_support(link: str, name: str):
     builder = InlineKeyboardBuilder()
     builder.button(
         text=await tools.get_text_button("link_on_member_support", name_=name),
         url=link,
+    )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+async def ik_confirm_or_change_bonus():
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text=await tools.get_text_button("confirm_bonus"),
+        callback_data="confirm_bonus",
+    )
+    builder.button(
+        text=await tools.get_text_button("change_bonus"), callback_data="change_bonus"
     )
     builder.adjust(1)
     return builder.as_markup()

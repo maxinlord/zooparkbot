@@ -18,7 +18,7 @@ from bot.keyboards import (
     ik_buy_item,
 )
 from bot.filters import GetTextButton, CompareDataByIndex
-from config import translated_currencies
+from game_variables import translated_currencies
 
 flags = {"throttling_key": "default"}
 router = Router()

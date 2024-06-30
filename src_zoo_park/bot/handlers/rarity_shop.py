@@ -31,7 +31,7 @@ from bot.keyboards import (
     ik_choice_quantity_animals_rshop,
 )
 from bot.filters import GetTextButton, CompareDataByIndex
-from config import rarities
+from game_variables import rarities
 
 flags = {"throttling_key": "default"}
 router = Router()
@@ -210,8 +210,7 @@ async def get_quantity_rshop(
     quantity_animal = int(query.data.split(":")[0])
     remain_seats = await get_remain_seats(
         session=session,
-        aviaries=user.aviaries,
-        amount_animals=await get_total_number_animals(self=user),
+        user=user
     )
     if remain_seats < quantity_animal:
         await query.answer(await get_text_message("not_enough_seats"), show_alert=True)
@@ -332,8 +331,7 @@ async def get_custom_quantity_animals_rshop(
         return
     remain_seats = await get_remain_seats(
         session=session,
-        aviaries=user.aviaries,
-        amount_animals=await get_total_number_animals(self=user),
+        user=user
     )
     if remain_seats < quantity_animal:
         await message.answer(await get_text_message("not_enough_seats"))

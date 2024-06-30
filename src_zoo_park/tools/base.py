@@ -11,15 +11,21 @@ def gen_key(length):
     )
 
 
-async def get_rates_calculator(session: AsyncSession):
-    rates = await tools.get_value(
-        session=session, value_name="RATES_CALCULATOR", value_type="str"
-    )
-    rates = [i.strip() for i in rates.split(",")]
-    return rates
-
-
 async def find_integers(text: str) -> int | None:
     numbers = re.sub(r"[^\d\s]", " ", text)
     integers = re.findall(r"\d+", numbers)
     return int("".join(integers)) if integers else None
+
+
+async def fetch_and_parse_str_value(
+    session: AsyncSession,
+    value_name: str,
+    func_to_element = int,
+    sep: str = ",",
+) -> list[any]:
+    value_str = await tools.get_value(
+        session=session,
+        value_name=value_name,
+        value_type="str",
+    )
+    return [func_to_element(v.strip()) for v in value_str.split(",")]

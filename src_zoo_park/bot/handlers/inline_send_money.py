@@ -22,7 +22,7 @@ from tools import (
     find_integers,
 )
 from bot.filters import CompareDataByIndex, FindIntegers
-from config import translated_currencies
+from game_variables import translated_currencies
 
 router = Router()
 

@@ -5,18 +5,24 @@ from sqlalchemy import select, update
 import random
 import tools
 import json
+from datetime import datetime
 
 
-async def get_rate(session: AsyncSession, items: str):
-    items: dict = json.loads(items)
+async def get_rate(session: AsyncSession, user: User):
     rate = await tools.get_value(
         session=session, value_name="RATE_RUB_USD", cache_=False
     )
-    if items.get("item_2"):
+    if await tools.get_status_item(items=user.items, code_name_item="item_2"):
         value = await session.scalar(
             select(Item.value).where(Item.code_name == "item_2")
         )
         rate = rate * (1 - (value / 100))
+    if d := await tools.get_values_from_item(items=user.items, code_name_item="item_6"):
+        time_str = d.get("date_end")
+        if not time_str:
+            pass
+        elif datetime.fromisoformat(time_str) >= datetime.now():
+            rate = await tools.get_value(session=session, value_name="MIN_RATE_RUB_USD")
     return int(rate)
 
 
@@ -49,7 +55,9 @@ async def exchange(
 
 
 async def get_weight_rate_bank(session: AsyncSession) -> list[float]:
-    weight_rate = await tools.get_value(session=session, value_name="WEIGHT_RATE_BANK", value_type='str')
+    weight_rate = await tools.get_value(
+        session=session, value_name="WEIGHT_RATE_BANK", value_type="str"
+    )
     return [float(i.strip()) for i in weight_rate.split(",")]
 
 
@@ -57,8 +65,12 @@ async def get_increase_rate_bank(
     session: AsyncSession,
 ) -> tuple[list[int], list[int]]:
     increase_rate_plus, increase_rate_minus = await asyncio.gather(
-        tools.get_value(session=session, value_name="INCREASE_PLUS_RATE_BANK", value_type='str'),
-        tools.get_value(session=session, value_name="INCREASE_MINUS_RATE_BANK", value_type='str'),
+        tools.get_value(
+            session=session, value_name="INCREASE_PLUS_RATE_BANK", value_type="str"
+        ),
+        tools.get_value(
+            session=session, value_name="INCREASE_MINUS_RATE_BANK", value_type="str"
+        ),
     )
     increase_rate_plus = [int(i.strip()) for i in increase_rate_plus.split(", ")]
     increase_rate_minus = [int(i.strip()) for i in increase_rate_minus.split(", ")]

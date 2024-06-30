@@ -158,3 +158,4 @@ alembic.ini
 alembic/
 *.png
 src_photos/
+celery/

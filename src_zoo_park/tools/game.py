@@ -41,12 +41,6 @@ async def get_nickname_owner_game(session: AsyncSession, game: Game, bot: Bot):
     return nickname
 
 
-async def get_percent_places_award(session: AsyncSession):
-    percents = await tools.get_value(
-        session=session, value_name="PERCENT_PLACES_AWARD", value_type="str"
-    )
-    return [int(i.strip()) for i in percents.split(",")]
-
 
 async def get_gamer(session: AsyncSession, idpk_gamer: int, id_game: str):
     gamer = await session.scalar(

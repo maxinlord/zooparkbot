@@ -1,9 +1,11 @@
 from sqlalchemy import select
-from db import User, Value, Aviary, Item
+from db import User, Value, Aviary, Item, Animal
 import random
 import tools
+from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from game_variables import types_bonus
 
 
 async def referral_bonus(session: AsyncSession, referral: User):
@@ -37,89 +39,121 @@ async def bonus_for_sub_on_channel(session: AsyncSession, user: User):
     return bonus
 
 
-async def fetch_and_parse(session: AsyncSession, name: str, parse_func):
-    value_str = await session.scalar(select(Value.value_str).where(Value.name == name))
-    return [parse_func(v.strip()) for v in value_str.split(",")]
-
-
-async def handle_rub_bonus(user, session):
+async def handle_rub_bonus(user, session, **kwargs) -> int:
     income = await tools.income_(session=session, user=user)
     if income == 0:
         income = 12
     income_for_8_hour = income * 480
     rub_to_add = random.randint(income_for_8_hour // 3, income_for_8_hour)
-    user.rub += rub_to_add
-    return {"rub_to_add": rub_to_add}
+    return rub_to_add
 
 
-async def handle_usd_bonus(user, session):
-    weights = await fetch_and_parse(session, "WEIGHTS_FOR_BONUS_USD", float)
-    types_usd_bonus = await fetch_and_parse(session, "TYPES_USD_BONUS", int)
-    usd_to_add = random.choices(population=types_usd_bonus, weights=weights)[0]
-    user.usd += usd_to_add
-    return {"usd_to_add": usd_to_add}
+async def handle_paw_coins(user, session, **kwargs) -> int:
+    paw_coins_to_add = random.randint(1, 50)
+    return paw_coins_to_add
 
 
-async def handle_aviary_bonus(user, session):
-    types_aviaries = list(await session.scalars(select(Aviary.code_name)))
-    aviary_to_add = random.choice(types_aviaries)
+async def handle_usd_bonus(user, session, **kwargs) -> int:
+    weights = await tools.fetch_and_parse_str_value(
+        session=session, value_name="WEIGHTS_FOR_BONUS_USD", func_to_element=float
+    )
+    values_usd_bonus = await tools.fetch_and_parse_str_value(
+        session=session, value_name="TYPES_USD_BONUS"
+    )
+    usd_to_add = random.choices(population=values_usd_bonus, weights=weights)[0]
+    return usd_to_add
+
+
+async def handle_aviary_bonus(user, session, **kwargs) -> tuple[dict, int]:
+    types_aviaries = list(await session.scalars(select(Aviary)))
+    aviary_to_add: Aviary = random.choice(types_aviaries)
     amount_to_add = random.randint(1, 5)
-    await tools.add_aviary(
-        session=session,
-        self=user,
-        code_name_aviary=aviary_to_add,
-        quantity=amount_to_add,
-        is_buy=False,
-    )
-    return {"aviary_to_add": aviary_to_add, "amount_to_add": amount_to_add}
+    return aviary_to_add.as_dict(), amount_to_add
 
 
-async def handle_animal_bonus(user: User, session):
+async def handle_animal_bonus(
+    user: User, session: AsyncSession, **kwargs
+) -> tuple[dict, int]:
     animal = await tools.get_random_animal(session=session, user_animals=user.animals)
+    THRESHOLD_MIN = 1
+    THRESHOLD_MAX = min(20, kwargs["remain_seats"])
     amount_to_add = random.randint(
-        1,
-        await tools.get_remain_seats(
-            session=session,
-            aviaries=user.aviaries,
-            amount_animals=await tools.get_total_number_animals(self=user),
-        ),
+        THRESHOLD_MIN,
+        THRESHOLD_MAX,
     )
-    await tools.add_animal(
-        self=user,
-        code_name_animal=animal.code_name,
-        quantity=amount_to_add,
-    )
-    return {"animal_to_add": animal.name, "amount_to_add": amount_to_add}
+    return animal.as_dict(), amount_to_add
 
 
-async def handle_item_bonus(user: User, session):
-    items = list(await session.scalars(select(Item)))
+async def handle_item_bonus(user: User, session) -> dict:
+    items = list(
+        await session.scalars(select(Item).where(Item.currency != "paw_coins"))
+    )
     item_to_add: Item = random.choice(items)
-    if item_to_add.code_name in user.items:
-        amount = item_to_add.price // 2
-        dict_currencies = {
-            "paw_coins": user.paw_coins,
-            "rub": user.rub,
-            "usd": user.usd,
-        }
-        dict_currencies[item_to_add.currency] += amount
-        return {f"{item_to_add.currency}_to_add": amount}
-    await tools.add_item(
-        session=session, self=user, code_name_item=item_to_add.code_name
+    return item_to_add.as_dict()
+
+
+@dataclass
+class DataBonus:
+    bonus_type: str
+    result_func: any
+
+
+async def get_bonus(session: AsyncSession, user: User) -> DataBonus:
+    weights = await tools.fetch_and_parse_str_value(
+        session=session, value_name="WEIGHTS_FOR_BONUS", func_to_element=float
     )
-    return {"item_to_add": item_to_add.name}
-
-
-async def bonus_(session: AsyncSession, user: User):
-    types_bonus = ["rub", "usd", "aviary", "animal", "item"]
-    weights = await fetch_and_parse(session, "WEIGHTS_FOR_BONUS", float)
     bonus_type = random.choices(population=types_bonus, weights=weights)[0]
+    args = {
+        "user": user,
+        "session": session,
+    }
+    if bonus_type == "animal":
+        remain_seats = await tools.get_remain_seats(session=session, user=user)
+        if remain_seats == 0:
+            bonus_type = random.choices(population=types_bonus, weights=weights)[0]
+        else:
+            args["remain_seats"] = remain_seats
+    if bonus_type == "item":
+        item = await handle_item_bonus(**args)
+        if item['code_name'] in user.items:
+            return DataBonus(bonus_type=item['currency'], result_func=item['price'] // 2)
     handlers = {
         "rub": handle_rub_bonus,
         "usd": handle_usd_bonus,
+        "paw_coins": handle_paw_coins,
         "aviary": handle_aviary_bonus,
         "animal": handle_animal_bonus,
         "item": handle_item_bonus,
     }
-    data_about_bonus = {bonus_type: await handlers[bonus_type](user, session)}
-    return data_about_bonus
+    return DataBonus(
+        bonus_type=bonus_type,
+        result_func=await handlers[bonus_type](**args),
+    )
+
+
+async def apply_bonus(session: AsyncSession, user: User, data_bonus: DataBonus):
+    match data_bonus.bonus_type:
+        case "rub":
+            user.rub += data_bonus.result_func
+        case "usd":
+            user.usd += data_bonus.result_func
+        case "aviary":
+            await tools.add_aviary(
+                session=session,
+                self=user,
+                code_name_aviary=data_bonus.result_func[0]["code_name"],
+                quantity=data_bonus.result_func[1],
+                is_buy=False,
+            )
+        case "animal":
+            await tools.add_animal(
+                self=user,
+                code_name_animal=data_bonus.result_func[0]["code_name"],
+                quantity=data_bonus.result_func[1],
+            )
+        case "item":
+            await tools.add_item(
+                session=session,
+                self=user,
+                code_name_item=data_bonus.result_func["code_name"],
+            )

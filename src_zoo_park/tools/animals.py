@@ -4,7 +4,7 @@ from db import Animal, Unity, User, Item
 
 import json
 import tools
-import config
+import game_variables
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,22 +12,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 async def get_all_animals(session: AsyncSession) -> list[Animal]:
     result = await session.scalars(select(Animal).where(Animal.code_name.contains("-")))
     return result.all()
-
-
-async def get_quantity_animals_for_rmerchant(session: AsyncSession) -> list[int]:
-    quantities = await tools.get_value(
-        session=session, value_name="QUANTITIES_FOR_RANDOM_MERCHANT", value_type="str"
-    )
-    quantities = map(lambda x: int(x.strip()), quantities.split(","))
-    return list(quantities)
-
-
-async def get_quantity_animals_for_rshop(session: AsyncSession) -> list[int]:
-    quantities = await tools.get_value(
-        session=session, value_name="QUANTITIES_FOR_RARITY_SHOP", value_type="str"
-    )
-    quantities = map(lambda x: int(x.strip()), quantities.split(","))
-    return list(quantities)
 
 
 async def get_price_animal(
@@ -58,27 +42,6 @@ async def _get_unity_data_for_price_animal(session: AsyncSession, idpk_unity: in
             session=session, value_name="BONUS_DISCOUNT_FOR_ANIMAL_3RD_LVL"
         )
     return bonus
-
-
-async def _get_income_animal(
-    session: AsyncSession,
-    animal: Animal,
-    unity_idpk: int,
-):
-    animal_income = animal.income
-    if unity_idpk:
-        unity_idpk_top, animal_top = await tools.get_top_unity_by_animal(
-            session=session
-        )
-        if (
-            unity_idpk_top == unity_idpk
-            and animal.code_name == list(animal_top.keys())[0]
-        ):
-            bonus = await tools.get_value(
-                session=session, value_name="BONUS_FOR_AMOUNT_ANIMALS"
-            )
-            animal_income = animal_income * (1 + (bonus / 100))
-    return int(animal_income)
 
 
 async def get_income_animal(
@@ -131,19 +94,47 @@ async def get_total_number_animals(self: User) -> int:
     return sum(decoded_dict.values())
 
 
+async def _get_income_animal(
+    session: AsyncSession,
+    animal: Animal,
+    unity_idpk: int,
+):
+    animal_income = animal.income
+    if unity_idpk:
+        unity_idpk_top, animal_top = await tools.get_top_unity_by_animal(
+            session=session
+        )
+        if (
+            unity_idpk_top == unity_idpk
+            and animal.code_name == list(animal_top.keys())[0]
+        ):
+            bonus = await tools.get_value(
+                session=session, value_name="BONUS_FOR_AMOUNT_ANIMALS"
+            )
+            animal_income = animal_income * (1 + (bonus / 100))
+    return int(animal_income)
+
+
 async def get_random_animal(session: AsyncSession, user_animals: str) -> Animal:
     dict_animals: dict = json.loads(user_animals)
     if not dict_animals:
-        r = await tools.get_value(
-            session=session, value_name="START_ANIMALS_FOR_RMERCHANT", value_type="str"
+        animal_names_to_choice = await tools.fetch_and_parse_str_value(
+            session=session,
+            value_name="START_ANIMALS_FOR_RMERCHANT",
+            func_to_element=str,
         )
-        c_names = [c_name.strip() for c_name in r.split(",")]
     else:
-        c_names = [c_name.split("_")[0] for c_name in dict_animals]
-    animal_name = random.choice(c_names)
+        animal_names_to_choice = [
+            animal_name.split("_")[0] for animal_name in dict_animals
+        ]
+    animal_name = random.choice(animal_names_to_choice)
     rarity = random.choices(
-        population=config.rarities,
-        weights=await tools.get_weights_rmerchant(session=session),
+        population=game_variables.rarities,
+        weights=await tools.fetch_and_parse_str_value(
+            session=session,
+            value_name="WEIGHTS_FOR_RANDOM_MERCHANT",
+            func_to_element=float,
+        ),
     )
     animal = await session.scalar(
         select(Animal).where(Animal.code_name == animal_name + rarity[0])
@@ -153,7 +144,7 @@ async def get_random_animal(session: AsyncSession, user_animals: str) -> Animal:
 
 async def get_animal_with_random_rarity(session: AsyncSession, animal: str) -> Animal:
     rarity = random.choices(
-        population=config.rarities,
+        population=game_variables.rarities,
         weights=await tools.get_weights_rmerchant(session=session),
     )
     animal = await session.scalar(
@@ -173,12 +164,9 @@ async def gen_quantity_animals(session: AsyncSession, user: User) -> int:
     return quantity_animals
 
 
-async def get_average_price_animals(
-    session: AsyncSession, animals_code_name: set[str]
-):
+async def get_average_price_animals(session: AsyncSession, animals_code_name: set[str]):
     result = await session.execute(
         select(Animal.price).where(Animal.code_name.in_(animals_code_name))
     )
     prices = [row[0] for row in result]
     return sum(prices) / len(prices)
-

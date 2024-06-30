@@ -12,16 +12,16 @@ from tools import (
     ft_bank_exchange_info,
     update_bank_storage,
     exchange,
-    find_integers
+    find_integers,
+    get_status_item,
+    add_value_to_item,
+    get_values_from_item,
+    get_value_from_item,
 )
 from bot.states import UserState
-from bot.keyboards import (
-    ik_bank,
-    rk_exchange_bank,
-    rk_main_menu,
-)
+from bot.keyboards import ik_bank, rk_exchange_bank, rk_main_menu, ik_bank_modify
 from bot.filters import GetTextButton
-from datetime import datetime
+from datetime import datetime, timedelta
 
 flags = {"throttling_key": "default"}
 router = Router()
@@ -35,7 +35,7 @@ async def bank(
     user: User,
     edit: bool = False,
 ):
-    rate = await get_rate(session=session, items=user.items)
+    rate = await get_rate(session=session, user=user)
     time_to_update_bank = 60 - datetime.now().second
     dict_func = {
         True: message.edit_text,
@@ -44,6 +44,10 @@ async def bank(
     bank_storage = await get_value(
         session=session, value_name="BANK_STORAGE", cache_=False
     )
+    keyboard = await ik_bank()
+    if d := await get_values_from_item(items=user.items, code_name_item="item_6"):
+        if d["is_activate"] and not d.get("date_end"):
+            keyboard = await ik_bank_modify()
     await dict_func[edit](
         text=await get_text_message(
             "bank_info",
@@ -53,7 +57,39 @@ async def bank(
             usd=user.usd,
             bank_storage=bank_storage,
         ),
-        reply_markup=await ik_bank(),
+        reply_markup=keyboard,
+    )
+
+
+@router.callback_query(UserState.main_menu, F.data == "market_collapse")
+async def market_collapse(
+    query: CallbackQuery,
+    session: AsyncSession,
+    state: FSMContext,
+    user: User,
+):
+    if await get_value_from_item(
+        items=user.items,
+        code_name_item="item_6",
+        value_name="date_end",
+    ):
+        await query.answer(
+            await get_text_message("market_collapse_used"), show_alert=True
+        )
+    else:
+        await add_value_to_item(
+            self=user,
+            code_name_item="item_6",
+            value_name="date_end",
+            value=(datetime.now() + timedelta(seconds=60)).isoformat(),
+        )
+        await session.commit()
+    await bank(
+        message=query.message,
+        session=session,
+        state=state,
+        user=user,
+        edit=True,
     )
 
 
@@ -81,7 +117,7 @@ async def exchange_bank(
     state: FSMContext,
     user: User,
 ):
-    rate = await get_rate(session=session, items=user.items)
+    rate = await get_rate(session=session, user=user)
     await state.update_data(rate=rate)
     if user.rub < rate:
         await query.answer(await get_text_message("no_money"), show_alert=True)

@@ -34,5 +34,7 @@ from .options_menu import (
     ik_choice_rate_calculator,
     ik_im_take,
     ik_confirm_or_cancel,
-    ik_link_on_member_support
+    ik_link_on_member_support,
+    ik_confirm_or_change_bonus,
+    ik_bank_modify
 )

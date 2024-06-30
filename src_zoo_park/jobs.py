@@ -1,7 +1,8 @@
 import contextlib
+import json
 from aiogram import Bot
 from sqlalchemy import delete, select, update, and_
-from db import User, RandomMerchant, Value, RequestToUnity, Game, Animal, Gamer
+from db import User, RandomMerchant, Value, RequestToUnity, Game, Animal, Gamer, Item
 from sqlalchemy.ext.asyncio import AsyncSession
 from aiogram.utils.deep_linking import create_start_link
 from init_db import _sessionmaker_for_func
@@ -20,16 +21,20 @@ from tools import (
     gen_key,
     get_nickname_owner_game,
     get_first_three_places,
-    get_percent_places_award,
     get_total_moves_game,
     get_amount_gamers,
+    fetch_and_parse_str_value,
 )
 from bot.keyboards import rk_main_menu, ik_start_created_game
 import random
 from datetime import datetime, timedelta
-from config import translated_currencies, games, CHAT_ID
-
-petard_emoji_effect = "5046509860389126442"
+from game_variables import (
+    translated_currencies,
+    games,
+    petard_emoji_effect,
+    MAX_AMOUNT_GAMERS,
+)
+from config import CHAT_ID
 
 
 async def job_sec(bot) -> None:
@@ -40,13 +45,17 @@ async def job_sec(bot) -> None:
 
 
 async def job_minute(bot) -> None:
-    if datetime.now().second == 00:
+    if datetime.now().second == 30:
+        async with _sessionmaker_for_func() as session:
+            await updater_mess_minigame(session=session, bot=bot)
+    elif datetime.now().second == 50:
+        async with _sessionmaker_for_func() as session:
+            await ender_minigames(session=session, bot=bot)
+    elif datetime.now().second == 58:
         async with _sessionmaker_for_func() as session:
             await accrual_of_income(session=session)
             await update_rate_bank(session=session)
             await deleter_request_to_unity(session=session)
-            await updater_mess_minigame(session=session, bot=bot)
-            await ender_minigames(session=session, bot=bot)
             await session.commit()
 
 
@@ -101,6 +110,18 @@ async def add_bonus_to_users() -> None:
         await session.commit()
 
 
+async def reset_items_effect() -> None:
+    async with _sessionmaker_for_func() as session:
+        users = await session.scalars(select(User))
+        for user in users.all():
+            items: dict = json.loads(user.items)
+            reset_items = {
+                k: {"is_activate": v["is_activate"]} for k, v in items.items()
+            }
+            user.items = json.dumps(reset_items)
+        await session.commit()
+
+
 async def update_rate_bank(session: AsyncSession):
     weight_plus, weight_minus = await get_weight_rate_bank(session=session)
     increase_plus, increase_minus = await get_increase_rate_bank(session=session)
@@ -136,9 +157,6 @@ async def deleter_request_to_unity(session: AsyncSession):
     await session.execute(
         delete(RequestToUnity).where(RequestToUnity.date_request_end < datetime.now())
     )
-
-
-MAX_AMOUNT_GAMERS = 80
 
 
 async def create_game_for_chat(bot: Bot):
@@ -260,7 +278,11 @@ async def award_winners(bot: Bot, session: AsyncSession, game: Game):
     gamers_winer: list[Gamer] = await get_first_three_places(session=session, game=game)
     if not gamers_winer:
         return
-    award_percent = iter(await get_percent_places_award(session=session))
+    award_percent = iter(
+        await fetch_and_parse_str_value(
+            session=session, value_name="PERCENT_PLACES_AWARD"
+        )
+    )
     for gamer in gamers_winer:
         gamer: User = await session.get(User, gamer.idpk_gamer)
         award = game.amount_award * (next(award_percent) / 100)
@@ -359,7 +381,11 @@ async def gen_text_winners(bot: Bot, session: AsyncSession, game: Game):
             )
         return
     additional_text = ""
-    award_percent = iter(await get_percent_places_award(session=session))
+    award_percent = iter(
+        await fetch_and_parse_str_value(
+            session=session, value_name="PERCENT_PLACES_AWARD"
+        )
+    )
     emoji_places = iter(["🏆", "🥈", "🥉"])
     for gamer in gamers_winer:
         gamer: User = await session.get(User, gamer.idpk_gamer)

@@ -14,14 +14,6 @@ async def get_all_name_and_size_aviaries(session: AsyncSession):
     return name_items.all()
 
 
-async def get_quantity_animals_for_avi(session: AsyncSession) -> list[int]:
-    quantities = await tools.get_value(
-        session, value_name="QUANTITIES_FOR_AVIARIES", value_type="str"
-    )
-    quantities = map(lambda x: int(x.strip()), quantities.split(","))
-    return list(quantities)
-
-
 async def get_total_number_seats(session: AsyncSession, aviaries: str) -> int:
     decoded_dict: dict = json.loads(aviaries)
     all_seats = 0
@@ -33,10 +25,9 @@ async def get_total_number_seats(session: AsyncSession, aviaries: str) -> int:
     return all_seats
 
 
-async def get_remain_seats(
-    session: AsyncSession, aviaries: str, amount_animals: int
-) -> int:
-    all_seats = await get_total_number_seats(session=session, aviaries=aviaries)
+async def get_remain_seats(session: AsyncSession, user: User) -> int:
+    all_seats = await get_total_number_seats(session=session, aviaries=user.aviaries)
+    amount_animals = await tools.get_total_number_animals(self=user)
     return all_seats - amount_animals
 
 

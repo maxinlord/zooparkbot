@@ -15,5 +15,6 @@ from .models import (
     TransferMoney,
     Game,
     Gamer,
-    MessageToSupport
+    MessageToSupport,
+    Donate
 )

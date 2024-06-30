@@ -3,18 +3,20 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from db import User, Photo
+from db import User, Photo, Item
 from tools import (
     get_text_message,
     factory_text_main_top,
     disable_not_main_window,
     bonus_for_sub_on_chat,
     bonus_for_sub_on_channel,
-    bonus_,
+    get_bonus,
+    apply_bonus,
+    get_status_item,
+    DataBonus,
+    ft_bonus_info,
 )
-from bot.keyboards import (
-    ik_get_bonus,
-)
+from bot.keyboards import ik_get_bonus, ik_confirm_or_change_bonus
 from bot.states import UserState
 from bot.filters import GetTextButton
 from config import CHANNEL_ID, CHAT_ID, CHANNEL_URL, CHAT_URL
@@ -86,7 +88,7 @@ async def get_bonus_channel(
         )
         return
     user.sub_on_channel = True
-    b = await bonus_for_sub_on_channel(session=session,user=user)
+    b = await bonus_for_sub_on_channel(session=session, user=user)
     await session.commit()
     await query.message.answer(await get_text_message("subscribed_to_channel", bonus=b))
     await query.message.edit_reply_markup(
@@ -98,7 +100,7 @@ async def get_bonus_channel(
 
 
 @router.callback_query(UserState.main_menu, F.data == "get_bonus")
-async def get_bonus(
+async def get_daily_bonus(
     query: CallbackQuery,
     session: AsyncSession,
     state: FSMContext,
@@ -110,40 +112,79 @@ async def get_bonus(
             show_alert=True,
         )
         return
-    user.bonus = 0
-    data_bonus = await bonus_(session=session, user=user)
-    await session.commit()
-    key = list(data_bonus.keys())[0]
-    text = ""
-    match key:
-        case "rub":
-            text = await get_text_message(
-                "bonus_rub", rub=data_bonus[key]["rub_to_add"]
-            )
-        case "usd":
-            text = await get_text_message(
-                "bonus_usd", usd=data_bonus[key]["usd_to_add"]
-            )
-        case "aviary":
-            text = await get_text_message(
-                "bonus_aviary",
-                aviary=data_bonus[key]["aviary_to_add"],
-                amount=data_bonus[key]["amount_to_add"],
-            )
-        case "animal":
-            text = await get_text_message(
-                "bonus_animal",
-                animal=data_bonus[key]["animal_to_add"],
-                amount=data_bonus[key]["amount_to_add"],
-            )
-        case "item":
-            text = await get_text_message(
-                "bonus_item", item=data_bonus[key]["item_to_add"]
-            )
+    data_bonus = await get_bonus(session=session, user=user)
+    text = await ft_bonus_info(data_bonus=data_bonus)
+    mess_data = {"text": text}
+    data = await state.get_data()
+    if (
+        await get_status_item(items=user.items, code_name_item="item_5")
+        and data.get("number_attempts_item_5", 1) > 0
+    ):
+        item = await session.scalar(select(Item).where(Item.code_name == "item_5"))
+        await state.update_data(
+            number_attempts_item_5=item.value - 1,
+            bonus_type=data_bonus.bonus_type,
+            result_func=data_bonus.result_func,
+        )
+        mess_data["reply_markup"] = await ik_confirm_or_change_bonus()
+    else:
+        await state.clear()
+        await state.set_state(UserState.main_menu)
+        user.bonus -= 1
+        await apply_bonus(session=session, user=user, data_bonus=data_bonus)
+        await session.commit()
     await query.message.delete_reply_markup()
     await query.message.answer(
-        text=await get_text_message(
-            "bonus_received",
-            text=text,
-        ),
+        **mess_data,
+    )
+
+
+@router.callback_query(UserState.main_menu, F.data == "confirm_bonus")
+async def confirm_bonus(
+    query: CallbackQuery,
+    session: AsyncSession,
+    state: FSMContext,
+    user: User,
+):
+    data = await state.get_data()
+    user.bonus -= 1
+    data_bonus = DataBonus(
+        bonus_type=data.get("bonus_type"),
+        result_func=data.get("result_func"),
+    )
+    await apply_bonus(session=session, user=user, data_bonus=data_bonus)
+    await state.clear()
+    await state.set_state(UserState.main_menu)
+    await session.commit()
+    await query.message.delete_reply_markup()
+
+
+@router.callback_query(UserState.main_menu, F.data == "change_bonus")
+async def change_bonus(
+    query: CallbackQuery,
+    session: AsyncSession,
+    state: FSMContext,
+    user: User,
+):
+    data = await state.get_data()
+    number_attempts_item_5 = data.get("number_attempts_item_5", 1) - 1
+    data_bonus = await get_bonus(session=session, user=user)
+    text = await ft_bonus_info(data_bonus=data_bonus)
+    mess_data = {"text": text}
+    if number_attempts_item_5 > 0:
+        _ = await state.update_data(
+            bonus_type=data_bonus.bonus_type,
+            result_func=data_bonus.result_func,
+            number_attempts_item_5=number_attempts_item_5,
+        )
+        print(data, _)
+        mess_data["reply_markup"] = await ik_confirm_or_change_bonus()
+    else:
+        user.bonus -= 1
+        await state.clear()
+        await state.set_state(UserState.main_menu)
+        await apply_bonus(session=session, user=user, data_bonus=data_bonus)
+        await session.commit()
+    await query.message.edit_text(
+        **mess_data,
     )

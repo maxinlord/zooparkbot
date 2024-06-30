@@ -3,11 +3,10 @@ import asyncio
 import aioschedule
 from db import Base
 from init_db_redis import redis
-from tools import get_text_button
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.types import BotCommand
-from init_db import _sessionmaker, _sessionmaker_for_func, _engine
+from init_db import _sessionmaker, _engine
 from bot.handlers import setup_message_routers
 from aiogram.fsm.storage.redis import RedisStorage
 from bot.middlewares import (
@@ -27,6 +26,7 @@ from jobs import (
     job_sec,
     add_bonus_to_users,
     create_game_for_chat,
+    reset_items_effect
 )
 
 bot: Bot = Bot(
@@ -44,14 +44,15 @@ async def on_shutdown(session: AsyncSession) -> None:
 
 
 async def scheduler() -> None:
-    aioschedule.every(1).seconds.do(job_sec, bot=bot)
+    # aioschedule.every(1).seconds.do(job_sec, bot=bot)
     aioschedule.every(1).seconds.do(job_minute, bot=bot)
-    aioschedule.every().day.at("11:00").do(reset_first_offer_bought)
+    aioschedule.every().day.at("10:00").do(reset_items_effect)
+    aioschedule.every().day.at("10:30").do(reset_first_offer_bought)
     aioschedule.every().day.at("11:00").do(add_bonus_to_users)
     aioschedule.every().day.at("13:00").do(create_game_for_chat, bot=bot)
     aioschedule.every().day.at("16:30").do(create_game_for_chat, bot=bot)
-    aioschedule.every().day.at("20:00").do(verification_referrals, bot=bot)
-    aioschedule.every().day.at("20:00").do(create_game_for_chat, bot=bot)
+    aioschedule.every().day.at("20:00").do(create_game_for_chat, bot=bot)   
+    aioschedule.every().day.at("21:00").do(verification_referrals, bot=bot)
     while True:
         await aioschedule.run_pending()
         await asyncio.sleep(1)

@@ -80,8 +80,7 @@ async def check_funds_and_seats(
         return False
     remain_seats = await get_remain_seats(
         session=session,
-        aviaries=user.aviaries,
-        amount_animals=await get_total_number_animals(self=user),
+        user=user
     )
     if remain_seats < quantity_animals:
         await query.answer(await get_text_message("not_enough_seats"), show_alert=True)
@@ -225,8 +224,7 @@ async def choice_qa_to_buy(
 
     remain_seats = await get_remain_seats(
         session=session,
-        aviaries=user.aviaries,
-        amount_animals=await get_total_number_animals(self=user),
+        user=user
     )
     if remain_seats < quantity:
         await query.answer(await get_text_message("not_enough_seats"), show_alert=True)
@@ -378,8 +376,7 @@ async def get_custom_quantity_animals(
         return
     remain_seats = await get_remain_seats(
         session=session,
-        aviaries=user.aviaries,
-        amount_animals=await get_total_number_animals(self=user),
+        user=user
     )
     if remain_seats < num:
         await message.answer(
