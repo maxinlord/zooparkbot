@@ -111,3 +111,4 @@ async def buy_item(
     await query.answer(
         text=await get_text_message("item_bought_successful"), show_alert=True
     )
+    await query.message.edit_reply_markup(reply_markup=await ik_buy_item(bought=True))
