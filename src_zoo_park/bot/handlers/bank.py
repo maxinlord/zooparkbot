@@ -100,7 +100,7 @@ async def update_bank(
     state: FSMContext,
     user: User,
 ):
-    await query.answer(cache_time=1)
+    await query.answer(cache_time=3)
     await bank(
         message=query.message,
         session=session,
@@ -130,7 +130,7 @@ async def exchange_bank(
     await state.set_state(UserState.exchange_bank_step)
 
 
-@router.message(UserState.exchange_bank_step, GetTextButton("exchange_all_amount"))
+@router.message(UserState.exchange_bank_step, GetTextButton("exchange_all_amount"), flags=flags)
 async def exchange_all_amount(
     message: Message,
     session: AsyncSession,

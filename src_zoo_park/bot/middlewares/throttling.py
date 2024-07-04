@@ -9,20 +9,19 @@ THROTTLE_TIME = 0.5
 
 
 class ThrottlingMiddleware(BaseMiddleware):
-    caches = {
-        "default": TTLCache(maxsize=10_000, ttl=THROTTLE_TIME)
-    }
+    caches = {"default": TTLCache(maxsize=10_000, ttl=THROTTLE_TIME)}
 
     async def __call__(
-            self,
-            handler: Callable[[Message, Dict[str, Any]], Awaitable[Any]],
-            event: Message,
-            data: Dict[str, Any],
+        self,
+        handler: Callable[[Message, Dict[str, Any]], Awaitable[Any]],
+        event: Message,
+        data: Dict[str, Any],
     ) -> Any:
         throttling_key = get_flag(data, "throttling_key")
-        if throttling_key is not None and throttling_key in self.caches:
-            if event.chat.id in self.caches[throttling_key]:
+        if throttling_key is not None:
+            cache = self.caches.get(throttling_key)
+            if cache is not None and event.chat.id in cache:
                 return
-            else:
-                self.caches[throttling_key][event.chat.id] = None
+            elif cache is not None:
+                cache[event.chat.id] = None
         return await handler(event, data)

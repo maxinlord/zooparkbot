@@ -16,6 +16,9 @@ from tools import (
     disable_not_main_window,
     count_page_unity,
     get_value,
+    income_,
+    get_total_number_animals,
+    mention_html,
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -231,9 +234,17 @@ async def process_viewing_unity_bio(
     user: User,
 ) -> None:
     idpk_owner = int(query.data.split(":")[0])
+    unity = await session.scalar(select(Unity).where(Unity.idpk_user == idpk_owner))
+    owner = await session.get(User, idpk_owner)
     await state.update_data(idpk_owner=idpk_owner)
     await query.message.edit_text(
-        text=await get_text_message("description_unity"),
+        text=await get_text_message(
+            "description_unity",
+            name_=unity.name,
+            lvl=unity.level,
+            nickname_owner=owner.nickname,
+            owner_income=await income_(session=session, user=owner),
+        ),
         reply_markup=await ik_unity_send_request(),
     )
 
@@ -273,7 +284,14 @@ async def process_send_request(
     await session.commit()
     await query.bot.send_message(
         chat_id=unity_owner.id_user,
-        text=await get_text_message("request_add_to_unity"),
+        text=await get_text_message(
+            "request_add_to_unity",
+            nickname=mention_html(id_user=user.id_user, name=user.nickname),
+            usd=user.usd,
+            rub=user.rub,
+            animals=await get_total_number_animals(self=user),
+            income=await income_(session=session, user=user),
+        ),
         reply_markup=await ik_unity_invitation(user.idpk),
     )
 

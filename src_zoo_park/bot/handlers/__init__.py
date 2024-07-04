@@ -1,7 +1,6 @@
 from aiogram import Router
 
 
-
 def setup_message_routers() -> Router:
     from . import (
         start,
@@ -11,6 +10,7 @@ def setup_message_routers() -> Router:
         command_donate,
         command_photo_view,
         command_calculator,
+        command_faq,
         zoomarket,
         unity,
         unity_level,
@@ -38,6 +38,7 @@ def setup_message_routers() -> Router:
     router.include_router(command_usd.router)
     router.include_router(command_support.router)
     router.include_router(command_calculator.router)
+    router.include_router(command_faq.router)
     router.include_router(command_donate.router)
     router.include_router(command_photo_view.router)
     router.include_router(referrals.router)
