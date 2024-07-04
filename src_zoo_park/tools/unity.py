@@ -131,7 +131,14 @@ async def get_members_not_have_amount_animals(
         is_have = all(i >= condition for i in animals) if animals else False
         if not is_have:
             members_not_have_amount_animals.append(user.nickname)
-    return ", ".join(members_not_have_amount_animals)
+    if not members_not_have_amount_animals:
+        return ""
+    not_have = ", ".join(members_not_have_amount_animals)
+    text = await tools.get_text_message(
+        "pattern_not_have_amount_animals",
+        not_have=not_have,
+    )
+    return text
 
 
 async def get_row_unity_members(session: AsyncSession):
