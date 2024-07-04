@@ -45,14 +45,15 @@ async def job_sec(bot) -> None:
 
 
 async def job_minute(bot) -> None:
-    if datetime.now().second == 30:
-        async with _sessionmaker_for_func() as session:
+    now = datetime.now()
+    second = now.second
+
+    async with _sessionmaker_for_func() as session:
+        if second == 30:
             await updater_mess_minigame(session=session, bot=bot)
-    elif datetime.now().second == 50:
-        async with _sessionmaker_for_func() as session:
+        elif second == 50:
             await ender_minigames(session=session, bot=bot)
-    elif datetime.now().second == 58:
-        async with _sessionmaker_for_func() as session:
+        elif second == 58:
             await accrual_of_income(session=session)
             await update_rate_bank(session=session)
             await deleter_request_to_unity(session=session)
@@ -278,28 +279,31 @@ async def award_winners(bot: Bot, session: AsyncSession, game: Game):
     gamers_winer: list[Gamer] = await get_first_three_places(session=session, game=game)
     if not gamers_winer:
         return
-    award_percent = iter(
-        await fetch_and_parse_str_value(
-            session=session, value_name="PERCENT_PLACES_AWARD"
-        )
+
+    # Cache award percentages
+    award_percentages = await fetch_and_parse_str_value(
+        session=session, value_name="PERCENT_PLACES_AWARD"
     )
+    award_percent = iter(award_percentages)
+
     for gamer in gamers_winer:
-        gamer: User = await session.get(User, gamer.idpk_gamer)
         award = game.amount_award * (next(award_percent) / 100)
         await add_to_currency(
             self=gamer,
             currency=game.currency_award,
             amount=award,
         )
-        award = f"{int(award):,d}{translated_currencies.get(game.currency_award)}"
+        award_text = f"{int(award):,d}{translated_currencies.get(game.currency_award)}"
+        message_text = await get_text_message(
+            "game_winer_message",
+            award=award_text,
+        )
+        reply_markup = await rk_main_menu()
         await bot.send_message(
             chat_id=gamer.id_user,
-            text=await get_text_message(
-                "game_winer_message",
-                award=award,
-            ),
+            text=message_text,
             message_effect_id=petard_emoji_effect,
-            reply_markup=await rk_main_menu(),
+            reply_markup=reply_markup,
         )
 
 
