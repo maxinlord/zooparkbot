@@ -1,14 +1,12 @@
 from aiogram.filters import CommandObject, Command
-from aiogram.types import Message
+from aiogram.types import Message, LinkPreviewOptions
 from aiogram import Router
 from aiogram.fsm.context import FSMContext
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from db import User
 from aiogram.filters import StateFilter
 from aiogram.fsm.state import any_state
 from tools import (
-    mention_html,
     get_text_message,
 )
 from config import FAQ_URL
@@ -29,4 +27,7 @@ async def faq(
     session: AsyncSession,
     user: User | None,
 ):
-    await message.answer(text=await get_text_message("faq", link_on_faq=FAQ_URL))
+    await message.answer(
+        text=await get_text_message("faq", link_on_faq=FAQ_URL),
+        link_preview_options=LinkPreviewOptions(show_above_text=True),
+    )

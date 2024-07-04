@@ -26,8 +26,9 @@ from jobs import (
     job_sec,
     add_bonus_to_users,
     create_game_for_chat,
-    reset_items_effect
+    reset_items_effect,
 )
+import tools
 
 bot: Bot = Bot(
     config.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML)
@@ -51,7 +52,7 @@ async def scheduler() -> None:
     aioschedule.every().day.at("11:00").do(add_bonus_to_users)
     aioschedule.every().day.at("13:00").do(create_game_for_chat, bot=bot)
     aioschedule.every().day.at("16:30").do(create_game_for_chat, bot=bot)
-    aioschedule.every().day.at("20:00").do(create_game_for_chat, bot=bot)   
+    aioschedule.every().day.at("20:00").do(create_game_for_chat, bot=bot)
     aioschedule.every().day.at("21:00").do(verification_referrals, bot=bot)
     while True:
         await aioschedule.run_pending()
@@ -61,10 +62,28 @@ async def scheduler() -> None:
 async def set_default_commands(bot: Bot):
     await bot.set_my_commands(
         [
-            BotCommand(command="start", description="-"),
-            BotCommand(command="calculator", description="-"),
-            BotCommand(command="support", description="-"),
-            BotCommand(command="donate", description="-"),
+            BotCommand(
+                command="start",
+                description=await tools.get_text_message("command_start_description"),
+            ),
+            BotCommand(
+                command="calculator",
+                description=await tools.get_text_message(
+                    "command_calculator_description"
+                ),
+            ),
+            BotCommand(
+                command="support",
+                description=await tools.get_text_message("command_support_description"),
+            ),
+            BotCommand(
+                command="donate",
+                description=await tools.get_text_message("command_donate_description"),
+            ),
+            BotCommand(
+                command="faq",
+                description=await tools.get_text_message("command_faq_description"),
+            ),
         ]
     )
 
