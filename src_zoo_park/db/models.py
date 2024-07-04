@@ -164,7 +164,7 @@ class Game(Base):
     idpk_user: Mapped[int] = mapped_column()
     type_game: Mapped[str] = mapped_column(String(length=64))
     amount_gamers: Mapped[int] = mapped_column()
-    amount_award: Mapped[int] = mapped_column()
+    amount_award: Mapped[int] = mapped_column(BigInteger)
     currency_award: Mapped[str] = mapped_column(String(length=10))
     amount_moves: Mapped[int] = mapped_column(default=7)
     id_mess: Mapped[str] = mapped_column(String(length=64), nullable=True)
