@@ -299,8 +299,9 @@ async def award_winners(bot: Bot, session: AsyncSession, game: Game):
             award=award_text,
         )
         reply_markup = await rk_main_menu()
+        user = await session.get(User, gamer.idpk_gamer)
         await bot.send_message(
-            chat_id=gamer.id_user,
+            chat_id=user.id_user,
             text=message_text,
             message_effect_id=petard_emoji_effect,
             reply_markup=reply_markup,
