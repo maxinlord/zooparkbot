@@ -214,13 +214,13 @@ async def ender_minigames(session: AsyncSession, bot: Bot):
     )
     for game in games:
         game.end = True
+        await session.execute(
+            update(Gamer).where(Gamer.id_game == game.id_game).values(game_end=True)
+        )
         if game.idpk_user == 0:
             await award_winners(bot, session, game)
         else:
             await award_winner(bot, session, game)
-        await session.execute(
-            update(Gamer).where(Gamer.id_game == game.id_game).values(game_end=True)
-        )
     await session.commit()
 
 
@@ -280,16 +280,16 @@ async def award_winners(bot: Bot, session: AsyncSession, game: Game):
     if not gamers_winer:
         return
 
-    # Cache award percentages
     award_percentages = await fetch_and_parse_str_value(
         session=session, value_name="PERCENT_PLACES_AWARD"
     )
     award_percent = iter(award_percentages)
+    users = [await session.get(User, gamer.idpk_gamer) for gamer in gamers_winer]
 
-    for gamer in gamers_winer:
+    for user in users:
         award = game.amount_award * (next(award_percent) / 100)
         await add_to_currency(
-            self=gamer,
+            self=user,
             currency=game.currency_award,
             amount=award,
         )
@@ -299,7 +299,6 @@ async def award_winners(bot: Bot, session: AsyncSession, game: Game):
             award=award_text,
         )
         reply_markup = await rk_main_menu()
-        user = await session.get(User, gamer.idpk_gamer)
         await bot.send_message(
             chat_id=user.id_user,
             text=message_text,
