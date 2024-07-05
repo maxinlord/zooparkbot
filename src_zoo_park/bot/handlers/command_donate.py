@@ -67,7 +67,7 @@ async def on_successful_payment(
     await add_to_currency(self=user, currency="paw_coins", amount=paw_coins_to_add)
     session.add(
         Donate(
-            user_id=message.from_user.id,
+            idpk_user=user.id,
             amount=message.successful_payment.total_amount,
             refund_id=message.successful_payment.telegram_payment_charge_id,
         )
