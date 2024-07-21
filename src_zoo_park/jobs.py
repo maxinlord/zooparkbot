@@ -35,24 +35,25 @@ from game_variables import (
     MAX_AMOUNT_GAMERS,
 )
 from config import CHAT_ID
+from init_bot import bot
 
 
-async def job_sec(bot) -> None:
+async def job_sec() -> None:
     pass
     # await test()
     # await add_bonus_to_users()
     # await ender_games(bot)
 
 
-async def job_minute(bot) -> None:
+async def job_minute() -> None:
     now = datetime.now()
     second = now.second
 
     async with _sessionmaker_for_func() as session:
         if second == 30:
-            await updater_mess_minigame(session=session, bot=bot)
+            await updater_mess_minigame(session=session)
         elif second == 50:
-            await ender_minigames(session=session, bot=bot)
+            await ender_minigames(session=session)
         elif second == 58:
             await accrual_of_income(session=session)
             await update_rate_bank(session=session)
@@ -60,7 +61,7 @@ async def job_minute(bot) -> None:
             await session.commit()
 
 
-async def verification_referrals(bot: Bot):
+async def verification_referrals():
     async with _sessionmaker_for_func() as session:
         users = await session.scalars(
             select(User).where(
@@ -160,7 +161,7 @@ async def deleter_request_to_unity(session: AsyncSession):
     )
 
 
-async def create_game_for_chat(bot: Bot):
+async def create_game_for_chat():
     async with _sessionmaker_for_func() as session:
         members = await bot.get_chat_member_count(chat_id=CHAT_ID)
         award = await get_value(
@@ -208,7 +209,7 @@ async def create_game_for_chat(bot: Bot):
         await session.commit()
 
 
-async def ender_minigames(session: AsyncSession, bot: Bot):
+async def ender_minigames(session: AsyncSession):
     games = await session.scalars(
         select(Game).where(and_(Game.end == False, Game.last_update_mess == True))
     )
@@ -217,6 +218,7 @@ async def ender_minigames(session: AsyncSession, bot: Bot):
         await session.execute(
             update(Gamer).where(Gamer.id_game == game.id_game).values(game_end=True)
         )
+        print("here")
         if game.idpk_user == 0:
             await award_winners(bot, session, game)
         else:
@@ -224,7 +226,7 @@ async def ender_minigames(session: AsyncSession, bot: Bot):
     await session.commit()
 
 
-async def updater_mess_minigame(session: AsyncSession, bot: Bot):
+async def updater_mess_minigame(session: AsyncSession):
     games = (
         await session.scalars(select(Game).where(Game.last_update_mess == False))
     ).all()
@@ -252,7 +254,7 @@ async def updater_mess_minigame(session: AsyncSession, bot: Bot):
 #
 
 
-async def award_winner(bot: Bot, session: AsyncSession, game: Game):
+async def award_winner(session: AsyncSession, game: Game):
     idpk_gamer = await get_user_where_max_score(session=session, game=game)
     if not idpk_gamer:
         return
@@ -275,7 +277,7 @@ async def award_winner(bot: Bot, session: AsyncSession, game: Game):
     )
 
 
-async def award_winners(bot: Bot, session: AsyncSession, game: Game):
+async def award_winners(session: AsyncSession, game: Game):
     gamers_winer: list[Gamer] = await get_first_three_places(session=session, game=game)
     if not gamers_winer:
         return
@@ -307,7 +309,7 @@ async def award_winners(bot: Bot, session: AsyncSession, game: Game):
         )
 
 
-async def gen_text_winner(bot: Bot, session: AsyncSession, game: Game):
+async def gen_text_winner(session: AsyncSession, game: Game):
     idpk_gamer = await get_user_where_max_score(session=session, game=game)
     owner_game = await session.get(User, game.idpk_user)
     nickname = (
@@ -360,9 +362,9 @@ async def gen_text_winner(bot: Bot, session: AsyncSession, game: Game):
         )
 
 
-async def gen_text_winners(bot: Bot, session: AsyncSession, game: Game):
+async def gen_text_winners(session: AsyncSession, game: Game):
     gamers_winer: list[Gamer] = await get_first_three_places(session=session, game=game)
-    nickname = await get_nickname_owner_game(session=session, game=game, bot=bot)
+    nickname = await get_nickname_owner_game(session=session, game=game)
     if not gamers_winer:
         text_top_mini_game = await factory_text_top_mini_game(
             session=session, game=game
@@ -395,15 +397,6 @@ async def gen_text_winners(bot: Bot, session: AsyncSession, game: Game):
         gamer: User = await session.get(User, gamer.idpk_gamer)
         award = game.amount_award * (next(award_percent) / 100)
         award = f"{int(award):,d}{translated_currencies.get(game.currency_award)}"
-        await bot.send_message(
-            chat_id=gamer.id_user,
-            text=await get_text_message(
-                "game_winer_message",
-                award=award,
-            ),
-            message_effect_id=petard_emoji_effect,
-            reply_markup=await rk_main_menu(),
-        )
         additional_text += f"\n\n{await get_text_message('game_pattern_winer', nickname=gamer.nickname, emoji_places=next(emoji_places))}"
     mess_data = (
         {"chat_id": CHAT_ID, "message_id": game.id_mess}

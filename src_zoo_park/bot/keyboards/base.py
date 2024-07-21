@@ -2,9 +2,11 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 import tools
 
 
-async def ik_back(custom_callback_data: str = 'back'):
+async def ik_back(custom_callback_data: str = "back"):
     builder = InlineKeyboardBuilder()
-    builder.button(text=await tools.get_text_button("back"), callback_data=custom_callback_data)
+    builder.button(
+        text=await tools.get_text_button("back"), callback_data=custom_callback_data
+    )
     return builder.as_markup()
 
 
@@ -38,3 +40,18 @@ async def rk_cancel():
     builder.button(text=await tools.get_text_button("cancel"))
     builder.adjust(1)
     return builder.as_markup(resize_keyboard=True)
+
+
+async def ik_update_inline_rate(inline_message_id: str):
+    builder = InlineKeyboardBuilder()
+    if not inline_message_id:
+        builder.button(
+            text=await tools.get_text_button("loading_inline_rate"),
+            callback_data='loading_inline_rate',
+        )
+    else:
+        builder.button(
+            text=await tools.get_text_button("update_inline_rate"),
+            callback_data=f"{inline_message_id}:update_inline_rate",
+        )
+    return builder.as_markup()

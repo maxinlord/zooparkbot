@@ -1,4 +1,11 @@
-from .base import rk_back, ik_back, ik_start_game, ik_start_created_game, rk_cancel
+from .base import (
+    rk_back,
+    ik_back,
+    ik_start_game,
+    ik_start_created_game,
+    rk_cancel,
+    ik_update_inline_rate,
+)
 from .menu import rk_main_menu, rk_zoomarket_menu, rk_unity_menu
 from .options_menu import (
     ik_merchant_menu,
@@ -36,5 +43,5 @@ from .options_menu import (
     ik_confirm_or_cancel,
     ik_link_on_member_support,
     ik_confirm_or_change_bonus,
-    ik_bank_modify
+    ik_bank_modify,
 )

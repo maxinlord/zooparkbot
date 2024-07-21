@@ -1,4 +1,4 @@
-from aioredis import Redis
+import redis.asyncio as rs
 
 
-redis = Redis()
+redis = rs.Redis(host='localhost', port=6379, db=0)

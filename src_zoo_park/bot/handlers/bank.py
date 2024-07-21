@@ -130,7 +130,9 @@ async def exchange_bank(
     await state.set_state(UserState.exchange_bank_step)
 
 
-@router.message(UserState.exchange_bank_step, GetTextButton("exchange_all_amount"), flags=flags)
+@router.message(
+    UserState.exchange_bank_step, GetTextButton("exchange_all_amount"), flags=flags
+)
 async def exchange_all_amount(
     message: Message,
     session: AsyncSession,
