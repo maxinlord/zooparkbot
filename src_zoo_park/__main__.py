@@ -23,7 +23,6 @@ from jobs import (
     verification_referrals,
     reset_first_offer_bought,
     job_minute,
-    job_sec,
     add_bonus_to_users,
     create_game_for_chat,
     reset_items_effect,

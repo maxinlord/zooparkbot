@@ -6,6 +6,7 @@ from db import User
 from tools import (
     get_text_message,
     get_referrals,
+    get_value
 )
 from bot.states import UserState
 from bot.keyboards import ik_referrals_menu
@@ -21,10 +22,12 @@ async def referrals(
     user: User,
 ):
     quantity_referrals = await get_referrals(session=session, user=user)
+    bonus = await get_value(session=session, value_name="REFERRER_BONUS")
     await query.message.edit_text(
         text=await get_text_message(
             "info_about_referrals",
             qr=quantity_referrals,
+            b=bonus
         ),
         reply_markup=await ik_referrals_menu(
             promo_text=await get_text_message("promo_text")

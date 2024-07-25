@@ -21,11 +21,12 @@ from tools import (
     get_gamer,
     gamer_have_active_game,
     get_status_item,
+    mention_html,
 )
 from bot.states import UserState
 from bot.keyboards import rk_main_menu, ik_start_created_game, ik_button_play
 from game_variables import translated_currencies
-from config import CHAT_ID
+from config import CHAT_ID, ADMIN_ID
 
 
 router = Router()
@@ -166,6 +167,7 @@ async def command_start_with_deep_link(
     }
     await state.set_state(UserState.start_reg_step)
     await state.update_data(data_user=data_user)
+    await message.answer(text=await get_text_message("welcome_message"))
     await message.answer(text=await get_text_message("enter_nickname"))
 
 
@@ -188,6 +190,7 @@ async def command_start(
     }
     await state.set_state(UserState.start_reg_step)
     await state.update_data(data_user=data_user)
+    await message.answer(text=await get_text_message("welcome_message"))
     await message.answer(text=await get_text_message("enter_nickname"))
 
 
@@ -219,10 +222,17 @@ async def getting_nickname(
     data_user = data["data_user"]
     data_user["nickname"] = await shorten_whitespace_nickname(message.text)
     data_user["date_reg"] = datetime.now()
-    data_user["usd"] = await get_value(session=session, value_name="START_USD") 
+    data_user["usd"] = await get_value(session=session, value_name="START_USD")
     session.add(User(**data_user))
     await session.commit()
     await message.answer(
         text=await get_text_message("main_menu"), reply_markup=await rk_main_menu()
     )
     await state.set_state(UserState.main_menu)
+    await message.bot.send_message(
+        chat_id=ADMIN_ID,
+        text=await get_text_message(
+            "new_user",
+            user=mention_html(data_user["id_user"], name=message.from_user.full_name),
+        ),
+    )

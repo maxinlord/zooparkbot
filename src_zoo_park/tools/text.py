@@ -1,5 +1,5 @@
 import json
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 from db import Text, Button, Value, Unity, User, Game, Gamer, Animal, Aviary
 from init_db import _sessionmaker_for_func
 from cache import text_cache, button_cache
@@ -118,7 +118,11 @@ async def factory_text_unity_top(session: AsyncSession) -> str:
         i = ls_obj[1]
         text += (
             await tools.get_text_message(
-                "pattern_line_top_unity", n=unity.name, i=i, c=counter, lvl=unity.level
+                "pattern_line_top_unity",
+                n=unity.format_name,
+                i=i,
+                c=counter,
+                lvl=unity.level,
             )
             + "\n"
         )
@@ -129,12 +133,14 @@ async def factory_text_main_top(session: AsyncSession, idpk_user: int) -> str:
     total_place_top = await tools.get_value(
         session=session, value_name="TOTAL_PLACE_TOP"
     )
-    users = await session.scalars(select(User).where(User.animals != "{}"))
-    users = users.all()
-    users_income = [
+    users = await tools.fetch_users_for_top(session=session, idpk_user=idpk_user)
+    if not users:
+        return await get_text_message("top_not_exist")
+    users_and_incomes = [
         (user, await tools.income_(session=session, user=user)) for user in users
     ]
-    users_income.sort(key=lambda x: x[1], reverse=True)
+    func_sort_by_income = lambda x: x[1]
+    users_and_incomes.sort(key=func_sort_by_income, reverse=True)
 
     async def format_text(user, income, counter, unity_name):
         pattern = (
@@ -147,20 +153,19 @@ async def factory_text_main_top(session: AsyncSession, idpk_user: int) -> str:
             n=await tools.view_nickname(session=session, user=user),
             i=income,
             c=counter,
-            u=unity_name or "",
+            u=unity_name,
         )
 
     text = ""
-    for counter, (user, income) in enumerate(users_income, start=1):
-        unity_idpk = user.current_unity.split(":")[-1] if user.current_unity else None
-        unity = await session.get(Unity, int(unity_idpk)) if unity_idpk else None
+    for counter, (user, income) in enumerate(users_and_incomes, start=1):
         if counter > total_place_top:
             break
-        text += await format_text(user, income, counter, unity.name if unity else "")
-
+        unity_idpk = get_unity_idpk(user.current_unity)
+        unity = await tools.fetch_unity(session=session, idpk_unity=unity_idpk)
+        text += await format_text(user, income, counter, unity.format_name)
     self_place, user_data = next(
         (place, user_data)
-        for place, user_data in enumerate(users_income, start=1)
+        for place, user_data in enumerate(users_and_incomes, start=1)
         if user_data[0].idpk == idpk_user
     )
     if self_place > total_place_top:
@@ -177,8 +182,9 @@ async def factory_text_main_top_by_money(session: AsyncSession, idpk_user: int) 
     total_place_top = await tools.get_value(
         session=session, value_name="TOTAL_PLACE_TOP"
     )
-    users = await session.scalars(select(User).where(User.animals != "{}"))
-    users = users.all()
+    users = await tools.fetch_users_for_top(session=session, idpk_user=idpk_user)
+    if not users:
+        return await get_text_message("top_not_exist")
     users.sort(key=lambda x: x.usd, reverse=True)
 
     async def format_text(user, money, counter, unity_name):
@@ -192,16 +198,16 @@ async def factory_text_main_top_by_money(session: AsyncSession, idpk_user: int) 
             n=await tools.view_nickname(session=session, user=user),
             m=money,
             c=counter,
-            u=unity_name or "",
+            u=unity_name,
         )
 
     text = ""
     for counter, user in enumerate(users, start=1):
-        unity_idpk = user.current_unity.split(":")[-1] if user.current_unity else None
-        unity = await session.get(Unity, int(unity_idpk)) if unity_idpk else None
         if counter > total_place_top:
             break
-        text += await format_text(user, user.usd, counter, unity.name if unity else "")
+        unity_idpk = get_unity_idpk(user.current_unity)
+        unity = await tools.fetch_unity(session=session, idpk_unity=unity_idpk)
+        text += await format_text(user, user.usd, counter, unity.format_name)
 
     self_place, user = next(
         (place, user)
@@ -224,8 +230,9 @@ async def factory_text_main_top_by_animals(
     total_place_top = await tools.get_value(
         session=session, value_name="TOTAL_PLACE_TOP"
     )
-    users = await session.scalars(select(User).where(User.animals != "{}"))
-    users = users.all()
+    users = await tools.fetch_users_for_top(session=session, idpk_user=idpk_user)
+    if not users:
+        return await get_text_message("top_not_exist")
     users_animals = [
         (user, await tools.get_total_number_animals(self=user)) for user in users
     ]
@@ -247,11 +254,11 @@ async def factory_text_main_top_by_animals(
 
     text = ""
     for counter, (user, animals) in enumerate(users_animals, start=1):
-        unity_idpk = user.current_unity.split(":")[-1] if user.current_unity else None
-        unity = await session.get(Unity, int(unity_idpk)) if unity_idpk else None
         if counter > total_place_top:
             break
-        text += await format_text(user, animals, counter, unity.name if unity else "")
+        unity_idpk = get_unity_idpk(user.current_unity)
+        unity = await tools.fetch_unity(session=session, idpk_unity=unity_idpk)
+        text += await format_text(user, animals, counter, unity.format_name)
 
     self_place, user_data = next(
         (place, user_data)
@@ -274,8 +281,9 @@ async def factory_text_main_top_by_referrals(
     total_place_top = await tools.get_value(
         session=session, value_name="TOTAL_PLACE_TOP"
     )
-    users = await session.scalars(select(User).where(User.animals != "{}"))
-    users = users.all()
+    users = await tools.fetch_users_for_top(session=session, idpk_user=idpk_user)
+    if not users:
+        return await get_text_message("top_not_exist")
     users_referrals = [
         (user, await tools.get_referrals(session=session, user=user)) for user in users
     ]
@@ -297,11 +305,11 @@ async def factory_text_main_top_by_referrals(
 
     text = ""
     for counter, (user, ref) in enumerate(users_referrals, start=1):
-        unity_idpk = user.current_unity.split(":")[-1] if user.current_unity else None
-        unity = await session.get(Unity, int(unity_idpk)) if unity_idpk else None
         if counter > total_place_top:
             break
-        text += await format_text(user, ref, counter, unity.name if unity else "")
+        unity_idpk = get_unity_idpk(user.current_unity)
+        unity = await tools.fetch_unity(session=session, idpk_unity=unity_idpk)
+        text += await format_text(user, ref, counter, unity.format_name)
 
     self_place, user_data = next(
         (place, user_data)
@@ -430,3 +438,7 @@ async def ft_bonus_info(
         text=text,
     )
     return text
+
+
+def get_unity_idpk(current_unity: str | None):
+    return current_unity.split(":")[-1] if current_unity else None

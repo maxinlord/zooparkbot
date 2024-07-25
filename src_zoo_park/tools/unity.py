@@ -256,3 +256,7 @@ async def count_income_unity(session: AsyncSession, unity: Unity) -> int:
         [await tools.income_(session=session, user=user) for user in users]
     )
     return total_income
+
+
+async def fetch_unity(session: AsyncSession, idpk_unity: int | None) -> Unity | tools.UnityPlug:
+    return await session.get(Unity, idpk_unity) if idpk_unity else tools.UnityPlug()

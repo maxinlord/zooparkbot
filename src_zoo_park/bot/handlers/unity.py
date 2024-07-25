@@ -240,7 +240,7 @@ async def process_viewing_unity_bio(
     await query.message.edit_text(
         text=await get_text_message(
             "description_unity",
-            name_=unity.name,
+            name_=unity.format_name,
             lvl=unity.level,
             nickname_owner=owner.nickname,
             owner_income=await income_(session=session, user=owner),

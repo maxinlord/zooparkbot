@@ -45,6 +45,10 @@ class Unity(Base):
     members: Mapped[str] = mapped_column(Text, default="{}")
     level: Mapped[int] = mapped_column(default=0)
 
+    @property
+    def format_name(self) -> str:
+        return f'«{self.name}»'
+
     def add_member(self, idpk_member: int, rule: str = "member") -> None:
         decoded_dict: dict = json.loads(self.members)
         decoded_dict[idpk_member] = rule

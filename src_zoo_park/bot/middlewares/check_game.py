@@ -19,19 +19,19 @@ class CheckGame(BaseMiddleware):
         data: dict[str, Any],
     ) -> Any:
         session: AsyncSession = data["session"]
-        user = data["user"]
         state = data.get("state")
         d = await state.get_data()
         idpk_game = d.get("idpk_game")
         if idpk_game is None:
             return await handler(event, data)
+        
         game = await session.get(Game, idpk_game)
         if game.end and data.get("raw_state") == "UserState:game":
             await state.clear()
             await state.set_state(UserState.main_menu)
             text = await get_text_message("main_menu")
             reply_markup = await rk_main_menu()
-            
+
             if isinstance(event, Message):
                 return await event.answer(text=text, reply_markup=reply_markup)
             elif isinstance(event, CallbackQuery):

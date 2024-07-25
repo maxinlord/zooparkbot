@@ -78,6 +78,7 @@ from .nickname import (
     view_nickname
 )
 from .photo import get_photo, get_photo_from_message
+from .plug_classes import UnityPlug
 from .random_merchant import create_random_merchant, gen_price
 from .referrals import get_referrals
 
@@ -117,7 +118,8 @@ from .unity import (
     get_data_by_lvl_unity,
     shorten_whitespace_name_unity,
     get_members_name_and_idpk,
+    fetch_unity
 )
 
-from .user import get_currency, add_to_amount_expenses_currency, add_to_currency
+from .user import get_currency, add_to_amount_expenses_currency, add_to_currency, fetch_users_for_top
 from .value import get_value

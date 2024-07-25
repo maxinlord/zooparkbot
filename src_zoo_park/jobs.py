@@ -86,7 +86,7 @@ async def verification_referrals():
             if user.amount_expenses_usd < QUANTITY_USD_TO_PASS:
                 continue
             referrer: User = await session.get(User, user.id_referrer)
-            bonus = await referrer_bonus(referrer=referrer)
+            bonus = await referrer_bonus(session=session, referrer=referrer)
             await bot.send_message(
                 chat_id=referrer.id_user,
                 text=await get_text_message("you_got_bonus_referrer", bonus=bonus),
@@ -218,11 +218,10 @@ async def ender_minigames(session: AsyncSession):
         await session.execute(
             update(Gamer).where(Gamer.id_game == game.id_game).values(game_end=True)
         )
-        print("here")
         if game.idpk_user == 0:
-            await award_winners(bot, session, game)
+            await award_winners(session, game)
         else:
-            await award_winner(bot, session, game)
+            await award_winner(session, game)
     await session.commit()
 
 
@@ -238,9 +237,9 @@ async def updater_mess_minigame(session: AsyncSession):
             continue
         game.last_update_mess = True
         if game.idpk_user == 0:
-            await gen_text_winners(bot, session, game)
+            await gen_text_winners(session, game)
         else:
-            await gen_text_winner(bot, session, game)
+            await gen_text_winner(session, game)
     await session.commit()
 
 
@@ -337,7 +336,7 @@ async def gen_text_winner(session: AsyncSession, game: Game):
                 reply_markup=None,
                 disable_web_page_preview=True,
             )
-        return
+            return
     winner = await session.get(User, idpk_gamer)
     additional_text = (
         f"\n\n{await get_text_message('game_winer', nickname=winner.nickname)}"
@@ -364,7 +363,12 @@ async def gen_text_winner(session: AsyncSession, game: Game):
 
 async def gen_text_winners(session: AsyncSession, game: Game):
     gamers_winer: list[Gamer] = await get_first_three_places(session=session, game=game)
-    nickname = await get_nickname_owner_game(session=session, game=game)
+    nickname = await get_nickname_owner_game(session=session, game=game, bot=bot)
+    mess_data = (
+        {"chat_id": CHAT_ID, "message_id": game.id_mess}
+        if game.id_mess.isdigit()
+        else {"inline_message_id": game.id_mess}
+    )
     if not gamers_winer:
         text_top_mini_game = await factory_text_top_mini_game(
             session=session, game=game
@@ -381,11 +385,11 @@ async def gen_text_winners(session: AsyncSession, game: Game):
                     award=f"{game.amount_award:,d}{translated_currencies[game.currency_award]}",
                 )
                 + await get_text_message("no_result_game"),
-                inline_message_id=game.id_mess,
                 reply_markup=None,
                 disable_web_page_preview=True,
+                **mess_data,
             )
-        return
+            return
     additional_text = ""
     award_percent = iter(
         await fetch_and_parse_str_value(
@@ -398,11 +402,6 @@ async def gen_text_winners(session: AsyncSession, game: Game):
         award = game.amount_award * (next(award_percent) / 100)
         award = f"{int(award):,d}{translated_currencies.get(game.currency_award)}"
         additional_text += f"\n\n{await get_text_message('game_pattern_winer', nickname=gamer.nickname, emoji_places=next(emoji_places))}"
-    mess_data = (
-        {"chat_id": CHAT_ID, "message_id": game.id_mess}
-        if game.id_mess.isdigit()
-        else {"inline_message_id": game.id_mess}
-    )
     with contextlib.suppress(Exception):
         t = await factory_text_top_mini_game(session=session, game=game)
         await bot.edit_message_text(

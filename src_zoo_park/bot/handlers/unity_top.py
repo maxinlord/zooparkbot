@@ -36,7 +36,7 @@ async def unity_members(
     await message.answer(
         text=await get_text_message(
             "unity_top_10",
-            name_unity=unity.name,
+            name_unity=unity.format_name,
             animal_name=animal_name,
             amount_animal=amount_animal,
             bonus=BONUS_FOR_AMOUNT_ANIMALS,
