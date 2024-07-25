@@ -11,16 +11,24 @@ from tools import get_text_message, get_value
 from bot.keyboards import ik_start_game, ik_update_inline_rate
 from typing import Any
 from bot.filters import CompareDataByIndex
+from aiogram.filters import CommandObject, Command
+from aiogram.filters import StateFilter
 
 router = Router()
+flags = {"throttling_key": "default"}
 
+from aiogram.fsm.state import any_state
 
-# @router.message(F.text == 'test')
-# async def test(
-#     message: Message
-# ) -> None:
-#     pass
-
+@router.message(
+    Command(commands="reset"),
+    StateFilter(any_state),
+    flags=flags,
+)
+async def reset(
+    message: Message,
+    state: FSMContext,
+):
+    await state.clear()
 
 @router.message(F.content_type == "photo")
 async def photo_catch(message: Message, session: AsyncSession) -> None:
