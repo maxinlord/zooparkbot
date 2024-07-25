@@ -114,6 +114,8 @@ async def get_plot(session: AsyncSession, type: str):
     if type in config:
         color, xlabel, ylabel, data_func = config[type]
         data = await data_func(session)
+        if not data:
+            return None
         nicks, values = zip(*data)
         return await gen_plot(
             nicks=nicks,

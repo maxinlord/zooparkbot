@@ -48,10 +48,11 @@ async def top_money(
 ):
     text = await factory_text_main_top_by_money(session=session, idpk_user=user.idpk)
     filename = await get_plot(session=session, type="money")
+    amount_gamers = len((await session.scalars(select(User.idpk))).all())
     await query.message.edit_media(
         media=InputMediaPhoto(
             media=FSInputFile(path=filename),
-            caption=await get_text_message("top_info", t=text),
+            caption=await get_text_message("top_info", t=text, ag=amount_gamers),
         ),
         reply_markup=await ik_choice_type_top(chosen="top_money"),
     )
@@ -66,10 +67,11 @@ async def top_income(
 ):
     text = await factory_text_main_top(session=session, idpk_user=user.idpk)
     filename = await get_plot(session=session, type="income")
+    amount_gamers = len((await session.scalars(select(User.idpk))).all())
     await query.message.edit_media(
         media=InputMediaPhoto(
             media=FSInputFile(path=filename),
-            caption=await get_text_message("top_info", t=text),
+            caption=await get_text_message("top_info", t=text, ag=amount_gamers),
         ),
         reply_markup=await ik_choice_type_top(chosen="top_income"),
     )
@@ -84,10 +86,11 @@ async def top_animals(
 ):
     text = await factory_text_main_top_by_animals(session=session, idpk_user=user.idpk)
     filename = await get_plot(session=session, type="animals")
+    amount_gamers = len((await session.scalars(select(User.idpk))).all())
     await query.message.edit_media(
         media=InputMediaPhoto(
             media=FSInputFile(path=filename),
-            caption=await get_text_message("top_info", t=text),
+            caption=await get_text_message("top_info", t=text, ag=amount_gamers),
         ),
         reply_markup=await ik_choice_type_top(chosen="top_animals"),
     )
@@ -104,10 +107,11 @@ async def top_referrals(
         session=session, idpk_user=user.idpk
     )
     filename = await get_plot(session=session, type="referrals")
+    amount_gamers = len((await session.scalars(select(User.idpk))).all())
     await query.message.edit_media(
         media=InputMediaPhoto(
             media=FSInputFile(path=filename),
-            caption=await get_text_message("top_info", t=text),
+            caption=await get_text_message("top_info", t=text, ag=amount_gamers),
         ),
         reply_markup=await ik_choice_type_top(chosen="top_referrals"),
     )
