@@ -249,7 +249,7 @@ async def factory_text_main_top_by_animals(
             n=await tools.view_nickname(session=session, user=user),
             a=animals,
             c=counter,
-            u=unity_name or "",
+            u=unity_name,
         )
 
     text = ""
@@ -267,7 +267,7 @@ async def factory_text_main_top_by_animals(
     )
     if self_place > total_place_top:
         text += await tools.get_text_message(
-            "pattern_line_not_in_top",
+            "pattern_line_not_in_top_animals",
             n=user_data[0].nickname,
             a=user_data[1],
             c=self_place,
@@ -300,7 +300,7 @@ async def factory_text_main_top_by_referrals(
             n=await tools.view_nickname(session=session, user=user),
             r=ref,
             c=counter,
-            u=unity_name or "",
+            u=unity_name,
         )
 
     text = ""
@@ -318,7 +318,7 @@ async def factory_text_main_top_by_referrals(
     )
     if self_place > total_place_top:
         text += await tools.get_text_message(
-            "pattern_line_not_in_top",
+            "pattern_line_not_in_top_referrals",
             n=user_data[0].nickname,
             r=user_data[1],
             c=self_place,
