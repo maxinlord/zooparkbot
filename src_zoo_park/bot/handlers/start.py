@@ -233,6 +233,6 @@ async def getting_nickname(
         chat_id=ADMIN_ID,
         text=await get_text_message(
             "new_user",
-            user=mention_html(data_user["id_user"], name=message.from_user.full_name),
+            user=mention_html(message.from_user.id, name=message.from_user.full_name),
         ),
     )
