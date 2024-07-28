@@ -188,6 +188,7 @@ async def get_top_unity_by_animal(session: AsyncSession) -> tuple[int, dict]:
             animals_user = await tools.get_dict_animals(self=user)
             for animal_name, num_animal in animals_user.items():
                 animals[animal_name] += num_animal
+        if not animals: continue
         max_animal = max(animals, key=animals.get)
         table_for_compare[unity.idpk] = {max_animal: animals[max_animal]}
     top_unity = max(
