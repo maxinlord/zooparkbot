@@ -10,6 +10,7 @@ from aiogram.fsm.state import any_state
 from tools import (
     mention_html,
 )
+from config import ADMIN_ID
 
 router = Router()
 flags = {"throttling_key": "default"}
@@ -23,6 +24,8 @@ async def command_reset(
     session: AsyncSession,
     user: User | None,
 ) -> None:
+    if user.id_user != ADMIN_ID:
+        return await message.answer("У вас нет прав")
     if not command.args:
         await message.answer("Не указана сумма и username")
         return
