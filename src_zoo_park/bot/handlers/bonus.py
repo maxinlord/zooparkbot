@@ -132,7 +132,7 @@ async def get_daily_bonus(
         await state.set_state(UserState.main_menu)
         user.bonus -= 1
         await apply_bonus(session=session, user=user, data_bonus=data_bonus)
-        await session.commit()
+    await session.commit()
     await query.message.delete_reply_markup()
     await query.message.answer(
         **mess_data,

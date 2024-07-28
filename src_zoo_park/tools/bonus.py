@@ -115,8 +115,10 @@ async def get_bonus(session: AsyncSession, user: User) -> DataBonus:
             args["remain_seats"] = remain_seats
     if bonus_type == "item":
         item = await handle_item_bonus(**args)
-        if item['code_name'] in user.items:
-            return DataBonus(bonus_type=item['currency'], result_func=item['price'] // 2)
+        if item["code_name"] in user.items:
+            return DataBonus(
+                bonus_type=item["currency"], result_func=item["price"] // 2
+            )
     handlers = {
         "rub": handle_rub_bonus,
         "usd": handle_usd_bonus,
@@ -157,3 +159,5 @@ async def apply_bonus(session: AsyncSession, user: User, data_bonus: DataBonus):
                 self=user,
                 code_name_item=data_bonus.result_func["code_name"],
             )
+        case "paw_coins":
+            user.paw_coins += data_bonus.result_func
