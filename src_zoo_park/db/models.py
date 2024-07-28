@@ -158,7 +158,7 @@ class Donate(Base):
 
     idpk_user: Mapped[int] = mapped_column()
     amount: Mapped[int] = mapped_column()
-    refund_id: Mapped[str] = mapped_column(String(length=64), nullable=True)
+    refund_id: Mapped[str] = mapped_column(String(length=200), nullable=True)
 
 
 class Game(Base):
