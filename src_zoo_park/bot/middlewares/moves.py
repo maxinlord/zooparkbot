@@ -23,7 +23,7 @@ class RegMove(BaseMiddleware):
                 session=session, value_name="LIMIT_ON_WRITE_MOVES"
             )
             decoded_dict: dict = json.loads(user.history_moves)
-            key = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
+            key = datetime.now().strftime("%d.%m.%Y %H:%M:%S.%f")
             decoded_dict[key] = event.text
             if len(decoded_dict) > LIMIT_ON_WRITE_MOVES:
                 # Преобразуем словарь в список кортежей

@@ -10,6 +10,7 @@ def setup_message_routers() -> Router:
         command_donate,
         command_photo_view,
         command_calculator,
+        command_history,
         command_faq,
         command_ban,
         zoomarket,
@@ -44,6 +45,7 @@ def setup_message_routers() -> Router:
     router.include_router(command_ban.router)
     router.include_router(command_donate.router)
     router.include_router(command_photo_view.router)
+    router.include_router(command_history.router)
     router.include_router(referrals.router)
     router.include_router(zoomarket.router)
     router.include_router(unity.router)
