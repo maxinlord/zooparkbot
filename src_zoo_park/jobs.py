@@ -39,7 +39,7 @@ from init_bot import bot
 
 
 async def job_sec() -> None:
-    pass
+    await verification_referrals()
     # await test()
     # await add_bonus_to_users()
     # await ender_games(bot)
@@ -48,7 +48,6 @@ async def job_sec() -> None:
 async def job_minute() -> None:
     now = datetime.now()
     second = now.second
-
     async with _sessionmaker_for_func() as session:
         if second == 30:
             await updater_mess_minigame(session=session)
@@ -72,16 +71,11 @@ async def verification_referrals():
         QUANTITY_MOVES_TO_PASS = await get_value(
             session=session, value_name="QUANTITY_MOVES_TO_PASS"
         )
-        QUANTITY_RUB_TO_PASS = await get_value(
-            session=session, value_name="QUANTITY_RUB_TO_PASS"
-        )
         QUANTITY_USD_TO_PASS = await get_value(
             session=session, value_name="QUANTITY_USD_TO_PASS"
         )
         for user in users:
             if user.moves < QUANTITY_MOVES_TO_PASS:
-                continue
-            if user.amount_expenses_rub < QUANTITY_RUB_TO_PASS:
                 continue
             if user.amount_expenses_usd < QUANTITY_USD_TO_PASS:
                 continue

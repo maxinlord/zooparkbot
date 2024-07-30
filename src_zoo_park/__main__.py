@@ -23,6 +23,7 @@ from jobs import (
     verification_referrals,
     reset_first_offer_bought,
     job_minute,
+    job_sec,
     add_bonus_to_users,
     create_game_for_chat,
     reset_items_effect,
@@ -41,6 +42,7 @@ async def on_shutdown(session: AsyncSession) -> None:
 
 
 async def scheduler() -> None:
+    # aioschedule.every(1).seconds.do(job_sec)
     aioschedule.every(1).seconds.do(job_minute)
     aioschedule.every().day.at("10:00").do(reset_items_effect)
     aioschedule.every().day.at("10:30").do(reset_first_offer_bought)

@@ -48,6 +48,9 @@ async def any_unknown_message(message: Message, state: FSMContext) -> None:
 # async def any_unknown_channel_post(message: Message) -> None:
 #     print(message.chat.id)
 
+# @router.message(F.text == 'test')
+# async def test(message: Message, session: AsyncSession) -> None:
+#     await message.answer_game()
 
 @router.callback_query(CompareDataByIndex('update_inline_rate'))
 async def update_inline_rate(
