@@ -18,7 +18,7 @@ router = Router()
 flags = {"throttling_key": "default"}
 
 
-@router.message(Command(commands="history"), StateFilter(any_state))
+@router.message(Command(commands="h"), StateFilter(any_state))
 async def command_history(
     message: Message,
     state: FSMContext,

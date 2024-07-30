@@ -29,6 +29,7 @@ async def reset(
     state: FSMContext,
 ):
     await state.clear()
+    await message.answer(text=await get_text_message('reset_done'))
 
 @router.message(F.content_type == "photo")
 async def photo_catch(message: Message, session: AsyncSession) -> None:

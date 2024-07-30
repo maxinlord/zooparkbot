@@ -19,4 +19,5 @@ class UserState(StatesGroup):
 
 class AdminState(StatesGroup):
     main = State()
+    get_mess_mailing = State()
     
