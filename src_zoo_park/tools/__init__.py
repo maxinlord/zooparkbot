@@ -80,7 +80,7 @@ from .nickname import (
 from .photo import get_photo, get_photo_from_message
 from .plug_classes import UnityPlug
 from .random_merchant import create_random_merchant, gen_price
-from .referrals import get_referrals
+from .referrals import get_referrals, get_verify_referrals
 
 from .text import (
     get_text_message,
