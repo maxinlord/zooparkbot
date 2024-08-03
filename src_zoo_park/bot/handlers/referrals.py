@@ -24,8 +24,8 @@ async def referrals(
 ):
     quantity_referrals = await get_referrals(session=session, user=user)
     quantity_verify_referrals = await get_verify_referrals(session=session, user=user)
-    received_bonus = bonus * quantity_verify_referrals
     bonus = await get_value(session=session, value_name="REFERRER_BONUS")
+    received_bonus = bonus * quantity_verify_referrals
     await query.message.edit_text(
         text=await get_text_message(
             "info_about_referrals",
