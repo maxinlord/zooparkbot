@@ -106,16 +106,16 @@ async def add_bonus_to_users() -> None:
         await session.commit()
 
 
-async def reset_items_effect() -> None:
-    async with _sessionmaker_for_func() as session:
-        users = await session.scalars(select(User))
-        for user in users.all():
-            items: dict = json.loads(user.info_about_items)
-            reset_items = {
-                k: {"is_activate": v["is_activate"]} for k, v in items.items()
-            }
-            user.info_about_items = json.dumps(reset_items)
-        await session.commit()
+# async def reset_items_effect() -> None:
+#     async with _sessionmaker_for_func() as session:
+#         users = await session.scalars(select(User))
+#         for user in users.all():
+#             items: dict = json.loads(user.info_about_items)
+#             reset_items = {
+#                 k: {"is_activate": v["is_activate"]} for k, v in items.items()
+#             }
+#             user.info_about_items = json.dumps(reset_items)
+#         await session.commit()
 
 
 async def update_rate_bank(session: AsyncSession):
