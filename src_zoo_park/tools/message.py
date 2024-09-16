@@ -23,7 +23,7 @@ async def m_choice_quantity_avi(
         session=session,
         code_name_aviary=aviary,
         aviaries=user.aviaries,
-        items=user.items,
+        info_about_items=user.info_about_items,
     )
     await state.update_data(code_name_aviary=aviary, aviary_price=aviary_price)
     await query.message.edit_text(

@@ -48,12 +48,12 @@ async def get_income_animal(
     session: AsyncSession,
     animal: Animal,
     unity_idpk: int,
-    items: str,
+    info_about_items: str,
 ):
     animal_income = animal.income
-    if await tools.get_status_item(items=items, code_name_item="item_1"):
-        item = await session.scalar(select(Item).where(Item.code_name == "item_1"))
-        animal_income = animal_income * (1 + item.value / 100)
+    name_prop = f'{animal.code_name}:animal_income'
+    if v:=tools.get_value_prop_from_iai(info_about_items=info_about_items, name_prop=name_prop):
+        animal_income = animal_income * (1 + v / 100)
     if unity_idpk:
         unity_idpk_top, animal_top = await tools.get_top_unity_by_animal(
             session=session

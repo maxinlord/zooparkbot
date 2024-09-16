@@ -2,13 +2,11 @@ from aiogram.types import Message, CallbackQuery
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from db import User, Aviary
+from db import User
 from tools import (
     get_text_message,
     disable_not_main_window,
     add_aviary,
-    get_price_aviaries,
     m_choice_quantity_avi,
     find_integers
 )

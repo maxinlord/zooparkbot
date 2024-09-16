@@ -1,6 +1,6 @@
 import contextlib
 from aiogram.types import Message, CallbackQuery, ReplyParameters
-from aiogram import F, Router
+from aiogram import Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from db import User, MessageToSupport
@@ -10,13 +10,11 @@ from tools import (
 )
 from bot.states import UserState
 from bot.keyboards import (
-    rk_cancel,
     ik_im_take,
-    rk_main_menu,
     ik_confirm_or_cancel,
     ik_link_on_member_support,
 )
-from bot.filters import GetTextButton, CompareDataByIndex
+from bot.filters import CompareDataByIndex
 from config import CHAT_SUPPORT_ID
 
 flags = {"throttling_key": "default"}

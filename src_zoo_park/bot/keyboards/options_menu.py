@@ -166,6 +166,25 @@ async def ik_choice_item(session: AsyncSession):
     return builder.as_markup()
 
 
+async def ik_forge_items_menu():
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text=await tools.get_text_button("create_item_info"),
+        callback_data="create_item_info",
+    )
+    builder.button(
+        text=await tools.get_text_button("merge_items_info"),
+        callback_data="merge_items_info",
+    )
+    builder.button(
+        text=await tools.get_text_button("up_lvl_item_info"),
+        callback_data="up_lvl_item_info",
+    )
+
+    builder.adjust(1)
+    return builder.as_markup()
+
+
 async def ik_choice_aviary(
     session: AsyncSession,
 ):
@@ -269,7 +288,7 @@ async def ik_account_menu():
 
 async def ik_menu_items(
     session: AsyncSession,
-    items: str,
+    id_user: int,
     row_keyboard: int = None,
     page: int = 1,
     size_items: int = None,
@@ -279,18 +298,15 @@ async def ik_menu_items(
     builder = InlineKeyboardBuilder()
     start = (page - 1) * size_items
     stop = start + size_items
-    items_data = await tools.get_items_data_to_kb(session=session, items=items)
+    items_data = await tools.get_items_data_to_kb(session=session, id_user=id_user)
     sliced_items_name = islice(items_data, start, stop)
     count_items = 0
-    for name, code_name, emoji in sliced_items_name:
+    for name, id_item in sliced_items_name:
         builder.button(
-            text=await tools.get_text_button(
-                name="pattern_button_name_item", n=name, ej=emoji
-            ),
-            callback_data=f"{code_name}:tap_item",
+            text=await tools.get_text_button(name="pattern_button_name_item", n=name),
+            callback_data=f"{id_item}:tap_item",
         )
         count_items += 1
-
     whole_pairs = count_items // row_keyboard
     remainder = count_items % row_keyboard
     row = (
@@ -700,4 +716,163 @@ async def ik_confirm_or_change_bonus():
         text=await tools.get_text_button("change_bonus"), callback_data="change_bonus"
     )
     builder.adjust(1)
+    return builder.as_markup()
+
+
+async def ik_create_item():
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text=await tools.get_text_button("create_item"),
+        callback_data="create_item",
+    )
+    builder.button(
+        text=await tools.get_text_button("back"),
+        callback_data="to_forge_items_menu:back_forge_items",
+    )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+async def ik_up_lvl_item():
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text=await tools.get_text_button("choice_item_for_upgrade"),
+        callback_data="choice_item_for_upgrade",
+    )
+    builder.button(
+        text=await tools.get_text_button("back"),
+        callback_data="to_forge_items_menu:back_forge_items",
+    )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+async def ik_menu_items_for_up(
+    session: AsyncSession,
+    id_user: int,
+    row_keyboard: int = None,
+    page: int = 1,
+    size_items: int = None,
+) -> InlineKeyboardBuilder:
+    row_keyboard = row_keyboard or await tools.get_row_items_for_kb(session=session)
+    size_items = size_items or await tools.get_size_items_for_kb(session=session)
+    builder = InlineKeyboardBuilder()
+    start = (page - 1) * size_items
+    stop = start + size_items
+    items_data = await tools.get_items_data_for_up_to_kb(
+        session=session, id_user=id_user
+    )
+    sliced_items_name = islice(items_data, start, stop)
+    count_items = 0
+    for name, id_item in sliced_items_name:
+        builder.button(
+            text=await tools.get_text_button(name="pattern_button_name_item", n=name),
+            callback_data=f"{id_item}:tap_to_up_item",
+        )
+        count_items += 1
+    whole_pairs = count_items // row_keyboard
+    remainder = count_items % row_keyboard
+    row = (
+        [row_keyboard for _ in range(whole_pairs)] + [remainder]
+        if remainder
+        else [row_keyboard for _ in range(whole_pairs)]
+    )
+
+    builder.button(
+        text=await tools.get_text_button("arrow_left"),
+        callback_data="left:up_items",
+    )
+    builder.button(
+        text=await tools.get_text_button("arrow_right"), callback_data="right:up_items"
+    )
+    builder.button(
+        text=await tools.get_text_button("back"),
+        callback_data="to_up_lvl_item_info:back_forge_items",
+    )
+    builder.adjust(*row, 2, 1)
+
+    return builder.as_markup()
+
+
+async def ik_upgrade_item():
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text=await tools.get_text_button("upgrade_item"),
+        callback_data="upgrade_item",
+    )
+    builder.button(
+        text=await tools.get_text_button("back"),
+        callback_data="to_choice_item:back_forge_items",
+    )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+async def ik_choice_items_to_merge():
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text=await tools.get_text_button("choice_item_to_merge"),
+        callback_data="choice_item_to_merge",
+    )
+    builder.button(
+        text=await tools.get_text_button("back"),
+        callback_data="to_forge_items_menu:back_forge_items",
+    )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+async def ik_menu_items_for_merge(
+    session: AsyncSession,
+    id_user: int,
+    id_chosen_items: list[str] = None,
+    row_keyboard: int = None,
+    page: int = 1,
+    size_items: int = None,
+) -> InlineKeyboardBuilder:
+    if not id_chosen_items:
+        id_chosen_items = []
+    row_keyboard = row_keyboard or await tools.get_row_items_for_kb(session=session)
+    size_items = size_items or await tools.get_size_items_for_kb(session=session)
+    builder = InlineKeyboardBuilder()
+    start = (page - 1) * size_items
+    stop = start + size_items
+    items_data = await tools.get_items_data_for_merge_to_kb(
+        session=session, id_user=id_user, id_items=id_chosen_items
+    )
+    sliced_items_name = islice(items_data, start, stop)
+    count_items = 0
+    for name, id_item in sliced_items_name:
+        builder.button(
+            text=await tools.get_text_button(name="pattern_button_name_item", n=name),
+            callback_data=f"{id_item}:tap_to_merge_item",
+        )
+        count_items += 1
+    whole_pairs = count_items // row_keyboard
+    remainder = count_items % row_keyboard
+    row = (
+        [row_keyboard for _ in range(whole_pairs)] + [remainder]
+        if remainder
+        else [row_keyboard for _ in range(whole_pairs)]
+    )
+    tail_row = [2, 1]
+    builder.button(
+        text=await tools.get_text_button("arrow_left"),
+        callback_data="left:turn_merge_items",
+    )
+    builder.button(
+        text=await tools.get_text_button("arrow_right"), callback_data="right:turn_merge_items"
+    )
+    if len(id_chosen_items) == 2:
+        builder.button(
+            text=await tools.get_text_button("merge_items"),
+            callback_data="merge_items",
+        )
+        tail_row.append(1)
+    builder.button(
+        text=await tools.get_text_button("back"),
+        callback_data="to_merge_items_info:back_forge_items",
+    )
+    builder.adjust(*row, *tail_row)
+
     return builder.as_markup()

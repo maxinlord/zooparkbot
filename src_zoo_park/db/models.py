@@ -29,7 +29,7 @@ class User(Base):
     usd: Mapped[int] = mapped_column(BigInteger, default=0)
     amount_expenses_usd: Mapped[int] = mapped_column(BigInteger, default=0)
     animals: Mapped[str] = mapped_column(Text, default="{}")
-    items: Mapped[str] = mapped_column(Text, default="{}")
+    info_about_items: Mapped[str] = mapped_column(Text, default="{}")
     aviaries: Mapped[str] = mapped_column(Text, default="{}")
     current_unity: Mapped[str] = mapped_column(String(64), nullable=True)
     sub_on_chat: Mapped[bool] = mapped_column(default=False)
@@ -47,7 +47,7 @@ class Unity(Base):
 
     @property
     def format_name(self) -> str:
-        return f'«{self.name}»'
+        return f"«{self.name}»"
 
     def add_member(self, idpk_member: int, rule: str = "member") -> None:
         decoded_dict: dict = json.loads(self.members)
@@ -91,14 +91,14 @@ class RequestToUnity(Base):
 class Item(Base):
     __tablename__ = "items"
 
-    code_name: Mapped[str] = mapped_column(String(64))
+    id_item: Mapped[str] = mapped_column(Text)
+    id_user: Mapped[int] = mapped_column(BigInteger)
     emoji: Mapped[str] = mapped_column(String(length=10))
     name: Mapped[str] = mapped_column(String(length=64))
-    description: Mapped[str] = mapped_column(Text)
-    price: Mapped[int] = mapped_column(BigInteger)
-    currency: Mapped[str] = mapped_column(String(length=64))
-    value: Mapped[int] = mapped_column()
-    quantity: Mapped[int] = mapped_column(default=0)
+    lvl: Mapped[int] = mapped_column(default=0)
+    properties: Mapped[str] = mapped_column(Text)
+    rarity: Mapped[str] = mapped_column(String(length=64))
+    is_active: Mapped[bool] = mapped_column(default=False)
 
     @property
     def name_with_emoji(self) -> str:

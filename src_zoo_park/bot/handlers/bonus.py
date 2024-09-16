@@ -2,19 +2,17 @@ from aiogram.types import Message, CallbackQuery
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from db import User, Photo, Item
+from db import User
 from tools import (
     get_text_message,
-    factory_text_main_top,
     disable_not_main_window,
     bonus_for_sub_on_chat,
     bonus_for_sub_on_channel,
     get_bonus,
     apply_bonus,
-    get_status_item,
     DataBonus,
     ft_bonus_info,
+    get_value_prop_from_iai,
 )
 from bot.keyboards import ik_get_bonus, ik_confirm_or_change_bonus
 from bot.states import UserState
@@ -117,12 +115,12 @@ async def get_daily_bonus(
     mess_data = {"text": text}
     data = await state.get_data()
     if (
-        await get_status_item(items=user.items, code_name_item="item_5")
-        and data.get("number_attempts_item_5", 1) > 0
-    ):
-        item = await session.scalar(select(Item).where(Item.code_name == "item_5"))
+        v := get_value_prop_from_iai(
+            info_about_items=user.info_about_items, name_prop="bonus_changer"
+        )
+    ) and data.get("number_attempts_item", 1) > 0:
         await state.update_data(
-            number_attempts_item_5=item.value - 1,
+            number_attempts_item=v - 1,
             bonus_type=data_bonus.bonus_type,
             result_func=data_bonus.result_func,
         )
@@ -167,15 +165,15 @@ async def change_bonus(
     user: User,
 ):
     data = await state.get_data()
-    number_attempts_item_5 = data.get("number_attempts_item_5", 1) - 1
+    number_attempts_item = data.get("number_attempts_item", 1) - 1
     data_bonus = await get_bonus(session=session, user=user)
     text = await ft_bonus_info(data_bonus=data_bonus)
     mess_data = {"text": text}
-    if number_attempts_item_5 > 0:
+    if number_attempts_item > 0:
         _ = await state.update_data(
             bonus_type=data_bonus.bonus_type,
             result_func=data_bonus.result_func,
-            number_attempts_item_5=number_attempts_item_5,
+            number_attempts_item=number_attempts_item,
         )
         print(data, _)
         mess_data["reply_markup"] = await ik_confirm_or_change_bonus()

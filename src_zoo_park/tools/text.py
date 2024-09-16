@@ -440,5 +440,41 @@ async def ft_bonus_info(
     return text
 
 
-def get_unity_idpk(current_unity: str | None):
-    return current_unity.split(":")[-1] if current_unity else None
+# def get_unity_idpk(current_unity: str | None):
+#     return current_unity.split(":")[-1] if current_unity else None
+
+
+async def ft_item_props(item_props: dict | str):
+    if isinstance(item_props, str):
+        item_props = json.loads(item_props)
+    t = []
+    for k, v in item_props.items():
+        name_prop = await get_text_message(name=k)
+        pattern_item_prop_line = await get_text_message(
+            "pattern_item_prop_line", name_prop=name_prop, v=v
+        )
+        t.append(pattern_item_prop_line)
+    return "".join(t)
+
+
+async def ft_item_props_for_update(
+    item_props: dict | str, updated_prop: str, parameter: int
+):
+    if isinstance(item_props, str):
+        item_props = json.loads(item_props)
+    t = []
+    for k, v in item_props.items():
+        name_prop = await get_text_message(name=k)
+        if k == updated_prop:
+            pattern = await get_text_message(
+                "pattern_item_prop_for_update_line",
+                name_prop=name_prop,
+                v=v,
+                parameter=parameter,
+            )
+        else:
+            pattern = await get_text_message(
+                "pattern_item_prop_line", name_prop=name_prop, v=v
+            )
+        t.append(pattern)
+    return "".join(t)

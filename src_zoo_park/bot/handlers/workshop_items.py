@@ -52,7 +52,7 @@ async def witems_menu_choice_item(
     item: str = query.data.split(":")[0]
     await state.update_data(code_name_item=item)
     item: Item = await session.scalar(select(Item).where(Item.code_name == item))
-    bought = item.code_name in user.items
+    bought = item.code_name in user.info_about_items
     await query.message.edit_text(
         text=await get_text_message(
             "witems_menu_buy_item",
@@ -92,7 +92,7 @@ async def buy_item(
     item: Item = await session.scalar(
         select(Item).where(Item.code_name == data["code_name_item"])
     )
-    if item.code_name in user.items:
+    if item.code_name in user.info_about_items:
         await query.answer(await get_text_message("item_already_have"), show_alert=True)
         return
     if await get_currency(self=user, currency=item.currency) < item.price:

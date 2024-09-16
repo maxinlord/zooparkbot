@@ -1,16 +1,4 @@
-from aiogram.filters import CommandObject, Command
-from aiogram.types import Message
 from aiogram import Router
-from aiogram.fsm.context import FSMContext
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from db import User, BlackList
-from aiogram.filters import StateFilter
-from aiogram.fsm.state import any_state
-from tools import (
-    mention_html,
-)
-from config import CHAT_ID
 
 router = Router()
 flags = {"throttling_key": "default"}

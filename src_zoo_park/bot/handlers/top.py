@@ -4,11 +4,10 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from db import User, Photo
+from db import User
 from tools import (
     get_text_message,
     factory_text_main_top,
-    get_photo,
     factory_text_main_top_by_money,
     factory_text_main_top_by_animals,
     factory_text_main_top_by_referrals,

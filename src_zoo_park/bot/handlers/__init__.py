@@ -28,8 +28,8 @@ def setup_message_routers() -> Router:
         inline_rate,
         play_game,
         random_merchant,
+        forge_items,
         rarity_shop,
-        workshop_items,
         aviaries,
         account,
         im_take,
@@ -62,10 +62,11 @@ def setup_message_routers() -> Router:
     router.include_router(inline_rate.router)
     router.include_router(play_game.router)
     router.include_router(inline_send_ref_link.router)
+    router.include_router(forge_items.router)
     router.include_router(account.router)
     router.include_router(random_merchant.router)
     router.include_router(rarity_shop.router)
-    router.include_router(workshop_items.router)
+    # router.include_router(workshop_items.router)
     router.include_router(aviaries.router)
     router.include_router(im_take.router)
 
@@ -73,5 +74,4 @@ def setup_message_routers() -> Router:
 
     # router.include_router(errors.router)
 
-    # router.include_router(bot_messages.router)
     return router

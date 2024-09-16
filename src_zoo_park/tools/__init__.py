@@ -54,21 +54,7 @@ from .game import (
 from .grafics import get_plot
 from .income import income_
 
-from .items import (
-    get_all_name_items,
-    get_items_data_to_kb,
-    get_row_items_for_kb,
-    get_size_items_for_kb,
-    get_status_item,
-    count_page_items,
-    add_item,
-    activate_item,
-    deactivate_all_items,
-    get_activated_items,
-    add_value_to_item,
-    get_value_from_item,
-    get_values_from_item
-)
+from .items import *
 
 from .message import disable_not_main_window, m_choice_quantity_avi
 from .nickname import (
@@ -96,7 +82,9 @@ from .text import (
     factory_text_account_animals,
     factory_text_account_aviaries,
     ft_bank_exchange_info,
-    ft_bonus_info
+    ft_bonus_info,
+    ft_item_props,
+    ft_item_props_for_update
 )
 
 from .transfer import in_used, add_user_to_used

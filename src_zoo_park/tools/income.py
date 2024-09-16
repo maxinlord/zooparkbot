@@ -11,9 +11,10 @@ async def income_(session: AsyncSession, user: User):
     income = await income_from_animal(
         session=session, animals=animals, unity_idpk=unity_idpk
     )
-    if await tools.get_status_item(items=user.items, code_name_item="item_1"):
-        item = await session.scalar(select(Item).where(Item.code_name == "item_1"))
-        income = income * (1 + item.value / 100)
+    if v := tools.get_value_prop_from_iai(
+        info_about_items=user.info_about_items, name_prop="general_income"
+    ):
+        income = income * (1 + v / 100)
     if unity_idpk:
         unity_data = await get_unity_data_for_income(
             session=session, idpk_unity=unity_idpk

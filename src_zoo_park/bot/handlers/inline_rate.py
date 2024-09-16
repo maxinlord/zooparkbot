@@ -1,22 +1,16 @@
-import asyncio
 from datetime import datetime
 from aiogram.types import (
     InlineQuery,
     InlineQueryResultArticle,
     InputTextMessageContent,
-    InlineQueryResultCachedPhoto,
-    InlineQueryResultPhoto,
 )
 from aiogram.types import ChosenInlineResult
 from aiogram import F, Router
-from aiogram.utils.deep_linking import create_start_link
 import random
 from sqlalchemy.ext.asyncio import AsyncSession
-from db import User, Photo
-from sqlalchemy import select
-from bot.keyboards import ik_start_game, ik_update_inline_rate
+from db import User
+from bot.keyboards import ik_update_inline_rate
 from tools import get_text_message, get_value
-from config import CHAT_ID
 
 router = Router()
 

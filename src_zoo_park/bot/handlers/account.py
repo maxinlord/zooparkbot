@@ -1,9 +1,10 @@
 import contextlib
+import json
 from aiogram.types import Message, CallbackQuery
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from db import User, Item
 from tools import (
     get_text_message,
@@ -12,12 +13,11 @@ from tools import (
     income_,
     get_total_number_seats,
     get_remain_seats,
-    activate_item,
-    deactivate_all_items,
-    get_status_item,
     get_total_number_animals,
     factory_text_account_animals,
     factory_text_account_aviaries,
+    ft_item_props,
+    synchronize_info_about_items,
 )
 from bot.states import UserState
 from bot.keyboards import ik_account_menu, ik_menu_items, ik_item_activate_menu, ik_back
@@ -125,19 +125,22 @@ async def account_items(
     state: FSMContext,
     user: User,
 ):
-    if user.items == "{}":
+    amount_items = await session.scalar(
+        select(func.count()).select_from(Item).where(Item.id_user == user.id_user)
+    )
+    if amount_items == 0:
         await query.answer(
             text=await get_text_message("no_items"),
             show_alert=True,
         )
         return
-    q_page = await count_page_items(session=session, items=user.items)
+    q_page = await count_page_items(session=session, amount_items=amount_items)
     await state.update_data(page=1, q_page=q_page)
     await query.message.edit_text(
         text=await get_text_message("menu_items"),
         reply_markup=await ik_menu_items(
             session=session,
-            items=user.items,
+            id_user=user.id_user,
         ),
     )
 
@@ -160,7 +163,7 @@ async def process_turn_right(
         await query.message.edit_reply_markup(
             reply_markup=await ik_menu_items(
                 session=session,
-                items=user.items,
+                id_user=user.id_user,
                 page=page,
             ),
         )
@@ -192,7 +195,7 @@ async def process_back_to_menu(
             await query.message.edit_text(
                 text=await get_text_message("menu_items"),
                 reply_markup=await ik_menu_items(
-                    session=session, items=user.items, page=data["page"]
+                    session=session, id_user=user.id_user, page=data["page"]
                 ),
             )
 
@@ -204,20 +207,17 @@ async def process_viewing_item(
     session: AsyncSession,
     user: User,
 ) -> None:
-    code_name_item = query.data.split(":")[0]
-    await state.update_data(code_name_item=code_name_item)
-    item: Item = await session.scalar(
-        select(Item).where(Item.code_name == code_name_item)
-    )
+    id_item = query.data.split(":")[0]
+    await state.update_data(id_item=id_item)
+    item: Item = await session.scalar(select(Item).where(Item.id_item == id_item))
+    props = await ft_item_props(item_props=item.properties)
     await query.message.edit_text(
         text=await get_text_message(
             "description_item",
             name_=item.name_with_emoji,
-            description=item.description,
+            description=props,
         ),
-        reply_markup=await ik_item_activate_menu(
-            await get_status_item(items=user.items, code_name_item=code_name_item)
-        ),
+        reply_markup=await ik_item_activate_menu(is_activate=item.is_active),
     )
 
 
@@ -231,29 +231,32 @@ async def process_viewing_recipes(
     user: User,
 ) -> None:
     data = await state.get_data()
-    match query.data:
-        case "item_activate":
-            await deactivate_all_items(self=user)
-            await activate_item(self=user, code_name_item=data["code_name_item"])
-        case "item_deactivate":
-            await activate_item(
-                self=user,
-                code_name_item=data["code_name_item"],
-                is_active=False,
-            )
-    await session.commit()
-    item = await session.scalar(
-        select(Item).where(Item.code_name == data["code_name_item"])
+    is_activate = True
+    items = await session.scalars(
+        select(Item).where(Item.id_user == user.id_user, Item.is_active == True)
     )
-    await query.message.edit_text(
-        text=await get_text_message(
-            "description_item",
-            name_=item.name_with_emoji,
-            description=item.description,
-        ),
-        reply_markup=await ik_item_activate_menu(
-            await get_status_item(
-                items=user.items, code_name_item=data["code_name_item"]
+    items = list(items.all())
+    if query.data == "item_activate":
+        if len(items) == 3:
+            await query.answer(
+                text=await get_text_message("max_active_items"),
+                show_alert=True,
             )
-        ),
+            return
+        item: Item = await session.scalar(
+            select(Item).where(Item.id_item == data["id_item"])
+        )
+        item.is_active = True
+        items.append(item)
+    elif query.data == "item_deactivate":
+        is_activate = False
+        item: Item = await session.scalar(
+            select(Item).where(Item.id_item == data["id_item"])
+        )
+        item.is_active = False
+        items.remove(item)
+    user.info_about_items = await synchronize_info_about_items(items=items)
+    await session.commit()
+    await query.message.edit_reply_markup(
+        reply_markup=await ik_item_activate_menu(is_activate=is_activate),
     )

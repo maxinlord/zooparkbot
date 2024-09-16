@@ -2,13 +2,11 @@ from aiogram.filters import CommandObject, Command
 from aiogram.types import Message
 from aiogram import Router
 from aiogram.fsm.context import FSMContext
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from db import User
 from aiogram.filters import StateFilter
 from aiogram.fsm.state import any_state
 from tools import (
-    mention_html,
     get_events_list,
     sort_events_batch
 )

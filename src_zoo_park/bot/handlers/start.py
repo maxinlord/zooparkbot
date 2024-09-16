@@ -20,8 +20,8 @@ from tools import (
     get_nickname_owner_game,
     get_gamer,
     gamer_have_active_game,
-    get_status_item,
     mention_html,
+    get_value_prop_from_iai,
 )
 from bot.states import UserState
 from bot.keyboards import rk_main_menu, ik_start_created_game, ik_button_play
@@ -72,9 +72,10 @@ async def command_start_game(
         idpk_gamer=user.idpk,
         moves=game.amount_moves,
     )
-    if await get_status_item(items=user.items, code_name_item="item_7"):
-        item = await session.scalar(select(Item).where(Item.code_name == "item_7"))
-        gamer.moves += item.value
+    if v := get_value_prop_from_iai(
+        info_about_items=user.info_about_items, name_prop="extra_moves"
+    ):
+        gamer.moves += v
     session.add(gamer)
     await session.commit()
     nickname = await get_nickname_owner_game(
@@ -123,10 +124,10 @@ async def command_start_game(
         "total_moves": game.amount_moves,
         "remain_moves": gamer.moves,
     }
-    if await get_status_item(items=user.items, code_name_item="item_8"):
-        item = await session.scalar(select(Item).where(Item.code_name == "item_8"))
-        keyboard_data["autopilot"] = True
-        await state.update_data(delay_autopilot=item.value)
+    # if await get_status_item(info_about_items=user.info_about_items, code_name_item="item_8"):
+    #     item = await session.scalar(select(Item).where(Item.code_name == "item_8"))
+    #     keyboard_data["autopilot"] = True
+    #     await state.update_data(delay_autopilot=item.value)
     await message.answer(
         text=await get_text_message("play_game", score=gamer.score),
         reply_markup=await ik_button_play(**keyboard_data),

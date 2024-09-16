@@ -3,10 +3,9 @@ from aiogram import Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from db import User, Animal, Unity, Value
+from db import User, Animal, Unity
 from tools import (
     get_text_message,
-    disable_not_main_window,
     factory_text_unity_top,
     get_top_unity_by_animal,
     get_value

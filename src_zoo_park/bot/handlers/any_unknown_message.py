@@ -1,17 +1,15 @@
 import contextlib
 from datetime import datetime
-from aiogram.types import Message, CallbackQuery, FSInputFile
+from aiogram.types import Message, CallbackQuery
 from aiogram import F, Router
 from tools import get_text_message
 from sqlalchemy.ext.asyncio import AsyncSession
 from db import Photo, User
 from aiogram.fsm.context import FSMContext
-from bot.states import UserState
 from tools import get_text_message, get_value
-from bot.keyboards import ik_start_game, ik_update_inline_rate
-from typing import Any
+from bot.keyboards import ik_update_inline_rate
 from bot.filters import CompareDataByIndex
-from aiogram.filters import CommandObject, Command
+from aiogram.filters import Command
 from aiogram.filters import StateFilter
 
 router = Router()

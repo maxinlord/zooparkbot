@@ -115,7 +115,7 @@ async def get_bonus(session: AsyncSession, user: User) -> DataBonus:
             args["remain_seats"] = remain_seats
     if bonus_type == "item":
         item = await handle_item_bonus(**args)
-        if item["code_name"] in user.items:
+        if item["code_name"] in user.info_about_items:
             return DataBonus(
                 bonus_type=item["currency"], result_func=item["price"] // 2
             )

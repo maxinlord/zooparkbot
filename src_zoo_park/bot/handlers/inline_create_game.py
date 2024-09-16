@@ -8,8 +8,8 @@ from aiogram import F, Router
 from aiogram.utils.deep_linking import create_start_link
 import random
 from sqlalchemy.ext.asyncio import AsyncSession
-from db import User, Game, Value
-from sqlalchemy import delete, select
+from db import User, Game
+from sqlalchemy import delete
 from bot.keyboards import (
     ik_start_created_game,
 )

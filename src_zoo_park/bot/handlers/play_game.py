@@ -7,13 +7,12 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import and_, select
 from aiogram.utils.deep_linking import create_start_link
-from aiogram.utils.link import create_telegram_link
-from db import User, Game, Gamer, Item
+from db import User, Game, Gamer
 from tools import (
     get_text_message,
     get_amount_gamers,
     factory_text_top_mini_game,
-    get_status_item,
+    get_value_prop_from_iai
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -69,11 +68,10 @@ async def play_game(
         await query.message.answer(
             text=await get_text_message("you_got", value_dice=value_dice)
         )
-        if await get_status_item(user.items, code_name_item="item_4"):
-            item = await session.scalar(select(Item).where(Item.code_name == "item_4"))
-            gamer.score += item.value
+        if v:=get_value_prop_from_iai(info_about_items=user.info_about_items, name_prop="last_chance"):
+            gamer.score += v
             await query.message.answer(
-                text=await get_text_message("you_got_bonus_item_4", value=item.value)
+                text=await get_text_message("you_got_bonus_item", value=v)
             )
         await query.message.answer(
             text=await get_text_message(

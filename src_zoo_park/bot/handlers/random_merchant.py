@@ -3,7 +3,7 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from db import User, Photo, RandomMerchant, Animal, Value
+from db import User, RandomMerchant, Animal
 from aiogram.utils.chat_action import ChatActionSender
 from tools import (
     get_text_message,
@@ -15,9 +15,7 @@ from tools import (
     disable_not_main_window,
     get_remain_seats,
     add_animal,
-    get_total_number_animals,
     get_value,
-    get_photo,
     find_integers
 )
 from bot.states import UserState

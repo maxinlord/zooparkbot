@@ -1,4 +1,3 @@
-import contextlib
 from aiogram.types import Message, CallbackQuery
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
@@ -10,18 +9,13 @@ from tools import (
     get_rate,
     mention_html_by_username,
     ft_bank_exchange_info,
-    update_bank_storage,
     exchange,
     find_integers,
-    get_status_item,
-    add_value_to_item,
-    get_values_from_item,
-    get_value_from_item,
 )
 from bot.states import UserState
-from bot.keyboards import ik_bank, rk_exchange_bank, rk_main_menu, ik_bank_modify
+from bot.keyboards import ik_bank, rk_exchange_bank, rk_main_menu
 from bot.filters import GetTextButton
-from datetime import datetime, timedelta
+from datetime import datetime
 
 flags = {"throttling_key": "default"}
 router = Router()
@@ -45,9 +39,9 @@ async def bank(
         session=session, value_name="BANK_STORAGE", cache_=False
     )
     keyboard = await ik_bank()
-    if d := await get_values_from_item(items=user.items, code_name_item="item_6"):
-        if d["is_activate"] and not d.get("date_end"):
-            keyboard = await ik_bank_modify()
+    # if d := await get_values_from_item(info_about_items=user.info_about_items, code_name_item="item_6"):
+    #     if d["is_activate"] and not d.get("date_end"):
+    #         keyboard = await ik_bank_modify()
     await dict_func[edit](
         text=await get_text_message(
             "bank_info",
@@ -61,36 +55,36 @@ async def bank(
     )
 
 
-@router.callback_query(UserState.main_menu, F.data == "market_collapse")
-async def market_collapse(
-    query: CallbackQuery,
-    session: AsyncSession,
-    state: FSMContext,
-    user: User,
-):
-    if await get_value_from_item(
-        items=user.items,
-        code_name_item="item_6",
-        value_name="date_end",
-    ):
-        await query.answer(
-            await get_text_message("market_collapse_used"), show_alert=True
-        )
-    else:
-        await add_value_to_item(
-            self=user,
-            code_name_item="item_6",
-            value_name="date_end",
-            value=(datetime.now() + timedelta(seconds=60)).isoformat(),
-        )
-        await session.commit()
-    await bank(
-        message=query.message,
-        session=session,
-        state=state,
-        user=user,
-        edit=True,
-    )
+# @router.callback_query(UserState.main_menu, F.data == "market_collapse")
+# async def market_collapse(
+#     query: CallbackQuery,
+#     session: AsyncSession,
+#     state: FSMContext,
+#     user: User,
+# ):
+#     # if await get_value_from_item(
+#     #     info_about_items=user.info_about_items,
+#     #     code_name_item="item_6",
+#     #     value_name="date_end",
+#     # ):
+#     #     await query.answer(
+#     #         await get_text_message("market_collapse_used"), show_alert=True
+#     #     )
+#     # else:
+#     #     await add_value_to_item(
+#     #         self=user,
+#     #         code_name_item="item_6",
+#     #         value_name="date_end",
+#     #         value=(datetime.now() + timedelta(seconds=60)).isoformat(),
+#     #     )
+#     #     await session.commit()
+#     await bank(
+#         message=query.message,
+#         session=session,
+#         state=state,
+#         user=user,
+#         edit=True,
+#     )
 
 
 @router.callback_query(UserState.main_menu, F.data == "update_bank")

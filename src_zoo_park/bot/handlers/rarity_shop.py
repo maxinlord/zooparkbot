@@ -3,13 +3,12 @@ from aiogram.types import (
     CallbackQuery,
     FSInputFile,
     InputMediaPhoto,
-    InputFile,
 )
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from db import User, Animal, Value
+from db import User, Animal
 from tools import (
     get_text_message,
     disable_not_main_window,
@@ -17,8 +16,6 @@ from tools import (
     get_price_animal,
     get_income_animal,
     add_animal,
-    get_total_number_animals,
-    get_photo,
     get_dict_animals,
     find_integers
 )
@@ -96,7 +93,7 @@ async def get_rarity_rshop(
         unity_idpk=unity_idpk,
     )
     animal_income = await get_income_animal(
-        session=session, animal=animal, unity_idpk=unity_idpk, items=user.items
+        session=session, animal=animal, unity_idpk=unity_idpk, info_about_items=user.info_about_items
     )
     await query.message.delete()
     photo = FSInputFile(f"src_photos/{data.get('animal')}/{animal.code_name}.jpg")
@@ -152,7 +149,7 @@ async def rshop_switch_rarity(
     )
     await state.update_data(rarity=rarity, animal_price=animal_price)
     animal_income = await get_income_animal(
-        session=session, animal=animal, unity_idpk=data["unity_idpk"], items=user.items
+        session=session, animal=animal, unity_idpk=data["unity_idpk"], info_about_items=user.info_about_items
     )
     photo = FSInputFile(f"src_photos/{data.get('animal')}/{animal.code_name}.jpg")
     await query.message.edit_media(
@@ -246,7 +243,7 @@ async def get_quantity_rshop(
                 session=session,
                 animal=animal,
                 unity_idpk=data["unity_idpk"],
-                items=user.items,
+                info_about_items=user.info_about_items,
             ),
             usd=user.usd,
             quantity_animals=(await get_dict_animals(user)).get(animal.code_name, 0)
@@ -293,7 +290,7 @@ async def back_to_choice_quantity_rshop(
     )
     unity_idpk = int(user.current_unity.split(":")[-1]) if user.current_unity else None
     animal_income = await get_income_animal(
-        session=session, animal=animal, unity_idpk=unity_idpk, items=user.items
+        session=session, animal=animal, unity_idpk=unity_idpk, info_about_items=user.info_about_items
     )
     photo = FSInputFile(f"src_photos/{data.get('animal')}/{animal.code_name}.jpg")
     msg = await message.answer_photo(
