@@ -208,6 +208,7 @@ def gen_name_and_emoji_item(item_props: str | dict) -> tuple[str, str]:
         if ":" not in prop:
             continue
         animal = prop.split(":")[0]
+        animal = animal.split('_')[0]
         prefix = prefixes.get(animal, "Живой")
     if not prefix:
         prefix = "Серый"
