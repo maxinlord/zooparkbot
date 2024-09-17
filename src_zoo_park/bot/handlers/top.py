@@ -31,11 +31,16 @@ async def main_top(
     text = await factory_text_main_top(session=session, idpk_user=user.idpk)
     filename = await get_plot(session=session, type="income")
     amount_gamers = len((await session.scalars(select(User.idpk))).all())
-    await message.answer_photo(
-        photo=FSInputFile(path=filename),
-        caption=await get_text_message("top_info", t=text, ag=amount_gamers),
-        reply_markup=await ik_choice_type_top(chosen="top_income"),
-    )
+    if filename:
+        await message.answer_photo(
+            photo=FSInputFile(path=filename),
+            caption=await get_text_message("top_info", t=text, ag=amount_gamers),
+            reply_markup=await ik_choice_type_top(chosen="top_income"),
+        )
+    else:
+        await message.answer(
+            text=await get_text_message("no_top"),
+        )
 
 
 @router.callback_query(UserState.main_menu, F.data == "top_money")

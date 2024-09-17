@@ -10,7 +10,12 @@ import random
 from abc import ABC, abstractmethod
 from init_db import _sessionmaker_for_func
 import tools
-from game_variables import rarities, prop_quantity_by_rarity, rarity_by_prop_quantity
+from game_variables import (
+    rarities,
+    prop_quantity_by_rarity,
+    rarity_by_prop_quantity,
+    colors_rarities_item,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 from db import Item
 from sqlalchemy import and_, select
@@ -28,12 +33,12 @@ async def get_items_data_to_kb(
     items = await session.scalars(select(Item).where(and_(Item.id_user == id_user)))
     data = []
     for item in items.all():
+        name_with_emoji = f"{item.lvl}lvl|{item.name_with_emoji}{colors_rarities_item.get(item.rarity)}"
+        name_with_emoji += f" {EMOJI_FOR_ACTIVATE_ITEM}" if item.is_active else ""
         if item.is_active:
-            data.insert(
-                0, (f"{item.name_with_emoji} {EMOJI_FOR_ACTIVATE_ITEM}", item.id_item)
-            )
+            data.insert(0, (name_with_emoji, item.id_item))
         else:
-            data.append((item.name_with_emoji, item.id_item))
+            data.append((name_with_emoji, item.id_item))
     return data
 
 
@@ -49,16 +54,18 @@ async def get_items_data_for_up_to_kb(
     items = await session.scalars(select(Item).where(and_(Item.id_user == id_user)))
     data = []
     for item in items.all():
+        name_with_emoji = f"{item.lvl}lvl|{item.name_with_emoji}{colors_rarities_item.get(item.rarity)}"
+        name_with_emoji += f" {EMOJI_FOR_ACTIVATE_ITEM}" if item.is_active else ""
         if item.is_active:
             data.insert(
                 0,
                 (
-                    f"{item.lvl} lvl|{item.name_with_emoji} {EMOJI_FOR_ACTIVATE_ITEM}",
+                    name_with_emoji,
                     item.id_item,
                 ),
             )
         else:
-            data.append((f"{item.lvl} lvl|{item.name_with_emoji}", item.id_item))
+            data.append((name_with_emoji, item.id_item))
     return data
 
 
@@ -78,7 +85,7 @@ async def get_items_data_for_merge_to_kb(
     items = await session.scalars(select(Item).where(and_(Item.id_user == id_user)))
     data = []
     for item in items.all():
-        name_with_emoji = item.name_with_emoji
+        name_with_emoji = f"{item.lvl}lvl|{item.name_with_emoji}{colors_rarities_item.get(item.rarity)}"
         name_with_emoji += f" {EMOJI_FOR_ACTIVATE_ITEM}" if item.is_active else ""
         name_with_emoji += (
             f" {EMOJI_FOR_CHOSEN_ITEM}" if item.id_item in id_items else ""
@@ -355,6 +362,9 @@ async def create_item(session: AsyncSession):
         ExchangeBankProperty(),
         AviariesSaleProperty(),
         AnimalIncomeProperty(),
+        ExtraMoves(),
+        LastChance(),
+        BonusChanger(),
     ]
     property_generator = PropertyGenerator(properties=properties, rarity=rarity)
     item_props = await property_generator.generate_properties()

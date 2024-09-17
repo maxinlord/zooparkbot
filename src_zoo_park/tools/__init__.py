@@ -106,7 +106,8 @@ from .unity import (
     get_data_by_lvl_unity,
     shorten_whitespace_name_unity,
     get_members_name_and_idpk,
-    fetch_unity
+    fetch_unity,
+    get_unity_idpk
 )
 
 from .user import get_currency, add_to_amount_expenses_currency, add_to_currency, fetch_users_for_top

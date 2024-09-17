@@ -29,10 +29,10 @@ async def is_unique_nickname(session: AsyncSession, nickname: str) -> bool:
 
 
 async def view_nickname(session: AsyncSession, user: User):
-    items = await tools.get_activated_items(session=session, info_about_items=user.info_about_items)
-    nickname = await tools.get_text_message("nickname", nickname=user.nickname)
-    for item_emoji in items:
-        nickname += await tools.get_text_message(
-            "pattern_item_in_nickname", item=item_emoji
-        )
-    return nickname
+    # items = await tools.get_activated_items(session=session, info_about_items=user.info_about_items)
+    # nickname = await tools.get_text_message("nickname", nickname=user.nickname)
+    # for item_emoji in items:
+    #     nickname += await tools.get_text_message(
+    #         "pattern_item_in_nickname", item=item_emoji
+    #     )
+    return user.nickname

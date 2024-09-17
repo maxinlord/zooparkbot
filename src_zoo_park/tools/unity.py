@@ -261,3 +261,6 @@ async def count_income_unity(session: AsyncSession, unity: Unity) -> int:
 
 async def fetch_unity(session: AsyncSession, idpk_unity: int | None) -> Unity | tools.UnityPlug:
     return await session.get(Unity, idpk_unity) if idpk_unity else tools.UnityPlug()
+
+def get_unity_idpk(current_unity: str | None):
+    return current_unity.split(":")[-1] if current_unity else None

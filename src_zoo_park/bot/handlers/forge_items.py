@@ -61,8 +61,23 @@ async def fi_create_item_info(
     state: FSMContext,
     user: User,
 ):
+    USD_TO_CREATE_ITEM = await get_value(
+        session=session, value_name="USD_TO_CREATE_ITEM"
+    )
+    PERCENT_EXTRA_CHARGE_BY_ITEM = await get_value(
+        session=session, value_name="PERCENT_EXTRA_CHARGE_BY_ITEM"
+    )
+    count_items = await session.scalar(
+        select(func.count(Item.id_item)).where(Item.id_user == user.id_user)
+    )
+    USD_TO_CREATE_ITEM = USD_TO_CREATE_ITEM * (
+        1 + (PERCENT_EXTRA_CHARGE_BY_ITEM / 100) * count_items
+    )
+    await state.update_data(USD_TO_CREATE_ITEM=USD_TO_CREATE_ITEM)
     await query.message.edit_text(
-        text=await get_text_message("item_probability_info"),
+        text=await get_text_message(
+            "item_probability_info", uci=int(USD_TO_CREATE_ITEM)
+        ),
         reply_markup=await ik_create_item(),
     )
 
@@ -74,9 +89,7 @@ async def fi_create_item(
     state: FSMContext,
     user: User,
 ):
-    USD_TO_CREATE_ITEM = await get_value(
-        session=session, value_name="USD_TO_CREATE_ITEM"
-    )
+    USD_TO_CREATE_ITEM = (await state.get_data())["USD_TO_CREATE_ITEM"]
     if user.usd < USD_TO_CREATE_ITEM:
         await query.answer(
             text=await get_text_message("not_enough_usd"), show_alert=True
@@ -217,20 +230,26 @@ async def process_viewing_to_up_item(
     id_item = query.data.split(":")[0]
     item: Item = await session.scalar(select(Item).where(Item.id_item == id_item))
     MAX_LVL_ITEM = await get_value(session=session, value_name="MAX_LVL_ITEM")
-    await state.update_data(
-        id_item=id_item, item_lvl=item.lvl, MAX_LVL_ITEM=MAX_LVL_ITEM
-    )
     if item.lvl == MAX_LVL_ITEM:
         await query.answer(
             text=await get_text_message("item_reached_max_lvl"), show_alert=True
         )
         return
+    USD_TO_UP_ITEM = await get_value(session=session, value_name="USD_TO_UP_ITEM")
+    USD_TO_UP_ITEM_view = USD_TO_UP_ITEM * (item.lvl + 1)
+    await state.update_data(
+        id_item=id_item,
+        item_lvl=item.lvl,
+        MAX_LVL_ITEM=MAX_LVL_ITEM,
+        USD_TO_UP_ITEM=USD_TO_UP_ITEM,
+    )
     props = await ft_item_props(item_props=item.properties)
     await query.message.edit_text(
         text=await get_text_message(
             "description_item_to_up",
             name_=item.name_with_emoji,
             description=props,
+            utui=USD_TO_UP_ITEM_view,
         ),
         reply_markup=await ik_upgrade_item(),
     )
@@ -249,7 +268,7 @@ async def fi_upgrade_item(
             text=await get_text_message("item_reached_max_lvl"), show_alert=True
         )
         return
-    USD_TO_UP_ITEM = await get_value(session=session, value_name="USD_TO_UP_ITEM")
+    USD_TO_UP_ITEM = data["USD_TO_UP_ITEM"] * (data["item_lvl"] + 1)
     if user.usd < USD_TO_UP_ITEM:
         await query.answer(
             text=await get_text_message("not_enough_usd"), show_alert=True
@@ -266,13 +285,17 @@ async def fi_upgrade_item(
     new_item_properties, updated_property, parameter = await random_up_property_item(
         session=session, item_properties=item.properties
     )
-    user.info_about_items = await update_prop_iai(
-        info_about_items=user.info_about_items, prop=updated_property, value=parameter
-    )
+    if item.is_active:
+        user.info_about_items = await update_prop_iai(
+            info_about_items=user.info_about_items,
+            prop=updated_property,
+            value=parameter,
+        )
     item.properties = new_item_properties
     item.lvl += 1
     await state.update_data(item_lvl=item.lvl)
     await session.commit()
+    utui = data["USD_TO_UP_ITEM"] * (item.lvl + 1)
     text_props = await ft_item_props_for_update(
         item_props=new_item_properties,
         updated_prop=updated_property,
@@ -282,7 +305,9 @@ async def fi_upgrade_item(
         text=await get_text_message(
             "item_upgraded",
             name_=item.name_with_emoji,
+            item_lvl=item.lvl,
             text_props=text_props,
+            utui=utui,
         ),
         reply_markup=await ik_upgrade_item(),
     )
@@ -319,7 +344,13 @@ async def fi_choice_item_to_merge(
         return
     q_page = await count_page_items(session=session, amount_items=amount_items)
     await state.update_data(
-        page=1, q_page=q_page, id_chosen_items=[], status_chosen_items=[]
+        page=1,
+        q_page=q_page,
+        id_chosen_items=[],
+        status_chosen_items=[],
+        q_props_items=[],
+        lvl_items=[],
+        ft_props=[],
     )
     await query.message.edit_text(
         text=await get_text_message("menu_items"),
@@ -382,12 +413,41 @@ async def process_viewing_to_merge_item(
     if id_item in data["id_chosen_items"]:
         data["id_chosen_items"].remove(id_item)
         data["status_chosen_items"].remove(item.is_active)
+        data["q_props_items"].remove(count_props)
+        data["lvl_items"].remove(item.lvl)
+        data["ft_props"].remove(await ft_item_props(item_props=item.properties))
     else:
         data["id_chosen_items"].append(id_item)
         data["status_chosen_items"].append(item.is_active)
-    await state.update_data(id_chosen_items=data["id_chosen_items"], status_chosen_items=data["status_chosen_items"])
+        data["q_props_items"].append(count_props)
+        data["lvl_items"].append(item.lvl)
+        data["ft_props"].append(await ft_item_props(item_props=item.properties))
+    await state.update_data(
+        id_chosen_items=data["id_chosen_items"],
+        status_chosen_items=data["status_chosen_items"],
+        q_props_items=data["q_props_items"],
+        lvl_items=data["lvl_items"],
+        ft_props=data["ft_props"],
+    )
+    USD_TO_MERGE_ITEMS = 0
+    t1 = data["ft_props"][0] if len(data["ft_props"]) > 0 else ""
+    t2 = data["ft_props"][1] if len(data["ft_props"]) == 2 else ""
+    if len(data["id_chosen_items"]) == 2:
+        USD_TO_MERGE_ITEMS = await get_value(
+            session=session, value_name="USD_TO_MERGE_ITEMS"
+        )
+        q_props = sum(data["q_props_items"])
+        lvl_sum = sum(data["lvl_items"])
+        lvl_sum = 1 if lvl_sum == 0 else lvl_sum
+        main_k = q_props + lvl_sum
+        USD_TO_MERGE_ITEMS = USD_TO_MERGE_ITEMS * main_k
     await query.message.edit_text(
-        text=await get_text_message("chosen_items_to_merge", t=""),
+        text=await get_text_message(
+            "chosen_items_to_merge",
+            t1=t1,
+            t2=t2,
+            utmi=USD_TO_MERGE_ITEMS,
+        ),
         reply_markup=await ik_menu_items_for_merge(
             session=session,
             id_user=user.id_user,

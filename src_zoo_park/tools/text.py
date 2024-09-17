@@ -160,7 +160,7 @@ async def factory_text_main_top(session: AsyncSession, idpk_user: int) -> str:
     for counter, (user, income) in enumerate(users_and_incomes, start=1):
         if counter > total_place_top:
             break
-        unity_idpk = get_unity_idpk(user.current_unity)
+        unity_idpk = tools.get_unity_idpk(user.current_unity)
         unity = await tools.fetch_unity(session=session, idpk_unity=unity_idpk)
         text += await format_text(user, income, counter, unity.format_name)
     self_place, user_data = next(
@@ -205,7 +205,7 @@ async def factory_text_main_top_by_money(session: AsyncSession, idpk_user: int) 
     for counter, user in enumerate(users, start=1):
         if counter > total_place_top:
             break
-        unity_idpk = get_unity_idpk(user.current_unity)
+        unity_idpk = tools.get_unity_idpk(user.current_unity)
         unity = await tools.fetch_unity(session=session, idpk_unity=unity_idpk)
         text += await format_text(user, user.usd, counter, unity.format_name)
 
@@ -256,7 +256,7 @@ async def factory_text_main_top_by_animals(
     for counter, (user, animals) in enumerate(users_animals, start=1):
         if counter > total_place_top:
             break
-        unity_idpk = get_unity_idpk(user.current_unity)
+        unity_idpk = tools.get_unity_idpk(user.current_unity)
         unity = await tools.fetch_unity(session=session, idpk_unity=unity_idpk)
         text += await format_text(user, animals, counter, unity.format_name)
 
@@ -307,7 +307,7 @@ async def factory_text_main_top_by_referrals(
     for counter, (user, ref) in enumerate(users_referrals, start=1):
         if counter > total_place_top:
             break
-        unity_idpk = get_unity_idpk(user.current_unity)
+        unity_idpk = tools.get_unity_idpk(user.current_unity)
         unity = await tools.fetch_unity(session=session, idpk_unity=unity_idpk)
         text += await format_text(user, ref, counter, unity.format_name)
 
@@ -439,19 +439,15 @@ async def ft_bonus_info(
     )
     return text
 
-
-# def get_unity_idpk(current_unity: str | None):
-#     return current_unity.split(":")[-1] if current_unity else None
-
-
 async def ft_item_props(item_props: dict | str):
     if isinstance(item_props, str):
         item_props = json.loads(item_props)
     t = []
     for k, v in item_props.items():
         name_prop = await get_text_message(name=k)
+        value = await get_text_message(name=f'{k}_value_pattern', v=v)
         pattern_item_prop_line = await get_text_message(
-            "pattern_item_prop_line", name_prop=name_prop, v=v
+            "pattern_item_prop_line", name_prop=name_prop, v=value
         )
         t.append(pattern_item_prop_line)
     return "".join(t)
@@ -465,16 +461,17 @@ async def ft_item_props_for_update(
     t = []
     for k, v in item_props.items():
         name_prop = await get_text_message(name=k)
+        value = await get_text_message(name=f'{k}_value_pattern', v=v)
         if k == updated_prop:
             pattern = await get_text_message(
                 "pattern_item_prop_for_update_line",
                 name_prop=name_prop,
-                v=v,
+                v=value,
                 parameter=parameter,
             )
         else:
             pattern = await get_text_message(
-                "pattern_item_prop_line", name_prop=name_prop, v=v
+                "pattern_item_prop_line", name_prop=name_prop, v=value
             )
         t.append(pattern)
     return "".join(t)

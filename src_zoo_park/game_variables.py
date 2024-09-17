@@ -2,10 +2,16 @@ rarities: list = ["_rare", "_epic", "_mythical", "_leg"]
 colors_rarities: list = ["🟢", "🟣", "🔴", "🟡"]
 translated_currencies: dict = {"rub": "₽", "usd": "$", "paw_coins": "🐾"}
 translated_rarities: dict = {
-    'common': 'обычный',
-    'rare': 'редкий',
-    'epic': 'эпический',
-    'mythical': 'мифический',
+    "common": "обычный",
+    "rare": "редкий",
+    "epic": "эпический",
+    "mythical": "мифический",
+}
+colors_rarities_item = {
+    "common": "⚪️",
+    "rare": "🟢",
+    "epic": "🟣",
+    "mythical": "🔴",
 }
 games = {
     "🎯": "dart",

@@ -34,5 +34,3 @@ async def m_choice_quantity_avi(
             session=session, aviary_price=aviary_price
         ),
     )
-
-
