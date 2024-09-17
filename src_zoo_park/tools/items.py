@@ -202,7 +202,7 @@ def gen_name_and_emoji_item(item_props: str | dict) -> tuple[str, str]:
         "Ловкости": "⚡️",
         "Удачи": "🍀",
     }
-
+    prefix = None
     # Генерация названия предмета
     for prop in item_props.keys():
         if ":" not in prop:
