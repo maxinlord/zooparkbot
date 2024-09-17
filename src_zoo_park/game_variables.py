@@ -12,6 +12,7 @@ colors_rarities_item = {
     "rare": "🟢",
     "epic": "🟣",
     "mythical": "🔴",
+    "leg": "🟡",
 }
 games = {
     "🎯": "dart",
@@ -35,4 +36,5 @@ rarity_by_prop_quantity = {
     2: "rare",
     3: "epic",
     4: "mythical",
+    5: "leg",
 }

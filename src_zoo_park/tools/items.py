@@ -485,7 +485,7 @@ def choice_prop(prop: dict):
 
 def get_rarity_by_amount_props(props: dict):
     if len(props) > 4:
-        return rarity_by_prop_quantity[4]
+        return rarity_by_prop_quantity[5]
     return rarity_by_prop_quantity[len(props)]
 
 
