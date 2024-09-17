@@ -33,7 +33,12 @@ async def get_items_data_to_kb(
     items = await session.scalars(select(Item).where(and_(Item.id_user == id_user)))
     data = []
     for item in items.all():
-        name_with_emoji = f"{item.lvl}lvl|{item.name_with_emoji}{colors_rarities_item.get(item.rarity)}"
+        name_with_emoji = await tools.get_text_button(
+            "pattern_for_item_button_attrs",
+            lvl=item.lvl,
+            name_with_emoji=item.name_with_emoji,
+            emoji_rarity=colors_rarities_item[item.rarity],
+        )
         name_with_emoji += f" {EMOJI_FOR_ACTIVATE_ITEM}" if item.is_active else ""
         if item.is_active:
             data.insert(0, (name_with_emoji, item.id_item))
@@ -54,7 +59,12 @@ async def get_items_data_for_up_to_kb(
     items = await session.scalars(select(Item).where(and_(Item.id_user == id_user)))
     data = []
     for item in items.all():
-        name_with_emoji = f"{item.lvl}lvl|{item.name_with_emoji}{colors_rarities_item.get(item.rarity)}"
+        name_with_emoji = await tools.get_text_button(
+            "pattern_for_item_button_attrs",
+            lvl=item.lvl,
+            name_with_emoji=item.name_with_emoji,
+            emoji_rarity=colors_rarities_item[item.rarity],
+        )
         name_with_emoji += f" {EMOJI_FOR_ACTIVATE_ITEM}" if item.is_active else ""
         if item.is_active:
             data.insert(
@@ -85,7 +95,12 @@ async def get_items_data_for_merge_to_kb(
     items = await session.scalars(select(Item).where(and_(Item.id_user == id_user)))
     data = []
     for item in items.all():
-        name_with_emoji = f"{item.lvl}lvl|{item.name_with_emoji}{colors_rarities_item.get(item.rarity)}"
+        name_with_emoji = await tools.get_text_button(
+            "pattern_for_item_button_attrs",
+            lvl=item.lvl,
+            name_with_emoji=item.name_with_emoji,
+            emoji_rarity=colors_rarities_item[item.rarity],
+        )
         name_with_emoji += f" {EMOJI_FOR_ACTIVATE_ITEM}" if item.is_active else ""
         name_with_emoji += (
             f" {EMOJI_FOR_CHOSEN_ITEM}" if item.id_item in id_items else ""
@@ -146,71 +161,66 @@ async def get_rarity_animal_probability() -> list[float]:
         return [float(i.strip()) for i in r.split(", ")]
 
 
-def gen_name_and_emoji_item() -> tuple[str, str]:
-    # Словари с частями названий предметов
-    prefixes = [
-        "Лесной",
-        "Тропический",
-        "Саванновый",
-        "Полярный",
-        "Горный",
-        "Джунглевый",
-        "Океанический",
-        "Пустынный",
-        "Ночной",
-        "Загадочный",
-    ]
-    bases = [
-        "Амулет",
-        "Тотем",
-        "Амфора",
-        "Маска",
-        "Кристалл",
-        "Фонарь",
-        "Талисман",
-        "Знак",
-        "Артефакт",
-        "Компас",
-        "Карта",
-        "Ключ",
-    ]
-    attributes = [
-        "Силы",
-        "Мудрости",
-        "Тайны",
-        "Заботы",
-        "Света",
-        "Мира",
-        "Ветра",
-        "Жизни",
-        "Тепла",
-        "Воли",
-        "Храбрости",
-        "Свободы",
-    ]
+def gen_name_and_emoji_item(item_props: str | dict) -> tuple[str, str]:
+    if isinstance(item_props, str):
+        item_props = json.loads(item_props)
+    prefixes = {
+        "animal1": "Зайцеобразный",
+        "animal3": "Пернатый",
+        "animal4": "Китообразный",
+        "animal7": "Парнокопытный",
+        "animal8": "Медвежий",
+        "animal9": "Псовый",
+        "animal10": "Кошачий",
+    }
+    bases = {
+        1: "Камень",
+        2: "Кристалл",
+        3: "Талисман",
+        4: "Амулет",
+        5: "Ключ",
+        6: "Компас",
+        7: "Фонарь",
+        8: "Тотем",
+    }
+    attributes = {
+        IncomeProperty().name: "Дохода",
+        ExchangeBankProperty().name: "Обмена",
+        AviariesSaleProperty().name: "Вольера",
+        AnimalIncomeProperty().name: "Жизни",
+        ExtraMoves().name: "Интеллекта",
+        LastChance().name: "Ловкости",
+        BonusChanger().name: "Удачи",
+    }
 
     emojis = {
-        "Силы": "💪",
-        "Мудрости": "🧠",
-        "Тайны": "🕵️",
-        "Заботы": "❤️",
-        "Света": "💡",
-        "Мира": "🌍",
-        "Ветра": "🌬️",
-        "Жизни": "🌱",
-        "Тепла": "🔥",
-        "Воли": "🎯",
-        "Храбрости": "🛡️",
-        "Свободы": "🕊️",
+        "Дохода": "📈",
+        "Обмена": "🔄",
+        "Вольера": "⛓",
+        "Жизни": "🐥",
+        "Интеллекта": "🧠",
+        "Ловкости": "⚡️",
+        "Удачи": "🍀",
     }
 
     # Генерация названия предмета
-    prefix = random.choice(prefixes)
-    base = random.choice(bases)
-    attribute = random.choice(attributes)
-    emoji = emojis.get(
-        attribute, "✨"
-    )  # Если атрибут не найден, использовать общий эмодзи
+    for prop in item_props.keys():
+        if ":" not in prop:
+            continue
+        animal = prop.split(":")[0]
+        prefix = prefixes.get(animal)
+    if not prefix:
+        prefix = random.choice(prefixes)
+    count_props = len(item_props)
+    base = bases[count_props]
+    name_max_value_prop = max(item_props.items(), key=lambda x: x[1])[0]
+    name_max_value_prop = (
+        name_max_value_prop.split(":")[1]
+        if ":" in name_max_value_prop
+        else name_max_value_prop
+    )
+    attribute = attributes[name_max_value_prop]
+    emoji = emojis[attribute]
 
     return f"{prefix} {base} {attribute}", emoji
 
@@ -368,7 +378,7 @@ async def create_item(session: AsyncSession):
     ]
     property_generator = PropertyGenerator(properties=properties, rarity=rarity)
     item_props = await property_generator.generate_properties()
-    item_name, emoji = gen_name_and_emoji_item()
+    item_name, emoji = gen_name_and_emoji_item(item_props=item_props)
     key = tools.gen_key(12)
     item_info = {"name": item_name, "emoji": emoji, "rarity": rarity, "key": key}
     return item_info, item_props
@@ -463,7 +473,7 @@ async def merge_items(session: AsyncSession, id_item_1: str, id_item_2: str):
         id_item=tools.gen_key(12),
         id_user=0,
         emoji=item_2.emoji,
-        name=gen_name_for_merge_items(name_item_1=item_1.name, name_item_2=item_2.name),
+        name=gen_name_and_emoji_item(item_props=new_props),
         properties=json.dumps(new_props),
         rarity=get_rarity_by_amount_props(props=new_props),
     )
@@ -487,13 +497,6 @@ def get_rarity_by_amount_props(props: dict):
     if len(props) > 4:
         return rarity_by_prop_quantity[5]
     return rarity_by_prop_quantity[len(props)]
-
-
-def gen_name_for_merge_items(name_item_1: str, name_item_2: str):
-    part1 = name_item_1.split()[:2]
-    part2 = name_item_2.split()[2:]
-    part1.extend(part2)
-    return " ".join(part1)
 
 
 def get_value_prop_from_iai(info_about_items: str | dict, name_prop: str):

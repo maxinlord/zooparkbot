@@ -163,7 +163,7 @@ async def fi_up_lvl_item_info(
     user: User,
 ):
     await query.message.edit_text(
-        text=await get_text_message("up_lvl_item_info"),
+        text=await get_text_message("up_lvl_item_info", usd=user.usd),
         reply_markup=await ik_up_lvl_item(),
     )
 
@@ -321,7 +321,7 @@ async def fi_merge_items_info(
     user: User,
 ):
     await query.message.edit_text(
-        text=await get_text_message("merge_items_info"),
+        text=await get_text_message("merge_items_info", usd=user.usd),
         reply_markup=await ik_choice_items_to_merge(),
     )
 
