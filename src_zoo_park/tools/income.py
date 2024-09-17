@@ -27,7 +27,7 @@ async def income_(session: AsyncSession, user: User):
     return int(income)
 
 
-async def income_from_animal(
+async def   income_from_animal(
     session: AsyncSession, animals: dict, unity_idpk: int, info_about_items: str
 ):
     income = 0

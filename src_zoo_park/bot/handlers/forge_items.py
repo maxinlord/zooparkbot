@@ -491,7 +491,8 @@ async def fi_merge_items(
         )
         user.info_about_items = await synchronize_info_about_items(items=list(items))
         await session.commit()
+    t = await ft_item_props(item_props=new_item.properties)
     await query.message.edit_text(
-        text=await get_text_message("items_merged", name_=new_item.name_with_emoji),
+        text=await get_text_message("items_merged", name_=new_item.name_with_emoji, t=t),
         reply_markup=await ik_choice_items_to_merge(),
     )
