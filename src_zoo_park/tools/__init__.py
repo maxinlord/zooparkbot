@@ -11,7 +11,6 @@ from .animals import (
     get_animal_with_random_rarity,
     gen_quantity_animals,
     get_average_price_animals,
-    _get_income_animal
 )
 
 from .aviaries import (
