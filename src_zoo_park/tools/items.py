@@ -210,7 +210,7 @@ def gen_name_and_emoji_item(item_props: str | dict) -> tuple[str, str]:
         animal = prop.split(":")[0]
         prefix = prefixes.get(animal)
     if not prefix:
-        prefix = random.choice(prefixes)
+        prefix = random.choice(list(prefixes.values()))
     count_props = len(item_props)
     base = bases[count_props]
     name_max_value_prop = max(item_props.items(), key=lambda x: x[1])[0]
