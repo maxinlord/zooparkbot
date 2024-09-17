@@ -134,7 +134,7 @@ async def process_back_forge_items(
             )
         case "to_up_lvl_item_info":
             await query.message.edit_text(
-                text=await get_text_message("up_lvl_item_info"),
+                text=await get_text_message("up_lvl_item_info", usd=user.usd),
                 reply_markup=await ik_up_lvl_item(),
             )
         case "to_choice_item":
@@ -150,7 +150,7 @@ async def process_back_forge_items(
             )
         case "to_merge_items_info":
             await query.message.edit_text(
-                text=await get_text_message("merge_items_info"),
+                text=await get_text_message("merge_items_info", usd=user.usd),
                 reply_markup=await ik_choice_items_to_merge(),
             )
 
