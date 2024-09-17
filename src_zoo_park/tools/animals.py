@@ -94,25 +94,25 @@ async def get_total_number_animals(self: User) -> int:
     return sum(decoded_dict.values())
 
 
-async def _get_income_animal(
-    session: AsyncSession,
-    animal: Animal,
-    unity_idpk: int,
-):
-    animal_income = animal.income
-    if unity_idpk:
-        unity_idpk_top, animal_top = await tools.get_top_unity_by_animal(
-            session=session
-        )
-        if (
-            unity_idpk_top == unity_idpk
-            and animal.code_name == list(animal_top.keys())[0]
-        ):
-            bonus = await tools.get_value(
-                session=session, value_name="BONUS_FOR_AMOUNT_ANIMALS"
-            )
-            animal_income = animal_income * (1 + (bonus / 100))
-    return int(animal_income)
+# async def _get_income_animal(
+#     session: AsyncSession,
+#     animal: Animal,
+#     unity_idpk: int,
+# ):
+#     animal_income = animal.income
+#     if unity_idpk:
+#         unity_idpk_top, animal_top = await tools.get_top_unity_by_animal(
+#             session=session
+#         )
+#         if (
+#             unity_idpk_top == unity_idpk
+#             and animal.code_name == list(animal_top.keys())[0]
+#         ):
+#             bonus = await tools.get_value(
+#                 session=session, value_name="BONUS_FOR_AMOUNT_ANIMALS"
+#             )
+#             animal_income = animal_income * (1 + (bonus / 100))
+#     return int(animal_income)
 
 
 async def get_random_animal(session: AsyncSession, user_animals: str) -> Animal:

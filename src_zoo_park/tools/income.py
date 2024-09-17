@@ -9,7 +9,10 @@ async def income_(session: AsyncSession, user: User):
     unity_idpk = int(user.current_unity.split(":")[-1]) if user.current_unity else None
     animals: dict = json.loads(user.animals)
     income = await income_from_animal(
-        session=session, animals=animals, unity_idpk=unity_idpk
+        session=session,
+        animals=animals,
+        unity_idpk=unity_idpk,
+        info_about_items=user.info_about_items,
     )
     if v := tools.get_value_prop_from_iai(
         info_about_items=user.info_about_items, name_prop="general_income"
@@ -24,14 +27,17 @@ async def income_(session: AsyncSession, user: User):
     return int(income)
 
 
-async def income_from_animal(session: AsyncSession, animals: dict, unity_idpk: int):
+async def income_from_animal(
+    session: AsyncSession, animals: dict, unity_idpk: int, info_about_items: str
+):
     income = 0
     for animal, quantity in animals.items():
         animal = await session.scalar(select(Animal).where(Animal.code_name == animal))
-        animal_income = await tools._get_income_animal(
+        animal_income = await tools.get_income_animal(
             session=session,
             animal=animal,
             unity_idpk=unity_idpk,
+            info_about_items=info_about_items,
         )
         income += animal_income * quantity
     return int(income)
