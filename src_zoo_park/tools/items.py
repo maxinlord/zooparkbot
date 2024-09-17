@@ -470,11 +470,12 @@ async def merge_items(session: AsyncSession, id_item_1: str, id_item_2: str):
         del new_props["plug"]
     item_1.id_user = 0
     item_2.id_user = 0
+    name, emoji = gen_name_and_emoji_item(item_props=new_props)
     new_item = Item(
         id_item=tools.gen_key(12),
         id_user=0,
-        emoji=item_2.emoji,
-        name=gen_name_and_emoji_item(item_props=new_props),
+        emoji=emoji,
+        name=name,
         properties=json.dumps(new_props),
         rarity=get_rarity_by_amount_props(props=new_props),
     )
