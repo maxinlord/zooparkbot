@@ -441,6 +441,7 @@ async def process_viewing_to_merge_item(
         lvl_sum = 1 if lvl_sum == 0 else lvl_sum
         main_k = q_props + lvl_sum
         USD_TO_MERGE_ITEMS = USD_TO_MERGE_ITEMS * main_k
+        await state.update_data(USD_TO_MERGE_ITEMS=USD_TO_MERGE_ITEMS)
     await query.message.edit_text(
         text=await get_text_message(
             "chosen_items_to_merge",
@@ -464,9 +465,7 @@ async def fi_merge_items(
     state: FSMContext,
     user: User,
 ):
-    USD_TO_MERGE_ITEMS = await get_value(
-        session=session, value_name="USD_TO_MERGE_ITEMS"
-    )
+    USD_TO_MERGE_ITEMS = (await state.get_data())["USD_TO_MERGE_ITEMS"]
     if user.usd < USD_TO_MERGE_ITEMS:
         await query.answer(
             text=await get_text_message("not_enough_usd"), show_alert=True
@@ -493,6 +492,8 @@ async def fi_merge_items(
         await session.commit()
     t = await ft_item_props(item_props=new_item.properties)
     await query.message.edit_text(
-        text=await get_text_message("items_merged", name_=new_item.name_with_emoji, t=t),
+        text=await get_text_message(
+            "items_merged", name_=new_item.name_with_emoji, t=t
+        ),
         reply_markup=await ik_choice_items_to_merge(),
     )
