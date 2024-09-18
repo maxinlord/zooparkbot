@@ -120,11 +120,13 @@ async def get_daily_bonus(
         )
     ) and data.get("number_attempts_item", 1) > 0:
         await state.update_data(
-            number_attempts_item=v - 1,
+            number_attempts_item=v,
             bonus_type=data_bonus.bonus_type,
             result_func=data_bonus.result_func,
         )
-        mess_data["reply_markup"] = await ik_confirm_or_change_bonus()
+        mess_data["reply_markup"] = await ik_confirm_or_change_bonus(
+            number_attempts_item=v
+        )
     else:
         await state.clear()
         await state.set_state(UserState.main_menu)
@@ -175,8 +177,9 @@ async def change_bonus(
             result_func=data_bonus.result_func,
             number_attempts_item=number_attempts_item,
         )
-        print(data, _)
-        mess_data["reply_markup"] = await ik_confirm_or_change_bonus()
+        mess_data["reply_markup"] = await ik_confirm_or_change_bonus(
+            number_attempts_item=number_attempts_item
+        )
     else:
         user.bonus -= 1
         await state.clear()

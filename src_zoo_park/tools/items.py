@@ -1,4 +1,4 @@
-from sqlalchemy import and_, select
+from sqlalchemy import and_, func, select
 from db import Item, User
 import json
 import tools
@@ -505,3 +505,19 @@ def get_value_prop_from_iai(info_about_items: str | dict, name_prop: str):
     if isinstance(info_about_items, str):
         info_about_items = json.loads(info_about_items)
     return info_about_items.get(name_prop, None)
+
+
+async def gen_price_to_create_item(session: AsyncSession, id_user: int):
+    USD_TO_CREATE_ITEM = await tools.get_value(
+        session=session, value_name="USD_TO_CREATE_ITEM"
+    )
+    PERCENT_EXTRA_CHARGE_BY_ITEM = await tools.get_value(
+        session=session, value_name="PERCENT_EXTRA_CHARGE_BY_ITEM"
+    )
+    count_items = await session.scalar(
+        select(func.count(Item.id_item)).where(Item.id_user == id_user)
+    )
+    USD_TO_CREATE_ITEM = USD_TO_CREATE_ITEM * (
+        1 + (PERCENT_EXTRA_CHARGE_BY_ITEM / 100) * count_items
+    )
+    return int(USD_TO_CREATE_ITEM)

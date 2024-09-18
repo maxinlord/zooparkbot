@@ -706,25 +706,32 @@ async def ik_link_on_member_support(link: str, name: str):
     return builder.as_markup()
 
 
-async def ik_confirm_or_change_bonus():
+async def ik_confirm_or_change_bonus(number_attempts_item: int):
     builder = InlineKeyboardBuilder()
     builder.button(
         text=await tools.get_text_button("confirm_bonus"),
         callback_data="confirm_bonus",
     )
     builder.button(
-        text=await tools.get_text_button("change_bonus"), callback_data="change_bonus"
+        text=await tools.get_text_button("change_bonus", nai=number_attempts_item),
+        callback_data="change_bonus",
     )
     builder.adjust(1)
     return builder.as_markup()
 
 
-async def ik_create_item():
+async def ik_create_item(uci: int = None):
     builder = InlineKeyboardBuilder()
-    builder.button(
-        text=await tools.get_text_button("create_item"),
-        callback_data="create_item",
-    )
+    if uci:
+        builder.button(
+            text=await tools.get_text_button("create_item_with_price", uci=uci),
+            callback_data="create_item",
+        )
+    else:
+        builder.button(
+            text=await tools.get_text_button("create_item"),
+            callback_data="create_item",
+        )
     builder.button(
         text=await tools.get_text_button("back"),
         callback_data="to_forge_items_menu:back_forge_items",
@@ -861,7 +868,8 @@ async def ik_menu_items_for_merge(
         callback_data="left:turn_merge_items",
     )
     builder.button(
-        text=await tools.get_text_button("arrow_right"), callback_data="right:turn_merge_items"
+        text=await tools.get_text_button("arrow_right"),
+        callback_data="right:turn_merge_items",
     )
     if len(id_chosen_items) == 2:
         builder.button(

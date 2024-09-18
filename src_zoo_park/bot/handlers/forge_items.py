@@ -20,6 +20,7 @@ from tools import (
     update_prop_iai,
     merge_items,
     synchronize_info_about_items,
+    gen_price_to_create_item,
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -61,17 +62,8 @@ async def fi_create_item_info(
     state: FSMContext,
     user: User,
 ):
-    USD_TO_CREATE_ITEM = await get_value(
-        session=session, value_name="USD_TO_CREATE_ITEM"
-    )
-    PERCENT_EXTRA_CHARGE_BY_ITEM = await get_value(
-        session=session, value_name="PERCENT_EXTRA_CHARGE_BY_ITEM"
-    )
-    count_items = await session.scalar(
-        select(func.count(Item.id_item)).where(Item.id_user == user.id_user)
-    )
-    USD_TO_CREATE_ITEM = USD_TO_CREATE_ITEM * (
-        1 + (PERCENT_EXTRA_CHARGE_BY_ITEM / 100) * count_items
+    USD_TO_CREATE_ITEM = await gen_price_to_create_item(
+        session=session, id_user=user.id_user
     )
     await state.update_data(USD_TO_CREATE_ITEM=USD_TO_CREATE_ITEM)
     await query.message.edit_text(
@@ -105,6 +97,10 @@ async def fi_create_item(
         id_user=user.id_user,
     )
     await session.commit()
+    USD_TO_CREATE_ITEM = await gen_price_to_create_item(
+        session=session, id_user=user.id_user
+    )
+    await state.update_data(USD_TO_CREATE_ITEM=USD_TO_CREATE_ITEM)
     text_props = await ft_item_props(item_props=item_props)
     await query.message.edit_text(
         text=await get_text_message(
@@ -114,7 +110,7 @@ async def fi_create_item(
             rarity=translated_rarities[item_info["rarity"]],
             text_props=text_props,
         ),
-        reply_markup=await ik_create_item(),
+        reply_markup=await ik_create_item(uci=USD_TO_CREATE_ITEM),
     )
 
 
