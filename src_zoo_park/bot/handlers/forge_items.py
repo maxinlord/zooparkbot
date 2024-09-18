@@ -21,6 +21,8 @@ from tools import (
     merge_items,
     synchronize_info_about_items,
     gen_price_to_create_item,
+    fetch_and_parse_str_value,
+    calculate_percent_to_enhance,
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -65,10 +67,20 @@ async def fi_create_item_info(
     USD_TO_CREATE_ITEM = await gen_price_to_create_item(
         session=session, id_user=user.id_user
     )
+    common, rare, epic, mythical = await fetch_and_parse_str_value(
+        session=session,
+        value_name="WEIGHT_RARITIES_ITEM",
+        func_to_element=lambda x: int(float(x) * 100),
+    )
     await state.update_data(USD_TO_CREATE_ITEM=USD_TO_CREATE_ITEM)
     await query.message.edit_text(
         text=await get_text_message(
-            "item_probability_info", uci=int(USD_TO_CREATE_ITEM)
+            "item_probability_info",
+            uci=int(USD_TO_CREATE_ITEM),
+            common_weight=common,
+            rare_weight=rare,
+            epic_weight=epic,
+            mythical_weight=mythical,
         ),
         reply_markup=await ik_create_item(),
     )
@@ -129,8 +141,11 @@ async def process_back_forge_items(
                 reply_markup=await ik_forge_items_menu(),
             )
         case "to_up_lvl_item_info":
+            PERCENTAGE_DECREASE_ENHANCE_BY_LVL = await get_value(
+                session=session, value_name="PERCENTAGE_DECREASE_ENHANCE_BY_LVL"
+            )
             await query.message.edit_text(
-                text=await get_text_message("up_lvl_item_info", usd=user.usd),
+                text=await get_text_message("up_lvl_item_info", usd=user.usd, pd=PERCENTAGE_DECREASE_ENHANCE_BY_LVL),
                 reply_markup=await ik_up_lvl_item(),
             )
         case "to_choice_item":
@@ -145,8 +160,9 @@ async def process_back_forge_items(
                 ),
             )
         case "to_merge_items_info":
+            PERCENT_MERGE_BY_PROP= await get_value(session=session, value_name="PERCENT_MERGE_BY_PROP") 
             await query.message.edit_text(
-                text=await get_text_message("merge_items_info", usd=user.usd),
+                text=await get_text_message("merge_items_info", usd=user.usd, pm=PERCENT_MERGE_BY_PROP),
                 reply_markup=await ik_choice_items_to_merge(),
             )
 
@@ -158,8 +174,13 @@ async def fi_up_lvl_item_info(
     state: FSMContext,
     user: User,
 ):
+    PERCENTAGE_DECREASE_ENHANCE_BY_LVL = await get_value(
+        session=session, value_name="PERCENTAGE_DECREASE_ENHANCE_BY_LVL"
+    )
     await query.message.edit_text(
-        text=await get_text_message("up_lvl_item_info", usd=user.usd),
+        text=await get_text_message(
+            "up_lvl_item_info", usd=user.usd, pd=PERCENTAGE_DECREASE_ENHANCE_BY_LVL
+        ),
         reply_markup=await ik_up_lvl_item(),
     )
 
@@ -239,6 +260,9 @@ async def process_viewing_to_up_item(
         MAX_LVL_ITEM=MAX_LVL_ITEM,
         USD_TO_UP_ITEM=USD_TO_UP_ITEM,
     )
+    penh = await calculate_percent_to_enhance(
+        session=session, current_item_lvl=item.lvl
+    )
     props = await ft_item_props(item_props=item.properties)
     await query.message.edit_text(
         text=await get_text_message(
@@ -246,6 +270,7 @@ async def process_viewing_to_up_item(
             name_=item.name_with_emoji,
             description=props,
             utui=USD_TO_UP_ITEM_view,
+            penh=penh,
         ),
         reply_markup=await ik_upgrade_item(),
     )
@@ -297,6 +322,9 @@ async def fi_upgrade_item(
         updated_prop=updated_property,
         parameter=parameter,
     )
+    penh = await calculate_percent_to_enhance(
+        session=session, current_item_lvl=item.lvl
+    )
     await query.message.edit_text(
         text=await get_text_message(
             "item_upgraded",
@@ -304,6 +332,7 @@ async def fi_upgrade_item(
             item_lvl=item.lvl,
             text_props=text_props,
             utui=utui,
+            penh=penh,
         ),
         reply_markup=await ik_upgrade_item(),
     )
@@ -316,8 +345,9 @@ async def fi_merge_items_info(
     state: FSMContext,
     user: User,
 ):
+    PERCENT_MERGE_BY_PROP= await get_value(session=session, value_name="PERCENT_MERGE_BY_PROP") 
     await query.message.edit_text(
-        text=await get_text_message("merge_items_info", usd=user.usd),
+        text=await get_text_message("merge_items_info", usd=user.usd, pm=PERCENT_MERGE_BY_PROP),
         reply_markup=await ik_choice_items_to_merge(),
     )
 

@@ -41,9 +41,9 @@ async def scheduler() -> None:
     aioschedule.every(1).seconds.do(job_minute)
     aioschedule.every().day.at("10:30").do(reset_first_offer_bought)
     aioschedule.every().day.at("11:00").do(add_bonus_to_users)
-    # aioschedule.every().day.at("13:00").do(create_game_for_chat)
-    # aioschedule.every().day.at("16:30").do(create_game_for_chat)
-    # aioschedule.every().day.at("20:00").do(create_game_for_chat)
+    aioschedule.every().day.at("13:00").do(create_game_for_chat)
+    aioschedule.every().day.at("16:30").do(create_game_for_chat)
+    aioschedule.every().day.at("20:00").do(create_game_for_chat)
     aioschedule.every().day.at("21:00").do(verification_referrals)
     while True:
         await aioschedule.run_pending()

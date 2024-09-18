@@ -401,13 +401,18 @@ async def add_item_to_db(
 
 
 async def able_to_enhance(session: AsyncSession, current_item_lvl: int):
+    percent = await calculate_percent_to_enhance(
+        session=session, current_item_lvl=current_item_lvl
+    )
+    percent /= 100
+    return random.choices([True, False], [percent, 1 - percent])[0]
+
+async def calculate_percent_to_enhance(session: AsyncSession, current_item_lvl: int):
     PERCENTAGE_DECREASE_ENHANCE_BY_LVL = await tools.get_value(
         session=session, value_name="PERCENTAGE_DECREASE_ENHANCE_BY_LVL"
     )
     percent = 100 - (PERCENTAGE_DECREASE_ENHANCE_BY_LVL * current_item_lvl)
-    percent /= 100
-    return random.choices([True, False], [percent, 1 - percent])[0]
-
+    return percent
 
 async def random_up_property_item(session: AsyncSession, item_properties: dict | str):
     if isinstance(item_properties, str):

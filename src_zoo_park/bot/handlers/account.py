@@ -18,6 +18,7 @@ from tools import (
     factory_text_account_aviaries,
     ft_item_props,
     synchronize_info_about_items,
+    get_value,
 )
 from bot.states import UserState
 from bot.keyboards import ik_account_menu, ik_menu_items, ik_item_activate_menu, ik_back
@@ -259,4 +260,37 @@ async def process_viewing_recipes(
     await session.commit()
     await query.message.edit_reply_markup(
         reply_markup=await ik_item_activate_menu(is_activate=is_activate),
+    )
+
+
+@router.callback_query(UserState.main_menu, F.data == "sell_item")
+async def sell_item(
+    query: CallbackQuery,
+    session: AsyncSession,
+    state: FSMContext,
+    user: User,
+):
+    data = await state.get_data()
+    item: Item = await session.scalar(
+        select(Item).where(Item.id_item == data["id_item"])
+    )
+    item.id_user = 0
+    USD_TO_CREATE_ITEM = await get_value(
+        session=session, value_name="USD_TO_CREATE_ITEM"
+    )
+    PERCENT_MARKDOWN_ITEM = await get_value(
+        session=session, value_name="PERCENT_MARKDOWN_ITEM"
+    )
+    sell_price = int(USD_TO_CREATE_ITEM * (PERCENT_MARKDOWN_ITEM / 100))
+    user.usd += sell_price
+    await session.commit()
+    await query.answer(
+        text=await get_text_message("item_sold", sell_price=sell_price), show_alert=True
+    )
+    await query.message.edit_text(
+        text=await get_text_message("menu_items"),
+        reply_markup=await ik_menu_items(
+            session=session,
+            id_user=user.id_user,
+        ),
     )

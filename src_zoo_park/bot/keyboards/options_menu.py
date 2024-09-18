@@ -344,6 +344,10 @@ async def ik_item_activate_menu(is_activate: bool):
                 text=await tools.get_text_button("item_activate"),
                 callback_data="item_activate",
             )
+            builder.button(
+                text=await tools.get_text_button('sell_item'),
+                callback_data="sell_item"
+            )
     builder.button(
         text=await tools.get_text_button("back"), callback_data="to_items:back_account"
     )
