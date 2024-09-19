@@ -22,7 +22,7 @@ games = {
     "🏀": "basketball",
 }
 petard_emoji_effect = "5046509860389126442"
-types_bonus = ["rub", "usd", "aviary", "animal", "item", "paw_coins"]
+types_bonus = ["rub", "usd", "aviary", "animal", "paw_coins"]
 MAX_AMOUNT_GAMERS = 80
 prop_quantity_by_rarity = {
     "common": 1,
