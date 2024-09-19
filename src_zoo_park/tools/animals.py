@@ -1,6 +1,6 @@
 import random
 from sqlalchemy import select
-from db import Animal, Unity, User, Item
+from db import Animal, Unity, User
 
 import json
 import tools
