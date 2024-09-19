@@ -480,6 +480,10 @@ async def ft_item_props_for_update(
 
 
 def contains_any_pattern(text, patterns):
+    
+    if not isinstance(text, str):
+        return False
+    
     # Создаем автомат
     A = ahocorasick.Automaton()
     
