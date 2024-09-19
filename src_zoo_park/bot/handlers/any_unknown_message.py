@@ -6,11 +6,12 @@ from tools import get_text_message
 from sqlalchemy.ext.asyncio import AsyncSession
 from db import Photo, User
 from aiogram.fsm.context import FSMContext
-from tools import get_text_message, get_value
+from tools import get_text_message, get_value, contains_any_pattern, fetch_and_parse_str_value
 from bot.keyboards import ik_update_inline_rate
 from bot.filters import CompareDataByIndex
 from aiogram.filters import Command
 from aiogram.filters import StateFilter
+from config import CHAT_ID
 
 router = Router()
 flags = {"throttling_key": "default"}
@@ -36,11 +37,17 @@ async def photo_catch(message: Message, session: AsyncSession) -> None:
     await session.commit()
     await message.answer(text=await get_text_message("photo_saved"))
 
+@router.message(F.chat.id == CHAT_ID)
+async def any_unknown_message_test(message: Message, state: FSMContext, session: AsyncSession) -> None:
+    patterns = await fetch_and_parse_str_value(session=session, value_name='pattern_ban_word', func_to_element=str)
+    if contains_any_pattern(text=message.text, patterns=patterns):
+        await message.delete()
 
 @router.message()
 async def any_unknown_message(message: Message, state: FSMContext) -> None:
     await message.answer(text=await get_text_message("answer_on_unknown_message"))
     # print(message.effect_id)
+
 
 
 # @router.channel_post()

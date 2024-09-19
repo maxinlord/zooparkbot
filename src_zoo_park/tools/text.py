@@ -5,6 +5,7 @@ from init_db import _sessionmaker_for_func
 from cache import text_cache, button_cache
 from sqlalchemy.ext.asyncio import AsyncSession
 import tools
+import ahocorasick
 
 
 async def get_text_message(name: str, **kw) -> str:
@@ -475,3 +476,22 @@ async def ft_item_props_for_update(
             )
         t.append(pattern)
     return "".join(t)
+
+
+
+def contains_any_pattern(text, patterns):
+    # Создаем автомат
+    A = ahocorasick.Automaton()
+    
+    # Добавляем все шаблоны в автомат
+    for idx, pattern in enumerate(patterns):
+        A.add_word(pattern, (idx, pattern))
+    
+    # Строим автомат
+    A.make_automaton()
+    
+    # Поиск вхождений, если хотя бы одно найдено, возвращаем True
+    for end_idx, (idx, pattern) in A.iter(text):
+        return True  # Нашли хотя бы одно вхождение
+    
+    return False  # Ничего не нашли

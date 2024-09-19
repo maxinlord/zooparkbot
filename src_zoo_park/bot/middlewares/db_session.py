@@ -1,10 +1,11 @@
+from pprint import pprint
 from typing import Callable, Awaitable, Any
 
 from aiogram import BaseMiddleware
 from aiogram.types import Message
 from config import CHANNEL_ID, CHAT_ID, CHAT_SUPPORT_ID
 from sqlalchemy.ext.asyncio import async_sessionmaker
-
+from aiogram.filters import CommandObject
 
 class DBSessionMiddleware(BaseMiddleware):
 
@@ -17,7 +18,7 @@ class DBSessionMiddleware(BaseMiddleware):
         event: Message,
         data: dict[str, Any],
     ) -> Any:
-        if isinstance(event, Message) and event.chat.id in [CHAT_ID, CHANNEL_ID, CHAT_SUPPORT_ID]:
+        if data.get('command') and event.chat.id in [CHAT_ID, CHANNEL_ID, CHAT_SUPPORT_ID]:
             return
         async with self._session_pool() as session:
             data["session"] = session

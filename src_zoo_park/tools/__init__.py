@@ -115,6 +115,7 @@ from .text import (
     ft_bonus_info,
     ft_item_props,
     ft_item_props_for_update,
+    contains_any_pattern
 )
 
 from .transfer import in_used, add_user_to_used

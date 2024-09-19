@@ -33,5 +33,5 @@ async def view_nickname(session: AsyncSession, user: User):
             and_(Item.id_user == user.id_user, Item.is_active == True)
         )
     )
-    emojis = ''.join(emojis.all())
-    return f'{user.nickname} [{emojis}]' if emojis else user.nickname
+    emojis = "".join(emojis.all())
+    return f"{user.nickname} [{emojis}]" if emojis else user.nickname
