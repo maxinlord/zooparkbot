@@ -146,6 +146,7 @@ async def command_start_with_deep_link(
         await message.answer(
             text=await get_text_message("main_menu"), reply_markup=await rk_main_menu()
         )
+        await state.set_state(UserState.main_menu)
         return
     valid_arg = validate_command_arg(command.args)
     if not valid_arg:
