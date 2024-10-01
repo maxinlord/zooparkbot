@@ -15,7 +15,10 @@ async def get_all_animals(session: AsyncSession) -> list[Animal]:
 
 
 async def get_price_animal(
-    session: AsyncSession, animal_code_name: str, unity_idpk: int | None
+    session: AsyncSession,
+    animal_code_name: str,
+    unity_idpk: int | None,
+    info_about_items: str | dict,
 ) -> int:
     discount = (
         await _get_unity_data_for_price_animal(session=session, idpk_unity=unity_idpk)
@@ -25,6 +28,11 @@ async def get_price_animal(
     price = await session.scalar(
         select(Animal.price).where(Animal.code_name == animal_code_name)
     )
+    name_prop = f"{animal_code_name}:animal_sale"
+    if v := tools.get_value_prop_from_iai(
+        info_about_items=info_about_items, name_prop=name_prop
+    ):
+        price = price * (1 - v / 100)
     if discount:
         price *= 1 - (discount / 100)
     return int(price)
@@ -51,8 +59,10 @@ async def get_income_animal(
     info_about_items: str,
 ):
     animal_income = animal.income
-    name_prop = f'{animal.code_name}:animal_income'
-    if v:=tools.get_value_prop_from_iai(info_about_items=info_about_items, name_prop=name_prop):
+    name_prop = f"{animal.code_name}:animal_income"
+    if v := tools.get_value_prop_from_iai(
+        info_about_items=info_about_items, name_prop=name_prop
+    ):
         animal_income = animal_income * (1 + v / 100)
     if unity_idpk:
         unity_idpk_top, animal_top = await tools.get_top_unity_by_animal(

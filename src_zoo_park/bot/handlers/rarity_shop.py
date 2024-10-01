@@ -82,7 +82,10 @@ async def get_rarity_rshop(
     rarity = query.data.split(":")[0]
     unity_idpk = int(user.current_unity.split(":")[-1]) if user.current_unity else None
     animal_price = await get_price_animal(
-        session=session, animal_code_name=data["animal"] + rarity, unity_idpk=unity_idpk
+        session=session,
+        animal_code_name=data["animal"] + rarity,
+        unity_idpk=unity_idpk,
+        info_about_items=user.info_about_items,
     )
     animal = await session.scalar(
         select(Animal).where(Animal.code_name == data["animal"] + rarity)
@@ -155,6 +158,7 @@ async def rshop_switch_rarity(
         session=session,
         animal_code_name=data["animal"] + rarity,
         unity_idpk=data["unity_idpk"],
+        info_about_items=user.info_about_items
     )
     animal = await session.scalar(
         select(Animal).where(Animal.code_name == data["animal"] + rarity)
