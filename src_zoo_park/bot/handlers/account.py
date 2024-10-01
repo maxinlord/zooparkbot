@@ -21,7 +21,13 @@ from tools import (
     get_value,
 )
 from bot.states import UserState
-from bot.keyboards import ik_account_menu, ik_menu_items, ik_item_activate_menu, ik_back
+from bot.keyboards import (
+    ik_account_menu,
+    ik_menu_items,
+    ik_item_activate_menu,
+    ik_back,
+    ik_yes_or_not_sell_item,
+)
 from bot.filters import GetTextButton, CompareDataByIndex
 
 flags = {"throttling_key": "default"}
@@ -136,9 +142,12 @@ async def account_items(
         )
         return
     q_page = await count_page_items(session=session, amount_items=amount_items)
-    await state.update_data(page=1, q_page=q_page)
+    all_stat_props = await ft_item_props(item_props=user.info_about_items)
+    await state.update_data(page=1, q_page=q_page, all_stat_props=all_stat_props)
     await query.message.edit_text(
-        text=await get_text_message("menu_items"),
+        text=await get_text_message(
+            "menu_items", q_page=q_page, page=1, all_stat_props=all_stat_props
+        ),
         reply_markup=await ik_menu_items(
             session=session,
             id_user=user.id_user,
@@ -161,7 +170,13 @@ async def process_turn_right(
         page = page + 1 if page < data["q_page"] else 1
     await state.update_data(page=page)
     with contextlib.suppress(Exception):
-        await query.message.edit_reply_markup(
+        await query.message.edit_text(
+            text=await get_text_message(
+                "menu_items",
+                q_page=data["q_page"],
+                page=page,
+                all_stat_props=data["all_stat_props"],
+            ),
             reply_markup=await ik_menu_items(
                 session=session,
                 id_user=user.id_user,
@@ -194,7 +209,12 @@ async def process_back_to_menu(
         case "to_items":
             data = await state.get_data()
             await query.message.edit_text(
-                text=await get_text_message("menu_items"),
+                text=await get_text_message(
+                    "menu_items",
+                    q_page=data["q_page"],
+                    page=data["page"],
+                    all_stat_props=data["all_stat_props"],
+                ),
                 reply_markup=await ik_menu_items(
                     session=session, id_user=user.id_user, page=data["page"]
                 ),
@@ -209,8 +229,8 @@ async def process_viewing_item(
     user: User,
 ) -> None:
     id_item = query.data.split(":")[0]
-    await state.update_data(id_item=id_item)
     item: Item = await session.scalar(select(Item).where(Item.id_item == id_item))
+    await state.update_data(id_item=id_item)
     props = await ft_item_props(item_props=item.properties)
     await query.message.edit_text(
         text=await get_text_message(
@@ -258,6 +278,8 @@ async def process_viewing_recipes(
         items.remove(item)
     user.info_about_items = await synchronize_info_about_items(items=items)
     await session.commit()
+    all_stat_props = await ft_item_props(item_props=user.info_about_items)
+    await state.update_data(all_stat_props=all_stat_props)
     await query.message.edit_reply_markup(
         reply_markup=await ik_item_activate_menu(is_activate=is_activate),
     )
@@ -265,6 +287,30 @@ async def process_viewing_recipes(
 
 @router.callback_query(UserState.main_menu, F.data == "sell_item")
 async def sell_item(
+    query: CallbackQuery,
+    session: AsyncSession,
+    state: FSMContext,
+    user: User,
+):
+    await query.message.edit_reply_markup(
+        reply_markup=await ik_yes_or_not_sell_item(),
+    )
+
+
+@router.callback_query(UserState.main_menu, F.data == "sell_item_no")
+async def sell_item_no(
+    query: CallbackQuery,
+    session: AsyncSession,
+    state: FSMContext,
+    user: User,
+):
+    await query.message.edit_reply_markup(
+        reply_markup=await ik_item_activate_menu(is_activate=False),
+    )
+
+
+@router.callback_query(UserState.main_menu, F.data == "sell_item_yes")
+async def sell_item_yes(
     query: CallbackQuery,
     session: AsyncSession,
     state: FSMContext,
@@ -287,10 +333,27 @@ async def sell_item(
     await query.answer(
         text=await get_text_message("item_sold", sell_price=sell_price), show_alert=True
     )
+    amount_items = await session.scalar(
+        select(func.count()).select_from(Item).where(Item.id_user == user.id_user)
+    )
+    if amount_items == 0:
+        await query.message.edit_reply_markup(
+            reply_markup=await ik_back(custom_callback_data="to_account:back_account"),
+        )
+        return
+    q_page = await count_page_items(session=session, amount_items=amount_items)
+    await state.update_data(q_page=q_page)
+    page = data["page"] if data["page"] <= q_page else q_page
     await query.message.edit_text(
-        text=await get_text_message("menu_items"),
+        text=await get_text_message(
+            "menu_items",
+            q_page=q_page,
+            page=page,
+            all_stat_props=data["all_stat_props"],
+        ),
         reply_markup=await ik_menu_items(
             session=session,
             id_user=user.id_user,
+            page=page,
         ),
     )

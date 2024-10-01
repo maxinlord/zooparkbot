@@ -165,13 +165,13 @@ def gen_name_and_emoji_item(item_props: str | dict) -> tuple[str, str]:
     if isinstance(item_props, str):
         item_props = json.loads(item_props)
     prefixes = {
-        "animal1": "Зайцеобразный",
-        "animal3": "Пернатый",
-        "animal4": "Китообразный",
-        "animal7": "Парнокопытный",
-        "animal8": "Медвежий",
-        "animal9": "Псовый",
-        "animal10": "Кошачий",
+        "animal1": "Зайце",
+        "animal3": "Крыло",
+        "animal4": "Кито",
+        "animal7": "Копыто",
+        "animal8": "Медведе",
+        "animal9": "Пёсо",
+        "animal10": "Кошка",
     }
     bases = {
         1: "Камень",
@@ -208,7 +208,7 @@ def gen_name_and_emoji_item(item_props: str | dict) -> tuple[str, str]:
         if ":" not in prop:
             continue
         animal = prop.split(":")[0]
-        animal = animal.split('_')[0]
+        animal = animal.split("_")[0]
         prefix = prefixes.get(animal, "Живой")
     if not prefix:
         prefix = "Серый"
@@ -223,7 +223,7 @@ def gen_name_and_emoji_item(item_props: str | dict) -> tuple[str, str]:
     attribute = attributes[name_max_value_prop]
     emoji = emojis[attribute]
 
-    return f"{prefix} {base} {attribute}", emoji
+    return f"{prefix}-{base} {attribute}", emoji
 
 
 # Абстрактный базовый класс для свойства
@@ -407,12 +407,14 @@ async def able_to_enhance(session: AsyncSession, current_item_lvl: int):
     percent /= 100
     return random.choices([True, False], [percent, 1 - percent])[0]
 
+
 async def calculate_percent_to_enhance(session: AsyncSession, current_item_lvl: int):
     PERCENTAGE_DECREASE_ENHANCE_BY_LVL = await tools.get_value(
         session=session, value_name="PERCENTAGE_DECREASE_ENHANCE_BY_LVL"
     )
     percent = 100 - (PERCENTAGE_DECREASE_ENHANCE_BY_LVL * current_item_lvl)
     return percent
+
 
 async def random_up_property_item(session: AsyncSession, item_properties: dict | str):
     if isinstance(item_properties, str):
@@ -428,6 +430,8 @@ async def random_up_property_item(session: AsyncSession, item_properties: dict |
 
 async def synchronize_info_about_items(items: list[Item]):
     info_about_items = {}
+    properties_to_limit = [AviariesSaleProperty.name, ExchangeBankProperty.name]
+    limit = 80
     for item in items:
         properties: dict = json.loads(item.properties)
         for prop, value in properties.items():
@@ -435,15 +439,21 @@ async def synchronize_info_about_items(items: list[Item]):
                 info_about_items[prop] += value
             else:
                 info_about_items[prop] = value
+            if prop in properties_to_limit and info_about_items[prop] > limit:
+                info_about_items[prop] = limit
     return json.dumps(info_about_items)
 
 
 async def update_prop_iai(
     info_about_items: str | dict, prop: str, value: int
 ):  # iai - info about items
+    properties_to_limit = [AviariesSaleProperty.name, ExchangeBankProperty.name]
+    limit = 80
     if isinstance(info_about_items, str):
         info_about_items = json.loads(info_about_items)
     info_about_items[prop] += value
+    if prop in properties_to_limit and info_about_items[prop] > limit:
+        info_about_items[prop] = limit
     return json.dumps(info_about_items)
 
 
@@ -456,7 +466,7 @@ async def merge_items(session: AsyncSession, id_item_1: str, id_item_2: str):
     weight_true, weight_false = await calculate_weight_merge(
         session=session, count_props=count_props
     )
-    max_len = max(len(prop_1), len(prop_2))
+    max_len = min(len(prop_1), len(prop_2))
     new_props = defaultdict(int)
     for _ in range(max_len):
         if random.choices([True, False], [weight_true, weight_false])[0]:
@@ -522,7 +532,6 @@ async def gen_price_to_create_item(session: AsyncSession, id_user: int):
     count_items = await session.scalar(
         select(func.count(Item.id_item)).where(Item.id_user == id_user)
     )
-    USD_TO_CREATE_ITEM = USD_TO_CREATE_ITEM * (
-        1 + (PERCENT_EXTRA_CHARGE_BY_ITEM / 100) * count_items
-    )
-    return int(USD_TO_CREATE_ITEM)
+    percent = 1 + PERCENT_EXTRA_CHARGE_BY_ITEM / 100
+    compounded_price = USD_TO_CREATE_ITEM * (percent**count_items)
+    return int(compounded_price)

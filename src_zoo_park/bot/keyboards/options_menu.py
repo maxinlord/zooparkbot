@@ -61,7 +61,7 @@ async def ik_choice_animal_rmerchant(session: AsyncSession):
 
 
 async def ik_choice_quantity_animals_rmerchant(
-    session: AsyncSession, animal_price: int
+    session: AsyncSession, animal_price: int, magic_count_animal: int
 ):
     builder = InlineKeyboardBuilder()
     all_quantity_animals = await tools.fetch_and_parse_str_value(
@@ -74,6 +74,14 @@ async def ik_choice_quantity_animals_rmerchant(
                 "pattern_quantity_animals", qa=quantity_animal, pr=price
             ),
             callback_data=f"{quantity_animal}:choice_qa_rmerchant",
+        )
+    if magic_count_animal != 0:
+        pr = magic_count_animal * animal_price
+        builder.button(
+            text=await tools.get_text_button(
+                "pattern_quantity_animals_magic", qa=magic_count_animal, pr=pr
+            ),
+            callback_data=f"{magic_count_animal}:choice_qa_rmerchant",
         )
     builder.button(
         text=await tools.get_text_button("custom_quantity_animals"),
@@ -110,7 +118,9 @@ async def ik_choice_rarity_rshop():
     return builder.as_markup()
 
 
-async def ik_choice_quantity_animals_rshop(session: AsyncSession, animal_price: int):
+async def ik_choice_quantity_animals_rshop(
+    session: AsyncSession, animal_price: int, magic_count_animal: int
+):
     builder = InlineKeyboardBuilder()
     all_quantity_animals = await tools.fetch_and_parse_str_value(
         session=session, value_name="QUANTITIES_FOR_RARITY_SHOP"
@@ -130,6 +140,15 @@ async def ik_choice_quantity_animals_rshop(session: AsyncSession, animal_price: 
                 "pattern_quantity_animals_rshop", qa=quantity_animal, pr=price
             ),
             callback_data=f"{quantity_animal}:rshop_choice_quantity",
+        )
+    if magic_count_animal != 0:
+        all_quantity_animals.append(magic_count_animal)
+        pr = magic_count_animal * animal_price
+        builder.button(
+            text=await tools.get_text_button(
+                "pattern_quantity_animals_magic", qa=magic_count_animal, pr=pr
+            ),
+            callback_data=f"{magic_count_animal}:rshop_choice_quantity",
         )
     builder.button(
         text=await tools.get_text_button("custom_quantity_animals"),
@@ -345,8 +364,7 @@ async def ik_item_activate_menu(is_activate: bool):
                 callback_data="item_activate",
             )
             builder.button(
-                text=await tools.get_text_button('sell_item'),
-                callback_data="sell_item"
+                text=await tools.get_text_button("sell_item"), callback_data="sell_item"
             )
     builder.button(
         text=await tools.get_text_button("back"), callback_data="to_items:back_account"
@@ -887,4 +905,18 @@ async def ik_menu_items_for_merge(
     )
     builder.adjust(*row, *tail_row)
 
+    return builder.as_markup()
+
+
+async def ik_yes_or_not_sell_item():
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text=await tools.get_text_button("sell_item_yes"),
+        callback_data="sell_item_yes",
+    )
+    builder.button(
+        text=await tools.get_text_button("sell_item_no"),
+        callback_data="sell_item_no",
+    )
+    builder.adjust(2)
     return builder.as_markup()

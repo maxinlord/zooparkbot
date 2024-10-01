@@ -10,6 +10,7 @@ from .animals import (
     get_animal_with_random_rarity,
     gen_quantity_animals,
     get_average_price_animals,
+    magic_count_animal_for_kb
 )
 
 from .aviaries import (

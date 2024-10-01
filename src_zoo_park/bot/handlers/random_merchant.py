@@ -16,7 +16,8 @@ from tools import (
     get_remain_seats,
     add_animal,
     get_value,
-    find_integers
+    find_integers,
+    magic_count_animal_for_kb,
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -76,10 +77,7 @@ async def check_funds_and_seats(
     if user.usd < price:
         await query.answer(await get_text_message("not_enough_money"), show_alert=True)
         return False
-    remain_seats = await get_remain_seats(
-        session=session,
-        user=user
-    )
+    remain_seats = await get_remain_seats(session=session, user=user)
     if remain_seats < quantity_animals:
         await query.answer(await get_text_message("not_enough_seats"), show_alert=True)
         return False
@@ -196,11 +194,19 @@ async def choice_animal_to_buy(
     animal_price = await session.scalar(
         select(Animal.price).where(Animal.code_name == f"{animal}-")
     )
-    await state.update_data(code_name_animal=animal, animal_price=animal_price)
+    remain_seats = await get_remain_seats(session=session, user=user)
+    await state.update_data(
+        code_name_animal=animal, animal_price=animal_price, remain_seats=remain_seats
+    )
+    magic_count_animal = await magic_count_animal_for_kb(
+        remain_seats=remain_seats, balance=user.usd, price_per_one_animal=animal_price
+    )
     await query.message.edit_text(
         text=await get_text_message("merchant_choise_quantity_animal"),
         reply_markup=await ik_choice_quantity_animals_rmerchant(
-            session=session, animal_price=animal_price
+            session=session,
+            animal_price=animal_price,
+            magic_count_animal=magic_count_animal,
         ),
     )
 
@@ -220,10 +226,7 @@ async def choice_qa_to_buy(
     quantity = int(query.data.split(":")[0])
     finite_price = animal_price * quantity
 
-    remain_seats = await get_remain_seats(
-        session=session,
-        user=user
-    )
+    remain_seats = data["remain_seats"]
     if remain_seats < quantity:
         await query.answer(await get_text_message("not_enough_seats"), show_alert=True)
         return
@@ -372,10 +375,7 @@ async def get_custom_quantity_animals(
     if num < 1:
         await message.answer(text=await get_text_message("enter_digit"))
         return
-    remain_seats = await get_remain_seats(
-        session=session,
-        user=user
-    )
+    remain_seats = await get_remain_seats(session=session, user=user)
     if remain_seats < num:
         await message.answer(
             await get_text_message("not_enough_seats"), show_alert=True

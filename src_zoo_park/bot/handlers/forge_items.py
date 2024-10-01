@@ -299,7 +299,7 @@ async def fi_upgrade_item(
     user.amount_expenses_usd += USD_TO_UP_ITEM
     await session.commit()
     if not await able_to_enhance(session=session, current_item_lvl=data["item_lvl"]):
-        await query.answer(text=await get_text_message("not_updated"), show_alert=True)
+        await query.answer(text=await get_text_message("not_updated"), show_alert=False)
         return
     id_item = data["id_item"]
     item: Item = await session.scalar(select(Item).where(Item.id_item == id_item))

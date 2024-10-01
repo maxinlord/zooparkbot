@@ -17,7 +17,8 @@ from tools import (
     get_income_animal,
     add_animal,
     get_dict_animals,
-    find_integers
+    find_integers,
+    magic_count_animal_for_kb,
 )
 from bot.states import UserState
 from bot.keyboards import (
@@ -86,17 +87,26 @@ async def get_rarity_rshop(
     animal = await session.scalar(
         select(Animal).where(Animal.code_name == data["animal"] + rarity)
     )
+
+    animal_income = await get_income_animal(
+        session=session,
+        animal=animal,
+        unity_idpk=unity_idpk,
+        info_about_items=user.info_about_items,
+    )
+    await query.message.delete()
+    photo = FSInputFile(f"src_photos/{data.get('animal')}/{animal.code_name}.jpg")
+    remain_seats = await get_remain_seats(session=session, user=user)
+    magic_count_animal = await magic_count_animal_for_kb(
+        remain_seats=remain_seats, balance=user.usd, price_per_one_animal=animal_price
+    )
     await state.update_data(
         animal_price=animal_price,
         animal=data["animal"],
         rarity=rarity,
         unity_idpk=unity_idpk,
+        remain_seats=remain_seats,
     )
-    animal_income = await get_income_animal(
-        session=session, animal=animal, unity_idpk=unity_idpk, info_about_items=user.info_about_items
-    )
-    await query.message.delete()
-    photo = FSInputFile(f"src_photos/{data.get('animal')}/{animal.code_name}.jpg")
     msg = await query.message.answer_photo(
         photo=photo,
         caption=await get_text_message(
@@ -109,7 +119,9 @@ async def get_rarity_rshop(
             quantity_animals=(await get_dict_animals(user)).get(animal.code_name, 0),
         ),
         reply_markup=await ik_choice_quantity_animals_rshop(
-            session=session, animal_price=animal_price
+            session=session,
+            animal_price=animal_price,
+            magic_count_animal=magic_count_animal,
         ),
         protect_content=True,
     )
@@ -149,9 +161,17 @@ async def rshop_switch_rarity(
     )
     await state.update_data(rarity=rarity, animal_price=animal_price)
     animal_income = await get_income_animal(
-        session=session, animal=animal, unity_idpk=data["unity_idpk"], info_about_items=user.info_about_items
+        session=session,
+        animal=animal,
+        unity_idpk=data["unity_idpk"],
+        info_about_items=user.info_about_items,
     )
     photo = FSInputFile(f"src_photos/{data.get('animal')}/{animal.code_name}.jpg")
+    magic_count_animal = await magic_count_animal_for_kb(
+        remain_seats=data["remain_seats"],
+        balance=user.usd,
+        price_per_one_animal=animal_price,
+    )
     await query.message.edit_media(
         media=InputMediaPhoto(
             media=photo,
@@ -162,11 +182,15 @@ async def rshop_switch_rarity(
                 price=animal_price,
                 income=animal_income,
                 usd=user.usd,
-                quantity_animals=(await get_dict_animals(user)).get(animal.code_name, 0)
+                quantity_animals=(await get_dict_animals(user)).get(
+                    animal.code_name, 0
+                ),
             ),
         ),
         reply_markup=await ik_choice_quantity_animals_rshop(
-            session=session, animal_price=animal_price
+            session=session,
+            animal_price=animal_price,
+            magic_count_animal=magic_count_animal,
         ),
         protect_content=True,
     )
@@ -205,14 +229,11 @@ async def get_quantity_rshop(
     user: User,
 ):
     quantity_animal = int(query.data.split(":")[0])
-    remain_seats = await get_remain_seats(
-        session=session,
-        user=user
-    )
+    data = await state.get_data()
+    remain_seats = data["remain_seats"]
     if remain_seats < quantity_animal:
         await query.answer(await get_text_message("not_enough_seats"), show_alert=True)
         return
-    data = await state.get_data()
     finite_price = data["animal_price"] * quantity_animal
     if user.usd < finite_price:
         return await query.answer(
@@ -246,10 +267,10 @@ async def get_quantity_rshop(
                 info_about_items=user.info_about_items,
             ),
             usd=user.usd,
-            quantity_animals=(await get_dict_animals(user)).get(animal.code_name, 0)
+            quantity_animals=(await get_dict_animals(user)).get(animal.code_name, 0),
         ),
         reply_markup=await ik_choice_quantity_animals_rshop(
-            session=session, animal_price=data["animal_price"]
+            session=session, animal_price=data["animal_price"], magic_count_animal=0
         ),
         protect_content=True,
     )
@@ -290,9 +311,17 @@ async def back_to_choice_quantity_rshop(
     )
     unity_idpk = int(user.current_unity.split(":")[-1]) if user.current_unity else None
     animal_income = await get_income_animal(
-        session=session, animal=animal, unity_idpk=unity_idpk, info_about_items=user.info_about_items
+        session=session,
+        animal=animal,
+        unity_idpk=unity_idpk,
+        info_about_items=user.info_about_items,
     )
     photo = FSInputFile(f"src_photos/{data.get('animal')}/{animal.code_name}.jpg")
+    magic_count_animal = await magic_count_animal_for_kb(
+        remain_seats=data["remain_seats"],
+        balance=user.usd,
+        price_per_one_animal=data["animal_price"],
+    )
     msg = await message.answer_photo(
         photo=photo,
         caption=await get_text_message(
@@ -302,10 +331,12 @@ async def back_to_choice_quantity_rshop(
             price=data["animal_price"],
             income=animal_income,
             usd=user.usd,
-            quantity_animals=(await get_dict_animals(user)).get(animal.code_name, 0)
+            quantity_animals=(await get_dict_animals(user)).get(animal.code_name, 0),
         ),
         reply_markup=await ik_choice_quantity_animals_rshop(
-            session=session, animal_price=data["animal_price"]
+            session=session,
+            animal_price=data["animal_price"],
+            magic_count_animal=magic_count_animal,
         ),
     )
     await state.update_data(active_window=msg.message_id)
@@ -326,10 +357,7 @@ async def get_custom_quantity_animals_rshop(
     if quantity_animal < 1:
         await message.answer(text=await get_text_message("enter_digit"))
         return
-    remain_seats = await get_remain_seats(
-        session=session,
-        user=user
-    )
+    remain_seats = await get_remain_seats(session=session, user=user)
     if remain_seats < quantity_animal:
         await message.answer(await get_text_message("not_enough_seats"))
         return

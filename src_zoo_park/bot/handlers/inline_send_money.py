@@ -84,6 +84,17 @@ async def inline_send_money(
         )
         return await inline_query.answer(results=[r], cache_time=0)
     pieces = await find_integers(split_query[2])
+    if not pieces:
+        r = InlineQueryResultArticle(
+            id=str(random.randint(1, 100000)),
+            title=await get_text_message("attention"),
+            description=await get_text_message("enter_correct_split_to_send"),
+            thumbnail_url="https://avatars.yandex.net/get-music-content/2433207/64c60238.a.12011003-1/m1000x1000?webp=false",
+            input_message_content=InputTextMessageContent(
+                message_text=await get_text_message("error_enter_correct_split_to_send")
+            ),
+        )
+        return await inline_query.answer(results=[r], cache_time=0)
     if pieces == 0:
         r = InlineQueryResultArticle(
             id=str(random.randint(1, 100000)),

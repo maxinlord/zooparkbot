@@ -174,3 +174,9 @@ async def get_average_price_animals(session: AsyncSession, animals_code_name: se
     )
     prices = [row[0] for row in result]
     return sum(prices) / len(prices)
+
+
+async def magic_count_animal_for_kb(remain_seats, balance, price_per_one_animal):
+    count_enough_animal = balance // price_per_one_animal
+    count_enough_animal = min(count_enough_animal, remain_seats)
+    return count_enough_animal
