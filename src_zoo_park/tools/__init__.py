@@ -84,7 +84,7 @@ from .items import (
     synchronize_info_about_items,
     random_up_property_item,
     update_prop_iai,
-    merge_items
+    merge_items,
 )
 
 from .message import disable_not_main_window, m_choice_quantity_avi

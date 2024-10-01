@@ -297,6 +297,19 @@ class AnimalIncomeProperty(Property):
         return [name, value]
 
 
+class AnimalSaleProperty(Property):
+
+    name = "animal_sale"
+
+    async def generate(self, rarity: str):
+        name_property = f"{self.name}_{rarity}"
+        border_min, border_max = await get_borders_property(name_property=name_property)
+        value = random.randint(border_min, border_max)
+        animal = await AnimalIncomeProperty.get_random_animal()
+        name = f"{animal}:{self.name}"
+        return [name, value]
+
+
 class BonusChanger(Property):
 
     name = "bonus_changer"
@@ -376,6 +389,7 @@ async def create_item(session: AsyncSession):
         ExtraMoves(),
         LastChance(),
         BonusChanger(),
+        AnimalSaleProperty(),
     ]
     property_generator = PropertyGenerator(properties=properties, rarity=rarity)
     item_props = await property_generator.generate_properties()
@@ -430,7 +444,11 @@ async def random_up_property_item(session: AsyncSession, item_properties: dict |
 
 async def synchronize_info_about_items(items: list[Item]):
     info_about_items = {}
-    properties_to_limit = [AviariesSaleProperty.name, ExchangeBankProperty.name]
+    properties_to_limit = [
+        AviariesSaleProperty.name,
+        ExchangeBankProperty.name,
+        AnimalSaleProperty.name,
+    ]
     limit = 80
     for item in items:
         properties: dict = json.loads(item.properties)
