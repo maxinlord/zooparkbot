@@ -191,6 +191,7 @@ def gen_name_and_emoji_item(item_props: str | dict) -> tuple[str, str]:
         ExtraMoves().name: "Интеллекта",
         LastChance().name: "Ловкости",
         BonusChanger().name: "Удачи",
+        AnimalSaleProperty().name: "Скидки",
     }
 
     emojis = {
@@ -201,6 +202,7 @@ def gen_name_and_emoji_item(item_props: str | dict) -> tuple[str, str]:
         "Интеллекта": "🧠",
         "Ловкости": "⚡️",
         "Удачи": "🍀",
+        "Скидки": "📉",
     }
     prefix = None
     # Генерация названия предмета
