@@ -1,21 +1,22 @@
-from aiogram.types import Message, CallbackQuery
+from datetime import datetime
+
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from sqlalchemy.ext.asyncio import AsyncSession
+from aiogram.types import CallbackQuery, Message
+from bot.filters import GetTextButton
+from bot.keyboards import ik_bank, rk_exchange_bank, rk_main_menu
+from bot.states import UserState
 from db import User
+from sqlalchemy.ext.asyncio import AsyncSession
 from tools import (
-    get_text_message,
-    get_value,
-    get_rate,
-    mention_html_by_username,
-    ft_bank_exchange_info,
     exchange,
     find_integers,
+    ft_bank_exchange_info,
+    get_rate,
+    get_text_message,
+    get_value,
+    mention_html_by_username,
 )
-from bot.states import UserState
-from bot.keyboards import ik_bank, rk_exchange_bank, rk_main_menu
-from bot.filters import GetTextButton
-from datetime import datetime
 
 flags = {"throttling_key": "default"}
 router = Router()

@@ -1,15 +1,12 @@
-from aiogram.filters import CommandObject, Command
-from aiogram.types import Message, CallbackQuery
 from aiogram import Router
+from aiogram.filters import Command, CommandObject, StateFilter
 from aiogram.fsm.context import FSMContext
-from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
-from db import User, Value
-from aiogram.filters import StateFilter
 from aiogram.fsm.state import any_state
-from tools import income_, get_text_message, find_integers, fetch_and_parse_str_value
-from bot.keyboards import ik_choice_rate_calculator
-from bot.filters import CompareDataByIndex
+from aiogram.types import Message
+from db import User, Value
+from sqlalchemy import update
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import fetch_and_parse_str_value, get_text_message
 
 router = Router()
 flags = {"throttling_key": "default"}

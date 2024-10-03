@@ -1,10 +1,11 @@
 import json
 from datetime import datetime
-from typing import Callable, Awaitable, Any
+from typing import Any, Awaitable, Callable
+
 from aiogram import BaseMiddleware
 from aiogram.types import Message
-from sqlalchemy.ext.asyncio import AsyncSession
 from db import User
+from sqlalchemy.ext.asyncio import AsyncSession
 from tools import get_value
 
 
@@ -29,7 +30,7 @@ class RegMove(BaseMiddleware):
                 # Преобразуем словарь в список кортежей
                 items = list(decoded_dict.items())
                 # Удаляем первый элемент
-                first_item = items.pop(0)
+                items.pop(0)
                 # Преобразуем список кортежей обратно в словарь
                 decoded_dict = dict(items)
             user.history_moves = json.dumps(decoded_dict, ensure_ascii=False)

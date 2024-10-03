@@ -1,21 +1,21 @@
-from aiogram.types import Message, CallbackQuery
-from aiogram import Router, F
+from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from sqlalchemy.ext.asyncio import AsyncSession
-from db import User, Unity
-from tools import (
-    get_text_message,
-    disable_not_main_window,
-    check_condition_1st_lvl,
-    check_condition_2nd_lvl,
-    check_condition_3rd_lvl,
-    get_data_by_lvl_unity,
-)
-from bot.states import UserState
+from aiogram.types import CallbackQuery, Message
+from bot.filters import GetTextButton
 from bot.keyboards import (
     ik_update_level_unity,
 )
-from bot.filters import GetTextButton
+from bot.states import UserState
+from db import Unity, User
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import (
+    check_condition_1st_lvl,
+    check_condition_2nd_lvl,
+    check_condition_3rd_lvl,
+    disable_not_main_window,
+    get_data_by_lvl_unity,
+    get_text_message,
+)
 
 flags = {"throttling_key": "default"}
 router = Router()

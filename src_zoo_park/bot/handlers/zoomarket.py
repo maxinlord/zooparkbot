@@ -1,12 +1,12 @@
-from aiogram.types import Message
 from aiogram import Router
 from aiogram.fsm.context import FSMContext
-from sqlalchemy.ext.asyncio import AsyncSession
-from db import User
-from tools import get_text_message, disable_not_main_window
-from bot.keyboards import rk_zoomarket_menu, rk_main_menu
+from aiogram.types import Message
 from bot.filters import GetTextButton
+from bot.keyboards import rk_main_menu, rk_zoomarket_menu
 from bot.states import UserState
+from db import User
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import disable_not_main_window, get_text_message
 
 flags = {"throttling_key": "default"}
 router = Router()
@@ -21,7 +21,8 @@ async def zoomarket(
 ):
     await state.set_state(UserState.zoomarket_menu)
     await message.answer(
-        text=await get_text_message("zoomarket_menu"), reply_markup=await rk_zoomarket_menu()
+        text=await get_text_message("zoomarket_menu"),
+        reply_markup=await rk_zoomarket_menu(),
     )
 
 

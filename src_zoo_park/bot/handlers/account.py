@@ -1,40 +1,39 @@
+import asyncio
 import contextlib
 import json
-from aiogram.types import Message, CallbackQuery
+
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, Message
+from bot.filters import CompareDataByIndex, GetTextButton
+from bot.keyboards import (
+    ik_account_menu,
+    ik_back,
+    ik_item_activate_menu,
+    ik_menu_items,
+    ik_yes_or_not_sell_item,
+)
+from bot.states import UserState
+from db import Item, User
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from db import User, Item
 from tools import (
-    get_text_message,
     count_page_items,
     disable_not_main_window,
-    income_,
-    get_total_number_seats,
-    get_remain_seats,
-    get_total_number_animals,
     factory_text_account_animals,
     factory_text_account_aviaries,
     ft_item_props,
-    synchronize_info_about_items,
+    get_remain_seats,
+    get_text_message,
+    get_total_number_animals,
+    get_total_number_seats,
     get_value,
+    income_,
+    synchronize_info_about_items,
 )
-from bot.states import UserState
-from bot.keyboards import (
-    ik_account_menu,
-    ik_menu_items,
-    ik_item_activate_menu,
-    ik_back,
-    ik_yes_or_not_sell_item,
-)
-from bot.filters import GetTextButton, CompareDataByIndex
 
 flags = {"throttling_key": "default"}
 router = Router()
-
-
-import asyncio
 
 
 @router.message(UserState.main_menu, GetTextButton("account"), flags=flags)

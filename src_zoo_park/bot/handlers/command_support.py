@@ -1,18 +1,18 @@
-from aiogram.filters import CommandObject, Command
-from aiogram.types import Message
 from aiogram import Router
+from aiogram.filters import Command, CommandObject
 from aiogram.fsm.context import FSMContext
-from sqlalchemy.ext.asyncio import AsyncSession
-from db import User, MessageToSupport
-from tools import (
-    mention_html,
-    get_text_message,
-    get_photo_from_message,
-)
-from bot.keyboards import rk_cancel, rk_main_menu, ik_im_take
+from aiogram.types import Message
 from bot.filters import GetTextButton
+from bot.keyboards import ik_im_take, rk_cancel, rk_main_menu
 from bot.states import UserState
 from config import CHAT_SUPPORT_ID
+from db import MessageToSupport, User
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import (
+    get_photo_from_message,
+    get_text_message,
+    mention_html,
+)
 
 router = Router()
 flags = {"throttling_key": "default"}

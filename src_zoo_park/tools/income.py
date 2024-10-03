@@ -1,8 +1,10 @@
+import json
+
+from db import Animal, Unity, User
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from db import User, Animal, Unity, Item
+
 import tools
-import json
 
 
 async def income_(session: AsyncSession, user: User):
@@ -27,7 +29,7 @@ async def income_(session: AsyncSession, user: User):
     return int(income)
 
 
-async def   income_from_animal(
+async def income_from_animal(
     session: AsyncSession, animals: dict, unity_idpk: int, info_about_items: str
 ):
     income = 0

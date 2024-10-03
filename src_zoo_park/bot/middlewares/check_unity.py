@@ -1,16 +1,11 @@
-from datetime import datetime
-from pprint import pprint
-from typing import Callable, Awaitable, Any
+from typing import Any, Awaitable, Callable
 
 from aiogram import BaseMiddleware
-from aiogram.types import Message, ReplyKeyboardRemove, CallbackQuery
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from tools import get_text_message
+from aiogram.types import CallbackQuery, Message
 from bot.keyboards import rk_main_menu
 from bot.states import UserState
-from db import User, BlackList
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import get_text_message
 
 
 class CheckUnity(BaseMiddleware):
@@ -21,7 +16,6 @@ class CheckUnity(BaseMiddleware):
         event: Message,
         data: dict[str, Any],
     ) -> Any:
-        session: AsyncSession = data["session"]
         user = data["user"]
         if (
             user
@@ -35,7 +29,7 @@ class CheckUnity(BaseMiddleware):
                     text=await get_text_message("main_menu"),
                     reply_markup=await rk_main_menu(),
                 )
-            elif isinstance(event, CallbackQuery):
+            if isinstance(event, CallbackQuery):
                 await state.set_state(UserState.main_menu)
                 await event.message.delete()
                 return await event.message.answer(

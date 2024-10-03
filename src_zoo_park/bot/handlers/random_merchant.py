@@ -1,35 +1,36 @@
-from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove, ReactionTypeEmoji
+import asyncio
+import random
+
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from db import User, RandomMerchant, Animal
+from aiogram.types import CallbackQuery, Message, ReactionTypeEmoji, ReplyKeyboardRemove
 from aiogram.utils.chat_action import ChatActionSender
-from tools import (
-    get_text_message,
-    create_random_merchant,
-    gen_quantity_animals,
-    gen_price,
-    get_random_animal,
-    get_animal_with_random_rarity,
-    disable_not_main_window,
-    get_remain_seats,
-    add_animal,
-    get_value,
-    find_integers,
-    magic_count_animal_for_kb,
-)
-from bot.states import UserState
+from bot.filters import CompareDataByIndex, GetTextButton
 from bot.keyboards import (
-    rk_zoomarket_menu,
-    ik_merchant_menu,
     ik_choice_animal_rmerchant,
     ik_choice_quantity_animals_rmerchant,
+    ik_merchant_menu,
     rk_back,
+    rk_zoomarket_menu,
 )
-from bot.filters import GetTextButton, CompareDataByIndex
-import random
-import asyncio
+from bot.states import UserState
+from db import Animal, RandomMerchant, User
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import (
+    add_animal,
+    create_random_merchant,
+    disable_not_main_window,
+    find_integers,
+    gen_price,
+    gen_quantity_animals,
+    get_animal_with_random_rarity,
+    get_random_animal,
+    get_remain_seats,
+    get_text_message,
+    get_value,
+    magic_count_animal_for_kb,
+)
 
 flags = {"throttling_key": "default"}
 router = Router()
@@ -221,7 +222,6 @@ async def choice_qa_to_buy(
     user: User,
 ):
     data = await state.get_data()
-    animal: str = data["code_name_animal"]
     animal_price = data["animal_price"]
     quantity = int(query.data.split(":")[0])
     finite_price = animal_price * quantity
@@ -276,7 +276,7 @@ async def for_while_shell_callback(
 
 
 @router.message(UserState.for_while_shell)
-async def random_merchant_menu(
+async def random_merchant_menu_(
     message: Message,
     session: AsyncSession,
     state: FSMContext,
@@ -351,10 +351,17 @@ async def back_to_choice_quantity(
     await message.answer(
         text=await get_text_message("backed"), reply_markup=await rk_zoomarket_menu()
     )
+    magic_count_animal = await magic_count_animal_for_kb(
+        remain_seats=data["remain_seats"],
+        balance=user.usd,
+        price_per_one_animal=data["animal_price"],
+    )
     msg = await message.answer(
         text=await get_text_message("merchant_choise_quantity_animal"),
         reply_markup=await ik_choice_quantity_animals_rmerchant(
-            session=session, animal_price=data["animal_price"]
+            session=session,
+            animal_price=data["animal_price"],
+            magic_count_animal=magic_count_animal,
         ),
     )
     await state.update_data(active_window=msg.message_id)

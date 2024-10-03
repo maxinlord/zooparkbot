@@ -1,11 +1,13 @@
-from collections import defaultdict
 import html
 import re
-from sqlalchemy import select
-from init_db import _sessionmaker_for_func
+from collections import defaultdict
+
 from db import Unity, User
-import tools
+from init_db import _sessionmaker_for_func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+import tools
 
 
 async def shorten_whitespace_name_unity(name: str) -> str:
@@ -188,7 +190,8 @@ async def get_top_unity_by_animal(session: AsyncSession) -> tuple[int, dict]:
             animals_user = await tools.get_dict_animals(self=user)
             for animal_name, num_animal in animals_user.items():
                 animals[animal_name] += num_animal
-        if not animals: continue
+        if not animals:
+            continue
         max_animal = max(animals, key=animals.get)
         table_for_compare[unity.idpk] = {max_animal: animals[max_animal]}
     top_unity = max(
@@ -259,8 +262,11 @@ async def count_income_unity(session: AsyncSession, unity: Unity) -> int:
     return total_income
 
 
-async def fetch_unity(session: AsyncSession, idpk_unity: int | None) -> Unity | tools.UnityPlug:
+async def fetch_unity(
+    session: AsyncSession, idpk_unity: int | None
+) -> Unity | tools.UnityPlug:
     return await session.get(Unity, idpk_unity) if idpk_unity else tools.UnityPlug()
+
 
 def get_unity_idpk(current_unity: str | None):
     return current_unity.split(":")[-1] if current_unity else None

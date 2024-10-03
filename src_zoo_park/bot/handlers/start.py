@@ -1,33 +1,33 @@
 import contextlib
 from datetime import datetime
-from aiogram.filters import CommandStart, CommandObject
-from aiogram.types import Message, ReplyKeyboardRemove
+
 from aiogram import F, Router
+from aiogram.filters import CommandObject, CommandStart
 from aiogram.fsm.context import FSMContext
-from sqlalchemy.ext.asyncio import AsyncSession
+from aiogram.types import Message, ReplyKeyboardRemove
 from aiogram.utils.deep_linking import create_start_link
+from bot.keyboards import ik_button_play, ik_start_created_game, rk_main_menu
+from bot.states import UserState
+from config import ADMIN_ID, CHAT_ID
+from db import Game, Gamer, User
+from game_variables import translated_currencies
 from sqlalchemy import select
-from db import User, Game, Gamer, Item
+from sqlalchemy.ext.asyncio import AsyncSession
 from tools import (
+    factory_text_top_mini_game,
+    gamer_have_active_game,
+    get_amount_gamers,
+    get_gamer,
+    get_nickname_owner_game,
     get_text_message,
+    get_value,
+    get_value_prop_from_iai,
     has_special_characters_nickname,
     is_unique_nickname,
+    mention_html,
     shorten_whitespace_nickname,
     validate_command_arg,
-    get_amount_gamers,
-    factory_text_top_mini_game,
-    get_value,
-    get_nickname_owner_game,
-    get_gamer,
-    gamer_have_active_game,
-    mention_html,
-    get_value_prop_from_iai,
 )
-from bot.states import UserState
-from bot.keyboards import rk_main_menu, ik_start_created_game, ik_button_play
-from game_variables import translated_currencies
-from config import CHAT_ID, ADMIN_ID
-
 
 router = Router()
 

@@ -1,7 +1,8 @@
 import html
 import re
+
+from db import Item, User
 from sqlalchemy import and_, select
-from db import User, Item
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -30,7 +31,7 @@ async def is_unique_nickname(session: AsyncSession, nickname: str) -> bool:
 async def view_nickname(session: AsyncSession, user: User):
     emojis = await session.scalars(
         select(Item.emoji).where(
-            and_(Item.id_user == user.id_user, Item.is_active == True)
+            and_(Item.id_user == user.id_user, Item.is_active == True)  # noqa: E712
         )
     )
     emojis = "".join(emojis.all())

@@ -1,13 +1,14 @@
+import json
+import random
 import re
 import string
-import random
-
-from sqlalchemy import and_, or_, select
-import tools
-from sqlalchemy.ext.asyncio import AsyncSession
-from db import User
 from datetime import datetime, timedelta
-import json
+
+from db import User
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+import tools
 
 
 def gen_key(length):
@@ -63,21 +64,21 @@ async def fetch_and_parse_str_value(
         value_name=value_name,
         value_type="str",
     )
-    return [func_to_element(v.strip()) for v in value_str.split(",")]
+    return [func_to_element(v.strip()) for v in value_str.split(sep)]
 
 
 async def get_events_list(session: AsyncSession, id_user: int):
-    l = []
+    events_list = []
     events = await session.execute(
         select(User.id_user, User.nickname, User.history_moves).where(
-           User.id_user != id_user
+            User.id_user != id_user
         )
     )
     for id_user, nickname, history_moves in events.all():
         d: dict = json.loads(history_moves)
         d["mention_user"] = tools.mention_html(id_user, nickname)
-        l.append(d)
-    return l
+        events_list.append(d)
+    return events_list
 
 
 MESSAGE_LENGTH = 4096

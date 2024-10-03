@@ -1,6 +1,6 @@
-from sqlalchemy import insert, select
-from db import Value
 from cache import value_cache
+from db import Value
+from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 

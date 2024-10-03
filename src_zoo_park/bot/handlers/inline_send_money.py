@@ -1,28 +1,30 @@
+import random
+
+from aiogram import F, Router
 from aiogram.types import (
+    CallbackQuery,
+    ChosenInlineResult,
     InlineQuery,
     InlineQueryResultArticle,
     InputTextMessageContent,
     LinkPreviewOptions,
 )
-from aiogram.types import ChosenInlineResult, CallbackQuery
-from aiogram import F, Router
-import random
-from sqlalchemy.ext.asyncio import AsyncSession
-from db import User, TransferMoney
-from sqlalchemy import delete, select
-from bot.keyboards import ik_get_money, ik_get_money_one_piece
-from tools import (
-    get_text_message,
-    gen_key,
-    add_to_currency,
-    in_used,
-    add_user_to_used,
-    add_to_amount_expenses_currency,
-    get_currency,
-    find_integers,
-)
 from bot.filters import CompareDataByIndex, FindIntegers
+from bot.keyboards import ik_get_money, ik_get_money_one_piece
+from db import TransferMoney, User
 from game_variables import translated_currencies
+from sqlalchemy import delete, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import (
+    add_to_amount_expenses_currency,
+    add_to_currency,
+    add_user_to_used,
+    find_integers,
+    gen_key,
+    get_currency,
+    get_text_message,
+    in_used,
+)
 
 router = Router()
 

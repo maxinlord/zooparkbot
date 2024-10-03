@@ -1,13 +1,12 @@
-from typing import Callable, Awaitable, Any
+from typing import Any, Awaitable, Callable
 
 from aiogram import BaseMiddleware
-from aiogram.types import Message, CallbackQuery
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from tools import get_text_message
+from aiogram.types import CallbackQuery, Message
 from bot.keyboards import rk_main_menu
 from bot.states import UserState
 from db import Game
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import get_text_message
 
 
 class CheckGame(BaseMiddleware):
@@ -24,7 +23,7 @@ class CheckGame(BaseMiddleware):
         idpk_game = d.get("idpk_game")
         if idpk_game is None:
             return await handler(event, data)
-        
+
         game = await session.get(Game, idpk_game)
         if game.end and data.get("raw_state") == "UserState:game":
             await state.clear()
@@ -34,9 +33,8 @@ class CheckGame(BaseMiddleware):
 
             if isinstance(event, Message):
                 return await event.answer(text=text, reply_markup=reply_markup)
-            elif isinstance(event, CallbackQuery):
+            if isinstance(event, CallbackQuery):
                 await event.message.delete()
                 return await event.message.answer(text=text, reply_markup=reply_markup)
-        
-        return await handler(event, data)
 
+        return await handler(event, data)

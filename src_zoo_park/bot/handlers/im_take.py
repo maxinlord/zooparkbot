@@ -1,21 +1,22 @@
 import contextlib
-from aiogram.types import Message, CallbackQuery, ReplyParameters
+
 from aiogram import Router
 from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, Message, ReplyParameters
+from bot.filters import CompareDataByIndex
+from bot.keyboards import (
+    ik_confirm_or_cancel,
+    ik_im_take,
+    ik_link_on_member_support,
+)
+from bot.states import UserState
+from config import CHAT_SUPPORT_ID
+from db import MessageToSupport, User
 from sqlalchemy.ext.asyncio import AsyncSession
-from db import User, MessageToSupport
 from tools import (
     get_text_message,
     mention_html,
 )
-from bot.states import UserState
-from bot.keyboards import (
-    ik_im_take,
-    ik_confirm_or_cancel,
-    ik_link_on_member_support,
-)
-from bot.filters import CompareDataByIndex
-from config import CHAT_SUPPORT_ID
 
 flags = {"throttling_key": "default"}
 router = Router()
@@ -150,8 +151,7 @@ async def get_answer_on_question(
             chat_id=CHAT_SUPPORT_ID,
         ),
         reply_markup=await ik_link_on_member_support(
-            link=f"tg://user?id={user.id_user}",
-            name=message.from_user.full_name
+            link=f"tg://user?id={user.id_user}", name=message.from_user.full_name
         ),
     )
     user_to_answer = await session.get(User, message_to_support.idpk_user)

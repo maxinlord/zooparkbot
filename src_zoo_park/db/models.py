@@ -1,14 +1,14 @@
 import json
+
 from sqlalchemy import (
     BigInteger,
-    Float,
+    DateTime,
     String,
     Text,
-    DateTime,
 )
-from .base import Base
+from sqlalchemy.orm import Mapped, mapped_column
 
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from .base import Base
 
 
 class User(Base):

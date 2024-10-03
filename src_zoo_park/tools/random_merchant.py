@@ -1,11 +1,13 @@
 import asyncio
-from sqlalchemy import select
-from db import RandomMerchant, Animal, User
-from faker import Faker
-import random
-import tools
-from sqlalchemy.ext.asyncio import AsyncSession
 import json
+import random
+
+from db import Animal, RandomMerchant, User
+from faker import Faker
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+import tools
 
 # Создание экземпляра Faker для русского языка
 fake = Faker("ru_RU")
@@ -46,8 +48,6 @@ def calculate_price_with_discount(price: int, discount: int) -> int:
     elif discount < 0:
         price *= 1 - abs(discount) / 100
     return round(price)
-
-
 
 
 async def gen_price(session: AsyncSession, animals: str) -> int:

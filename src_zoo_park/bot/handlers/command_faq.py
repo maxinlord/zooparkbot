@@ -1,15 +1,14 @@
-from aiogram.filters import CommandObject, Command
-from aiogram.types import Message, LinkPreviewOptions
 from aiogram import Router
+from aiogram.filters import Command, CommandObject, StateFilter
 from aiogram.fsm.context import FSMContext
-from sqlalchemy.ext.asyncio import AsyncSession
-from db import User
-from aiogram.filters import StateFilter
 from aiogram.fsm.state import any_state
+from aiogram.types import LinkPreviewOptions, Message
+from config import FAQ_URL
+from db import User
+from sqlalchemy.ext.asyncio import AsyncSession
 from tools import (
     get_text_message,
 )
-from config import FAQ_URL
 
 router = Router()
 flags = {"throttling_key": "default"}

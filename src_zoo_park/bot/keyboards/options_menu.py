@@ -1,8 +1,8 @@
-from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
-from aiogram.types import SwitchInlineQueryChosenChat
-import tools
-from game_variables import rarities, colors_rarities
 from itertools import islice
+
+import tools
+from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
+from game_variables import colors_rarities, rarities
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -173,15 +173,6 @@ async def ik_buy_item(bought: bool):
         callback_data="to_witems_menu:back_witems",
     )
     builder.adjust(1)
-    return builder.as_markup()
-
-
-async def ik_choice_item(session: AsyncSession):
-    builder = InlineKeyboardBuilder()
-    all_items = await tools.get_all_name_items(session=session)
-    for name, code_name in all_items:
-        builder.button(text=name, callback_data=f"{code_name}:choice_item_witems")
-    builder.adjust(2)
     return builder.as_markup()
 
 

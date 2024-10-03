@@ -1,24 +1,24 @@
-from aiogram.types import Message, CallbackQuery
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from db import User, Item
-from tools import (
-    get_text_message,
-    disable_not_main_window,
-    add_to_currency,
-    add_to_amount_expenses_currency,
-    add_item,
-    get_currency,
+from aiogram.types import CallbackQuery, Message
+from bot.filters import CompareDataByIndex, GetTextButton
+from bot.keyboards import (
+    ik_buy_item,
+    ik_choice_item,
 )
 from bot.states import UserState
-from bot.keyboards import (
-    ik_choice_item,
-    ik_buy_item,
-)
-from bot.filters import GetTextButton, CompareDataByIndex
+from db import Item, User
 from game_variables import translated_currencies
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import (
+    add_item,
+    add_to_amount_expenses_currency,
+    add_to_currency,
+    disable_not_main_window,
+    get_currency,
+    get_text_message,
+)
 
 flags = {"throttling_key": "default"}
 router = Router()

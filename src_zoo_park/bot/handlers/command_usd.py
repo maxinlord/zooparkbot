@@ -1,16 +1,15 @@
-from aiogram.filters import CommandObject, Command
-from aiogram.types import Message
 from aiogram import Router
+from aiogram.filters import Command, CommandObject, StateFilter
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import any_state
+from aiogram.types import Message
+from config import ADMIN_ID
+from db import User
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from db import User
-from aiogram.filters import StateFilter
-from aiogram.fsm.state import any_state
 from tools import (
     mention_html,
 )
-from config import ADMIN_ID
 
 router = Router()
 flags = {"throttling_key": "default"}
@@ -47,4 +46,3 @@ async def command_reset(
     await message.answer(text)
     mention = mention_html(id_user=user.id_user, name=f"{amount} USD")
     await message.bot.send_message(chat_id=user_to_add.id_user, text=mention)
-

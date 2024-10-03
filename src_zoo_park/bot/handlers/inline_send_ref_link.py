@@ -1,14 +1,14 @@
+from aiogram import F, Router
 from aiogram.types import (
+    ChosenInlineResult,
     InlineQuery,
     InlineQueryResultArticle,
     InputTextMessageContent,
 )
-from aiogram.types import ChosenInlineResult
-from aiogram import F, Router
 from aiogram.utils.deep_linking import create_start_link
-from sqlalchemy.ext.asyncio import AsyncSession
-from db import User
 from bot.keyboards import ik_start_game
+from db import User
+from sqlalchemy.ext.asyncio import AsyncSession
 from tools import get_text_message
 
 router = Router()

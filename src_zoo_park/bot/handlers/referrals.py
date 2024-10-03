@@ -1,16 +1,11 @@
-from aiogram.types import CallbackQuery
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from sqlalchemy.ext.asyncio import AsyncSession
-from db import User
-from tools import (
-    get_text_message,
-    get_referrals,
-    get_value,
-    get_verify_referrals
-)
-from bot.states import UserState
+from aiogram.types import CallbackQuery
 from bot.keyboards import ik_referrals_menu
+from bot.states import UserState
+from db import User
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import get_referrals, get_text_message, get_value, get_verify_referrals
 
 router = Router()
 
@@ -32,7 +27,7 @@ async def referrals(
             qr=quantity_referrals,
             qvr=quantity_verify_referrals,
             rb=received_bonus,
-            b=bonus
+            b=bonus,
         ),
         reply_markup=await ik_referrals_menu(
             promo_text=await get_text_message("promo_text")

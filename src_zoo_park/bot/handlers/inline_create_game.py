@@ -1,33 +1,35 @@
+import random
+from datetime import datetime, timedelta
+
+from aiogram import F, Router
 from aiogram.types import (
+    ChosenInlineResult,
     InlineQuery,
     InlineQueryResultArticle,
     InputTextMessageContent,
 )
-from aiogram.types import ChosenInlineResult
-from aiogram import F, Router
 from aiogram.utils.deep_linking import create_start_link
-import random
-from sqlalchemy.ext.asyncio import AsyncSession
-from db import User, Game
-from sqlalchemy import delete
 from bot.keyboards import (
     ik_start_created_game,
 )
+from db import Game, User
+from game_variables import games, translated_currencies
+from sqlalchemy import delete
+from sqlalchemy.ext.asyncio import AsyncSession
 from tools import (
-    get_text_message,
-    gen_key,
-    add_to_currency,
     add_to_amount_expenses_currency,
+    add_to_currency,
+    find_integers,
+    gen_key,
     get_currency,
-    mention_html_by_username,
+    get_text_message,
     get_value,
-    find_integers
+    mention_html_by_username,
 )
-from game_variables import translated_currencies, games
-from datetime import datetime, timedelta
 
 router = Router()
 MAX_AMOUNT_GAMERS = 80
+
 
 async def create_inline_query_result(
     title_key: str,
@@ -102,9 +104,14 @@ async def inline_game_three_pm(
         )
         return await inline_query.answer(results=[r], cache_time=0)
 
-    if not await find_integers(split_query[2]) or await find_integers(split_query[2]) < 1:
+    if (
+        not await find_integers(split_query[2])
+        or await find_integers(split_query[2]) < 1
+    ):
         description_key = (
-            "enter_prise_small" if await find_integers(split_query[2]) else "enter_prise_for_win"
+            "enter_prise_small"
+            if await find_integers(split_query[2])
+            else "enter_prise_for_win"
         )
         message_text_key = (
             "error_enter_prise_small"
@@ -153,7 +160,9 @@ async def inline_game_three_pm(
         )
         return await inline_query.answer(results=[r], cache_time=0)
 
-    SEC_TO_EXPIRE_GAME = await get_value(session=session, value_name="SEC_TO_EXPIRE_GAME")
+    SEC_TO_EXPIRE_GAME = await get_value(
+        session=session, value_name="SEC_TO_EXPIRE_GAME"
+    )
     game = Game(
         id_game=f"game_{gen_key(length=12)}",
         idpk_user=user.idpk,

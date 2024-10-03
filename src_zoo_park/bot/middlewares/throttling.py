@@ -20,8 +20,8 @@ class ThrottlingMiddleware(BaseMiddleware):
         throttling_key = get_flag(data, "throttling_key")
         if throttling_key is not None:
             cache = self.caches.get(throttling_key)
-            if cache is not None and event.chat.id in cache:
-                return
-            elif cache is not None:
+            if cache is not None:
+                if event.chat.id in cache:
+                    return
                 cache[event.chat.id] = None
         return await handler(event, data)

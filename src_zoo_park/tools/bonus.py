@@ -1,11 +1,12 @@
-from sqlalchemy import select
-from db import User, Value, Aviary, Item, Animal
 import random
-import tools
 from dataclasses import dataclass
 
-from sqlalchemy.ext.asyncio import AsyncSession
+from db import Aviary, User
 from game_variables import types_bonus
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+import tools
 
 
 async def referral_bonus(session: AsyncSession, referral: User):
@@ -84,12 +85,12 @@ async def handle_animal_bonus(
     return animal.as_dict(), amount_to_add
 
 
-async def handle_item_bonus(user: User, session) -> dict:
-    items = list(
-        await session.scalars(select(Item).where(Item.currency != "paw_coins"))
-    )
-    item_to_add: Item = random.choice(items)
-    return item_to_add.as_dict()
+# async def handle_item_bonus(user: User, session) -> dict:
+#     items = list(
+#         await session.scalars(select(Item).where(Item.currency != "paw_coins"))
+#     )
+#     item_to_add: Item = random.choice(items)
+#     return item_to_add.as_dict()
 
 
 @dataclass
@@ -113,19 +114,19 @@ async def get_bonus(session: AsyncSession, user: User) -> DataBonus:
             bonus_type = random.choices(population=types_bonus, weights=weights)[0]
         else:
             args["remain_seats"] = remain_seats
-    if bonus_type == "item":
-        item = await handle_item_bonus(**args)
-        if item["code_name"] in user.info_about_items:
-            return DataBonus(
-                bonus_type=item["currency"], result_func=item["price"] // 2
-            )
+    # if bonus_type == "item":
+    #     item = await handle_item_bonus(**args)
+    #     if item["code_name"] in user.info_about_items:
+    #         return DataBonus(
+    #             bonus_type=item["currency"], result_func=item["price"] // 2
+    #         )
     handlers = {
         "rub": handle_rub_bonus,
         "usd": handle_usd_bonus,
         "paw_coins": handle_paw_coins,
         "aviary": handle_aviary_bonus,
         "animal": handle_animal_bonus,
-        "item": handle_item_bonus,
+        # "item": handle_item_bonus,
     }
     return DataBonus(
         bonus_type=bonus_type,
@@ -153,11 +154,11 @@ async def apply_bonus(session: AsyncSession, user: User, data_bonus: DataBonus):
                 code_name_animal=data_bonus.result_func[0]["code_name"],
                 quantity=data_bonus.result_func[1],
             )
-        case "item":
-            await tools.add_item(
-                session=session,
-                self=user,
-                code_name_item=data_bonus.result_func["code_name"],
-            )
+        # case "item":
+        #     await tools.add_item(
+        #         session=session,
+        #         self=user,
+        #         code_name_item=data_bonus.result_func["code_name"],
+        #     )
         case "paw_coins":
             user.paw_coins += data_bonus.result_func

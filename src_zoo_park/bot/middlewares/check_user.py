@@ -1,14 +1,13 @@
 from datetime import datetime
 from pprint import pprint
-from typing import Callable, Awaitable, Any
+from typing import Any, Awaitable, Callable
 
 from aiogram import BaseMiddleware
 from aiogram.types import Message, ReplyKeyboardRemove
+from db import BlackList, User
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from tools import get_text_message
-from db import User, BlackList
 
 
 class CheckUser(BaseMiddleware):

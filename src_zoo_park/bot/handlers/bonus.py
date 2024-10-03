@@ -1,23 +1,23 @@
-from aiogram.types import Message, CallbackQuery
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from sqlalchemy.ext.asyncio import AsyncSession
+from aiogram.types import CallbackQuery, Message
+from bot.filters import GetTextButton
+from bot.keyboards import ik_confirm_or_change_bonus, ik_get_bonus
+from bot.states import UserState
+from config import CHANNEL_ID, CHANNEL_URL, CHAT_ID, CHAT_URL
 from db import User
+from sqlalchemy.ext.asyncio import AsyncSession
 from tools import (
-    get_text_message,
-    disable_not_main_window,
-    bonus_for_sub_on_chat,
-    bonus_for_sub_on_channel,
-    get_bonus,
-    apply_bonus,
     DataBonus,
+    apply_bonus,
+    bonus_for_sub_on_channel,
+    bonus_for_sub_on_chat,
+    disable_not_main_window,
     ft_bonus_info,
+    get_bonus,
+    get_text_message,
     get_value_prop_from_iai,
 )
-from bot.keyboards import ik_get_bonus, ik_confirm_or_change_bonus
-from bot.states import UserState
-from bot.filters import GetTextButton
-from config import CHANNEL_ID, CHAT_ID, CHANNEL_URL, CHAT_URL
 
 flags = {"throttling_key": "default"}
 router = Router()

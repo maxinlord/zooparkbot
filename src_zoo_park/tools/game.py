@@ -1,7 +1,8 @@
 from aiogram import Bot
-from sqlalchemy import and_, select
 from db import Game, Gamer, User
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 import tools
 
 
@@ -54,7 +55,7 @@ async def get_gamer(session: AsyncSession, idpk_gamer: int, id_game: str):
 async def gamer_have_active_game(session: AsyncSession, idpk_gamer: int):
     gamer = await session.scalar(
         select(Gamer).where(
-            and_(Gamer.idpk_gamer == idpk_gamer, Gamer.game_end == False)
+            and_(Gamer.idpk_gamer == idpk_gamer, Gamer.game_end == False)  # noqa: E712
         )
     )
     return bool(gamer)

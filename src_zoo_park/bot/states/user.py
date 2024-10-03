@@ -1,4 +1,4 @@
-from aiogram.fsm.state import StatesGroup, State
+from aiogram.fsm.state import State, StatesGroup
 
 
 class UserState(StatesGroup):
@@ -17,7 +17,7 @@ class UserState(StatesGroup):
     send_mess_to_support = State()
     answer_on_question = State()
 
+
 class AdminState(StatesGroup):
     main = State()
     get_mess_mailing = State()
-    

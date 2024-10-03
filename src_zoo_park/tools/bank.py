@@ -1,11 +1,10 @@
 import asyncio
+
+from db import User, Value
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
-from db import User, Value, Aviary, Item
-from sqlalchemy import select, update
-import random
+
 import tools
-import json
-from datetime import datetime
 
 
 async def get_rate(session: AsyncSession, user: User):

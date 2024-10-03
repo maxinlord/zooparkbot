@@ -1,16 +1,12 @@
-from aiogram.filters import CommandObject, Command
-from aiogram.types import Message
 from aiogram import Router
+from aiogram.filters import Command, CommandObject, StateFilter
 from aiogram.fsm.context import FSMContext
-from sqlalchemy.ext.asyncio import AsyncSession
-from db import User
-from aiogram.filters import StateFilter
 from aiogram.fsm.state import any_state
-from tools import (
-    get_events_list,
-    sort_events_batch
-)
+from aiogram.types import Message
 from config import ADMIN_ID
+from db import User
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import get_events_list, sort_events_batch
 
 router = Router()
 flags = {"throttling_key": "default"}
@@ -36,5 +32,3 @@ async def command_history(
         await message.answer(text="Нет событий")
         return
     await message.answer(text=sev)
-    
-

@@ -1,41 +1,40 @@
 import contextlib
-import json
-from aiogram import Bot
-from sqlalchemy import delete, select, update, and_
-from db import User, RandomMerchant, Value, RequestToUnity, Game, Animal, Gamer, Item
-from sqlalchemy.ext.asyncio import AsyncSession
-from aiogram.utils.deep_linking import create_start_link
-from init_db import _sessionmaker_for_func
-from tools import (
-    referrer_bonus,
-    referral_bonus,
-    get_text_message,
-    get_value,
-    income_,
-    get_user_where_max_score,
-    add_to_currency,
-    factory_text_top_mini_game,
-    mention_html_by_username,
-    get_weight_rate_bank,
-    get_increase_rate_bank,
-    gen_key,
-    get_nickname_owner_game,
-    get_first_three_places,
-    get_total_moves_game,
-    get_amount_gamers,
-    fetch_and_parse_str_value,
-)
-from bot.keyboards import rk_main_menu, ik_start_created_game
 import random
 from datetime import datetime, timedelta
+
+from aiogram.utils.deep_linking import create_start_link
+from bot.keyboards import ik_start_created_game, rk_main_menu
+from config import CHAT_ID
+from db import Game, Gamer, RandomMerchant, RequestToUnity, User, Value
 from game_variables import (
-    translated_currencies,
+    MAX_AMOUNT_GAMERS,
     games,
     petard_emoji_effect,
-    MAX_AMOUNT_GAMERS,
+    translated_currencies,
 )
-from config import CHAT_ID
 from init_bot import bot
+from init_db import _sessionmaker_for_func
+from sqlalchemy import and_, delete, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import (
+    add_to_currency,
+    factory_text_top_mini_game,
+    fetch_and_parse_str_value,
+    gen_key,
+    get_amount_gamers,
+    get_first_three_places,
+    get_increase_rate_bank,
+    get_nickname_owner_game,
+    get_text_message,
+    get_total_moves_game,
+    get_user_where_max_score,
+    get_value,
+    get_weight_rate_bank,
+    income_,
+    mention_html_by_username,
+    referral_bonus,
+    referrer_bonus,
+)
 
 
 async def job_sec() -> None:
@@ -204,10 +203,10 @@ async def create_game_for_chat():
 
 
 async def ender_minigames(session: AsyncSession):
-    games = await session.scalars(
+    all_games = await session.scalars(
         select(Game).where(and_(Game.end == False, Game.last_update_mess == True))
     )
-    for game in games:
+    for game in all_games:
         game.end = True
         await session.execute(
             update(Gamer).where(Gamer.id_game == game.id_game).values(game_end=True)
@@ -220,10 +219,10 @@ async def ender_minigames(session: AsyncSession):
 
 
 async def updater_mess_minigame(session: AsyncSession):
-    games = (
+    all_games = (
         await session.scalars(select(Game).where(Game.last_update_mess == False))
     ).all()
-    for game in games:
+    for game in all_games:
         if game.end_date > datetime.now() and (
             await get_total_moves_game(session=session, game=game) != 0
             or await get_amount_gamers(session=session, game=game) != game.amount_gamers

@@ -1,30 +1,31 @@
 import asyncio
+
 import aioschedule
-from db import Base
-from init_db_redis import redis
+import tools
 from aiogram import Bot, Dispatcher
-from aiogram.types import BotCommand
-from init_db import _sessionmaker, _engine
-from bot.handlers import setup_message_routers
 from aiogram.fsm.storage.redis import RedisStorage
+from aiogram.types import BotCommand
+from bot.handlers import setup_message_routers
 from bot.middlewares import (
-    DBSessionMiddleware,
-    CheckUser,
+    CheckGame,
     CheckUnity,
+    CheckUser,
+    DBSessionMiddleware,
     RegMove,
     ThrottlingMiddleware,
-    CheckGame,
 )
-from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
+from db import Base
+from init_bot import bot
+from init_db import _engine, _sessionmaker
+from init_db_redis import redis
 from jobs import (
-    verification_referrals,
-    reset_first_offer_bought,
-    job_minute,
     add_bonus_to_users,
     create_game_for_chat,
+    job_minute,
+    reset_first_offer_bought,
+    verification_referrals,
 )
-import tools
-from init_bot import bot
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 
 async def on_startup(_engine: AsyncEngine) -> None:

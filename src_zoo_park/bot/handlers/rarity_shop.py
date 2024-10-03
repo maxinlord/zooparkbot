@@ -1,35 +1,35 @@
+from aiogram import F, Router
+from aiogram.fsm.context import FSMContext
 from aiogram.types import (
-    Message,
     CallbackQuery,
     FSInputFile,
     InputMediaPhoto,
+    Message,
 )
-from aiogram import F, Router
-from aiogram.fsm.context import FSMContext
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from db import User, Animal
-from tools import (
-    get_text_message,
-    disable_not_main_window,
-    get_remain_seats,
-    get_price_animal,
-    get_income_animal,
-    add_animal,
-    get_dict_animals,
-    find_integers,
-    magic_count_animal_for_kb,
+from bot.filters import CompareDataByIndex, GetTextButton
+from bot.keyboards import (
+    ik_choice_animal_rshop,
+    ik_choice_quantity_animals_rshop,
+    ik_choice_rarity_rshop,
+    rk_back,
+    rk_zoomarket_menu,
 )
 from bot.states import UserState
-from bot.keyboards import (
-    rk_zoomarket_menu,
-    rk_back,
-    ik_choice_animal_rshop,
-    ik_choice_rarity_rshop,
-    ik_choice_quantity_animals_rshop,
-)
-from bot.filters import GetTextButton, CompareDataByIndex
+from db import Animal, User
 from game_variables import rarities
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import (
+    add_animal,
+    disable_not_main_window,
+    find_integers,
+    get_dict_animals,
+    get_income_animal,
+    get_price_animal,
+    get_remain_seats,
+    get_text_message,
+    magic_count_animal_for_kb,
+)
 
 flags = {"throttling_key": "default"}
 router = Router()
@@ -158,7 +158,7 @@ async def rshop_switch_rarity(
         session=session,
         animal_code_name=data["animal"] + rarity,
         unity_idpk=data["unity_idpk"],
-        info_about_items=user.info_about_items
+        info_about_items=user.info_about_items,
     )
     animal = await session.scalar(
         select(Animal).where(Animal.code_name == data["animal"] + rarity)

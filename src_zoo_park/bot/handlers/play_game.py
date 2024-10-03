@@ -1,27 +1,28 @@
+import asyncio
 import contextlib
+
+from aiogram import F, Router
+from aiogram.fsm.context import FSMContext
 from aiogram.types import (
     CallbackQuery,
 )
-from aiogram import F, Router
-from aiogram.fsm.context import FSMContext
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import and_, select
 from aiogram.utils.deep_linking import create_start_link
-from db import User, Game, Gamer
-from tools import (
-    get_text_message,
-    get_amount_gamers,
-    factory_text_top_mini_game,
-    get_value_prop_from_iai
-)
-from bot.states import UserState
 from bot.keyboards import (
-    rk_main_menu,
     ik_button_play,
     ik_start_created_game,
+    rk_main_menu,
 )
-import asyncio
+from bot.states import UserState
 from config import CHAT_ID
+from db import Game, Gamer, User
+from sqlalchemy import and_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import (
+    factory_text_top_mini_game,
+    get_amount_gamers,
+    get_text_message,
+    get_value_prop_from_iai,
+)
 
 router = Router()
 petard_emoji_effect = "5046509860389126442"
@@ -68,7 +69,9 @@ async def play_game(
         await query.message.answer(
             text=await get_text_message("you_got", value_dice=value_dice)
         )
-        if v:=get_value_prop_from_iai(info_about_items=user.info_about_items, name_prop="last_chance"):
+        if v := get_value_prop_from_iai(
+            info_about_items=user.info_about_items, name_prop="last_chance"
+        ):
             gamer.score += v
             await query.message.answer(
                 text=await get_text_message("you_got_bonus_item", value=v)

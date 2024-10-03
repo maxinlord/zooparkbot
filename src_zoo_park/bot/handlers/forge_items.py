@@ -1,41 +1,42 @@
 import contextlib
 import json
-from aiogram.types import Message, CallbackQuery
+
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import and_, func, select
-from db import User, Item
-from tools import (
-    get_text_message,
-    disable_not_main_window,
-    get_value,
-    create_item,
-    add_item_to_db,
-    ft_item_props,
-    ft_item_props_for_update,
-    count_page_items,
-    able_to_enhance,
-    random_up_property_item,
-    update_prop_iai,
-    merge_items,
-    synchronize_info_about_items,
-    gen_price_to_create_item,
-    fetch_and_parse_str_value,
-    calculate_percent_to_enhance,
+from aiogram.types import CallbackQuery, Message
+from bot.filters import CompareDataByIndex, GetTextButton
+from bot.keyboards import (
+    ik_choice_items_to_merge,
+    ik_create_item,
+    ik_forge_items_menu,
+    ik_menu_items_for_merge,
+    ik_menu_items_for_up,
+    ik_up_lvl_item,
+    ik_upgrade_item,
 )
 from bot.states import UserState
-from bot.keyboards import (
-    ik_forge_items_menu,
-    ik_create_item,
-    ik_up_lvl_item,
-    ik_menu_items_for_up,
-    ik_upgrade_item,
-    ik_menu_items_for_merge,
-    ik_choice_items_to_merge,
+from db import Item, User
+from game_variables import prop_quantity_by_rarity, translated_rarities
+from sqlalchemy import and_, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import (
+    able_to_enhance,
+    add_item_to_db,
+    calculate_percent_to_enhance,
+    count_page_items,
+    create_item,
+    disable_not_main_window,
+    fetch_and_parse_str_value,
+    ft_item_props,
+    ft_item_props_for_update,
+    gen_price_to_create_item,
+    get_text_message,
+    get_value,
+    merge_items,
+    random_up_property_item,
+    synchronize_info_about_items,
+    update_prop_iai,
 )
-from bot.filters import GetTextButton, CompareDataByIndex
-from game_variables import translated_rarities, prop_quantity_by_rarity
 
 flags = {"throttling_key": "default"}
 router = Router()
@@ -145,7 +146,11 @@ async def process_back_forge_items(
                 session=session, value_name="PERCENTAGE_DECREASE_ENHANCE_BY_LVL"
             )
             await query.message.edit_text(
-                text=await get_text_message("up_lvl_item_info", usd=user.usd, pd=PERCENTAGE_DECREASE_ENHANCE_BY_LVL),
+                text=await get_text_message(
+                    "up_lvl_item_info",
+                    usd=user.usd,
+                    pd=PERCENTAGE_DECREASE_ENHANCE_BY_LVL,
+                ),
                 reply_markup=await ik_up_lvl_item(),
             )
         case "to_choice_item":
@@ -160,9 +165,13 @@ async def process_back_forge_items(
                 ),
             )
         case "to_merge_items_info":
-            PERCENT_MERGE_BY_PROP= await get_value(session=session, value_name="PERCENT_MERGE_BY_PROP") 
+            PERCENT_MERGE_BY_PROP = await get_value(
+                session=session, value_name="PERCENT_MERGE_BY_PROP"
+            )
             await query.message.edit_text(
-                text=await get_text_message("merge_items_info", usd=user.usd, pm=PERCENT_MERGE_BY_PROP),
+                text=await get_text_message(
+                    "merge_items_info", usd=user.usd, pm=PERCENT_MERGE_BY_PROP
+                ),
                 reply_markup=await ik_choice_items_to_merge(),
             )
 
@@ -345,9 +354,13 @@ async def fi_merge_items_info(
     state: FSMContext,
     user: User,
 ):
-    PERCENT_MERGE_BY_PROP= await get_value(session=session, value_name="PERCENT_MERGE_BY_PROP") 
+    PERCENT_MERGE_BY_PROP = await get_value(
+        session=session, value_name="PERCENT_MERGE_BY_PROP"
+    )
     await query.message.edit_text(
-        text=await get_text_message("merge_items_info", usd=user.usd, pm=PERCENT_MERGE_BY_PROP),
+        text=await get_text_message(
+            "merge_items_info", usd=user.usd, pm=PERCENT_MERGE_BY_PROP
+        ),
         reply_markup=await ik_choice_items_to_merge(),
     )
 
@@ -511,7 +524,7 @@ async def fi_merge_items(
     if any(data["status_chosen_items"]):
         items = await session.scalars(
             select(Item).where(
-                and_(Item.id_user == user.id_user, Item.is_active == True)
+                and_(Item.id_user == user.id_user, Item.is_active == True)  # noqa: E712
             )
         )
         user.info_about_items = await synchronize_info_about_items(items=list(items))

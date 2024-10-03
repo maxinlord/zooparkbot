@@ -1,12 +1,12 @@
-import random
-from sqlalchemy import select
-from db import Animal, Unity, User
-
 import json
-import tools
-import game_variables
+import random
 
+import game_variables
+from db import Animal, Unity, User
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+import tools
 
 
 async def get_all_animals(session: AsyncSession) -> list[Animal]:

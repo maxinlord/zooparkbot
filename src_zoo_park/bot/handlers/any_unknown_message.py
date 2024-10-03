@@ -1,22 +1,26 @@
 import contextlib
 from datetime import datetime
-from aiogram.types import Message, CallbackQuery
+
 from aiogram import F, Router
-from tools import get_text_message
-from sqlalchemy.ext.asyncio import AsyncSession
-from db import Photo, User
+from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
-from tools import get_text_message, get_value, contains_any_pattern, fetch_and_parse_str_value
-from bot.keyboards import ik_update_inline_rate
+from aiogram.fsm.state import any_state
+from aiogram.types import CallbackQuery, Message
 from bot.filters import CompareDataByIndex
-from aiogram.filters import Command
-from aiogram.filters import StateFilter
+from bot.keyboards import ik_update_inline_rate
 from config import CHAT_ID
+from db import Photo, User
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import (
+    contains_any_pattern,
+    fetch_and_parse_str_value,
+    get_text_message,
+    get_value,
+)
 
 router = Router()
 flags = {"throttling_key": "default"}
 
-from aiogram.fsm.state import any_state
 
 @router.message(
     Command(commands="reset"),
@@ -28,7 +32,8 @@ async def reset(
     state: FSMContext,
 ):
     await state.clear()
-    await message.answer(text=await get_text_message('reset_done'))
+    await message.answer(text=await get_text_message("reset_done"))
+
 
 @router.message(F.content_type == "photo")
 async def photo_catch(message: Message, session: AsyncSession) -> None:
@@ -37,17 +42,22 @@ async def photo_catch(message: Message, session: AsyncSession) -> None:
     await session.commit()
     await message.answer(text=await get_text_message("photo_saved"))
 
+
 @router.message(F.chat.id == CHAT_ID)
-async def any_unknown_message_test(message: Message, state: FSMContext, session: AsyncSession) -> None:
-    patterns = await fetch_and_parse_str_value(session=session, value_name='pattern_ban_word', func_to_element=str)
+async def any_unknown_message_test(
+    message: Message, state: FSMContext, session: AsyncSession
+) -> None:
+    patterns = await fetch_and_parse_str_value(
+        session=session, value_name="pattern_ban_word", func_to_element=str
+    )
     if contains_any_pattern(text=message.text, patterns=patterns):
         await message.delete()
+
 
 @router.message()
 async def any_unknown_message(message: Message, state: FSMContext) -> None:
     await message.answer(text=await get_text_message("answer_on_unknown_message"))
     # print(message.effect_id)
-
 
 
 # @router.channel_post()
@@ -58,7 +68,8 @@ async def any_unknown_message(message: Message, state: FSMContext) -> None:
 # async def test(message: Message, session: AsyncSession) -> None:
 #     await message.answer_game()
 
-@router.callback_query(CompareDataByIndex('update_inline_rate'))
+
+@router.callback_query(CompareDataByIndex("update_inline_rate"))
 async def update_inline_rate(
     query: CallbackQuery,
     session: AsyncSession,
@@ -80,7 +91,7 @@ async def update_inline_rate(
                 t=time_to_update_bank,
                 s=bank_storage,
             ),
-            reply_markup=await ik_update_inline_rate(inline_message_id)
+            reply_markup=await ik_update_inline_rate(inline_message_id),
         )
 
 

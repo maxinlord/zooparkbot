@@ -1,24 +1,21 @@
-from sqlalchemy import and_, func, select
-from db import Item, User
 import json
-import tools
-from sqlalchemy.ext.asyncio import AsyncSession
 import math
-from collections import defaultdict
-import json
 import random
 from abc import ABC, abstractmethod
-from init_db import _sessionmaker_for_func
-import tools
-from game_variables import (
-    rarities,
-    prop_quantity_by_rarity,
-    rarity_by_prop_quantity,
-    colors_rarities_item,
-)
-from sqlalchemy.ext.asyncio import AsyncSession
+from collections import defaultdict
+
 from db import Item
-from sqlalchemy import and_, select
+from game_variables import (
+    colors_rarities_item,
+    prop_quantity_by_rarity,
+    rarities,
+    rarity_by_prop_quantity,
+)
+from init_db import _sessionmaker_for_func
+from sqlalchemy import and_, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+import tools
 
 
 async def get_items_data_to_kb(
@@ -230,6 +227,7 @@ def gen_name_and_emoji_item(item_props: str | dict) -> tuple[str, str]:
 
 # Абстрактный базовый класс для свойства
 class Property(ABC):
+    name = "base_property"
 
     async def get_weight(self, rarity: str):
         property_probability = await get_property_probability(
@@ -238,7 +236,7 @@ class Property(ABC):
         return property_probability
 
     @abstractmethod
-    async def generate(self):
+    async def generate(self, rarity: str):
         pass
 
 

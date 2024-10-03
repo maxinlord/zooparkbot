@@ -1,15 +1,16 @@
+import random
 from datetime import datetime
+
+from aiogram import F, Router
 from aiogram.types import (
+    ChosenInlineResult,
     InlineQuery,
     InlineQueryResultArticle,
     InputTextMessageContent,
 )
-from aiogram.types import ChosenInlineResult
-from aiogram import F, Router
-import random
-from sqlalchemy.ext.asyncio import AsyncSession
-from db import User
 from bot.keyboards import ik_update_inline_rate
+from db import User
+from sqlalchemy.ext.asyncio import AsyncSession
 from tools import get_text_message, get_value
 
 router = Router()

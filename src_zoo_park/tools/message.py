@@ -1,9 +1,11 @@
 import contextlib
-from aiogram.types import Message, CallbackQuery
-import tools
-from sqlalchemy.ext.asyncio import AsyncSession
+
 import bot.keyboards as kb
+from aiogram.types import CallbackQuery, Message
 from db import User
+from sqlalchemy.ext.asyncio import AsyncSession
+
+import tools
 
 
 async def disable_not_main_window(data: dict, message: Message):

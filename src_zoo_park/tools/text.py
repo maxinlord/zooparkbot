@@ -1,11 +1,13 @@
 import json
-from sqlalchemy import and_, or_, select
-from db import Text, Button, Value, Unity, User, Game, Gamer, Animal, Aviary
-from init_db import _sessionmaker_for_func
-from cache import text_cache, button_cache
-from sqlalchemy.ext.asyncio import AsyncSession
-import tools
+
 import ahocorasick
+from cache import button_cache, text_cache
+from db import Animal, Aviary, Button, Game, Gamer, Text, Unity, User, Value
+from init_db import _sessionmaker_for_func
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+import tools
 
 
 async def get_text_message(name: str, **kw) -> str:
@@ -33,7 +35,7 @@ async def get_text_message(name: str, **kw) -> str:
         return formatted_text
 
 
-async def _get_or_create_text(session: AsyncSession, name):
+async def _get_or_create_text(session: AsyncSession, name: str):
     text_obj = await session.scalar(select(Text).where(Text.name == name))
     if not text_obj:
         text_obj = Text(name=name)
@@ -140,7 +142,8 @@ async def factory_text_main_top(session: AsyncSession, idpk_user: int) -> str:
     users_and_incomes = [
         (user, await tools.income_(session=session, user=user)) for user in users
     ]
-    func_sort_by_income = lambda x: x[1]
+    def func_sort_by_income(x):
+        return x[1]
     users_and_incomes.sort(key=func_sort_by_income, reverse=True)
 
     async def format_text(user, income, counter, unity_name):
@@ -440,13 +443,14 @@ async def ft_bonus_info(
     )
     return text
 
+
 async def ft_item_props(item_props: dict | str):
     if isinstance(item_props, str):
         item_props = json.loads(item_props)
     t = []
     for k, v in item_props.items():
         name_prop = await get_text_message(name=k)
-        value = await get_text_message(name=f'{k}_value_pattern', v=v)
+        value = await get_text_message(name=f"{k}_value_pattern", v=v)
         pattern_item_prop_line = await get_text_message(
             "pattern_item_prop_line", name_prop=name_prop, v=value
         )
@@ -462,7 +466,7 @@ async def ft_item_props_for_update(
     t = []
     for k, v in item_props.items():
         name_prop = await get_text_message(name=k)
-        value = await get_text_message(name=f'{k}_value_pattern', v=v)
+        value = await get_text_message(name=f"{k}_value_pattern", v=v)
         if k == updated_prop:
             pattern = await get_text_message(
                 "pattern_item_prop_for_update_line",
@@ -478,24 +482,23 @@ async def ft_item_props_for_update(
     return "".join(t)
 
 
-
 def contains_any_pattern(text, patterns):
-    
+
     if not isinstance(text, str):
         return False
-    
+
     # Создаем автомат
     A = ahocorasick.Automaton()
-    
+
     # Добавляем все шаблоны в автомат
     for idx, pattern in enumerate(patterns):
         A.add_word(pattern, (idx, pattern))
-    
+
     # Строим автомат
     A.make_automaton()
-    
+
     # Поиск вхождений, если хотя бы одно найдено, возвращаем True
     for end_idx, (idx, pattern) in A.iter(text):
         return True  # Нашли хотя бы одно вхождение
-    
+
     return False  # Ничего не нашли

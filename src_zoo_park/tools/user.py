@@ -1,7 +1,5 @@
-import json
-
-from sqlalchemy import or_, select
 from db import User
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 

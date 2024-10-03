@@ -1,7 +1,7 @@
-from sqlalchemy import select
-from aiogram.types import Message, InputFile
-from db import Photo
+from aiogram.types import Message
 from cache import photo_cache
+from db import Photo
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 

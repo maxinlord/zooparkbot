@@ -1,15 +1,13 @@
 import datetime
-import fnmatch
-import os
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-import matplotlib.pyplot as plt
-from db import User
-import tools
-
-
 import os
 from pathlib import Path
+
+import matplotlib.pyplot as plt
+from db import User
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+import tools
 
 
 async def remove_file_plot(pattern: str):
@@ -94,7 +92,7 @@ async def gen_plot(
     if not os.path.exists(name):
         await remove_file_plot(pattern=f"plot_{type}_*.png")
         plt.savefig(name, dpi=300, bbox_inches="tight")
-        plt.close('all')
+        plt.close("all")
     return name
 
 

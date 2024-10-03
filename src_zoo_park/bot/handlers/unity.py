@@ -1,37 +1,37 @@
 import contextlib
-from aiogram.types import Message, CallbackQuery
-from aiogram import Router, F
+from datetime import datetime, timedelta
+
+from aiogram import F, Router
+from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import any_state
-from aiogram.filters import StateFilter
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from db import User, Unity, Value, RequestToUnity
-from datetime import datetime
-from tools import (
-    get_text_message,
-    has_special_characters_name,
-    shorten_whitespace_name_unity,
-    is_unique_name,
-    disable_not_main_window,
-    count_page_unity,
-    get_value,
-    income_,
-    get_total_number_animals,
-    mention_html,
-)
-from bot.states import UserState
+from aiogram.types import CallbackQuery, Message
+from bot.filters import CompareDataByIndex, GetTextButton
 from bot.keyboards import (
-    rk_unity_menu,
-    rk_main_menu,
-    ik_unity_options,
-    rk_back,
     ik_menu_unity_to_join,
     ik_unity_invitation,
+    ik_unity_options,
     ik_unity_send_request,
+    rk_back,
+    rk_main_menu,
+    rk_unity_menu,
 )
-from bot.filters import GetTextButton, CompareDataByIndex
-from datetime import timedelta
+from bot.states import UserState
+from db import RequestToUnity, Unity, User
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import (
+    count_page_unity,
+    disable_not_main_window,
+    get_text_message,
+    get_total_number_animals,
+    get_value,
+    has_special_characters_name,
+    income_,
+    is_unique_name,
+    mention_html,
+    shorten_whitespace_name_unity,
+)
 
 flags = {"throttling_key": "default"}
 router = Router()
@@ -327,7 +327,7 @@ async def process_accept_to_unity(
 
 
 @router.callback_query(StateFilter(any_state), CompareDataByIndex("rejected_to_unity"))
-async def process_accept_to_unity(
+async def process_rejected_to_unity(
     query: CallbackQuery,
     state: FSMContext,
     session: AsyncSession,

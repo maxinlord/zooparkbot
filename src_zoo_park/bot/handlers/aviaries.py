@@ -1,24 +1,23 @@
-from aiogram.types import Message, CallbackQuery
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from sqlalchemy.ext.asyncio import AsyncSession
-from db import User
-from tools import (
-    get_text_message,
-    disable_not_main_window,
-    add_aviary,
-    m_choice_quantity_avi,
-    find_integers
-)
-from bot.states import UserState
+from aiogram.types import CallbackQuery, Message
+from bot.filters import CompareDataByIndex, GetTextButton
 from bot.keyboards import (
     ik_choice_aviary,
     ik_choice_quantity_aviary_avi,
     rk_back,
     rk_zoomarket_menu,
 )
-from bot.filters import GetTextButton, CompareDataByIndex
-
+from bot.states import UserState
+from db import User
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import (
+    add_aviary,
+    disable_not_main_window,
+    find_integers,
+    get_text_message,
+    m_choice_quantity_avi,
+)
 
 flags = {"throttling_key": "default"}
 router = Router()

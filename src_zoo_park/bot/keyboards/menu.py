@@ -1,5 +1,5 @@
-from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 import tools
+from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
 
 async def rk_main_menu():
@@ -32,7 +32,7 @@ async def rk_unity_menu():
     builder.button(text=await tools.get_text_button("level"))
     builder.button(text=await tools.get_text_button("unity_members"))
     builder.button(text=await tools.get_text_button("top_unity"))
-    builder.button(text=await tools.get_text_button("exit_from_unity"))    
+    builder.button(text=await tools.get_text_button("exit_from_unity"))
     builder.button(text=await tools.get_text_button("back"))
 
     builder.adjust(3, 2)

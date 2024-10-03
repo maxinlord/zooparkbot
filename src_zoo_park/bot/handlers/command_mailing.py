@@ -1,17 +1,16 @@
 import asyncio
-import contextlib
-from aiogram.filters import CommandObject, Command
-from aiogram.types import Message
+
 from aiogram import Router
+from aiogram.filters import Command, CommandObject, StateFilter
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import any_state
+from aiogram.types import Message
+from bot.states import AdminState
+from config import ADMIN_ID
+from db import User
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from db import User
-from aiogram.filters import StateFilter
-from aiogram.fsm.state import any_state
-from tools import mention_html, get_text_message
-from config import ADMIN_ID
-from bot.states import AdminState
+from tools import get_text_message, mention_html
 
 router = Router()
 flags = {"throttling_key": "default"}

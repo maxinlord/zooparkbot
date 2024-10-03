@@ -1,21 +1,20 @@
-from aiogram.types import Message, CallbackQuery, InputMediaPhoto
-from aiogram.types import FSInputFile
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from db import User
-from tools import (
-    get_text_message,
-    factory_text_main_top,
-    factory_text_main_top_by_money,
-    factory_text_main_top_by_animals,
-    factory_text_main_top_by_referrals,
-    get_plot,
-)
-from bot.states import UserState
+from aiogram.types import CallbackQuery, FSInputFile, InputMediaPhoto, Message
 from bot.filters import GetTextButton
 from bot.keyboards import ik_choice_type_top
+from bot.states import UserState
+from db import User
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from tools import (
+    factory_text_main_top,
+    factory_text_main_top_by_animals,
+    factory_text_main_top_by_money,
+    factory_text_main_top_by_referrals,
+    get_plot,
+    get_text_message,
+)
 
 flags = {"throttling_key": "default"}
 router = Router()

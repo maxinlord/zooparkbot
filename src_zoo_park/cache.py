@@ -1,4 +1,4 @@
-from cachetools import cached, TTLCache
+from cachetools import TTLCache
 
 text_cache = TTLCache(maxsize=500, ttl=5000)
 button_cache = TTLCache(maxsize=500, ttl=5000)
