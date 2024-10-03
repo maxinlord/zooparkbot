@@ -379,7 +379,7 @@ async def fi_choice_item_to_merge(
         ft_props=[],
     )
     await query.message.edit_text(
-        text=await get_text_message("menu_items"),
+        text=await get_text_message("merge_menu_items"),
         reply_markup=await ik_menu_items_for_merge(
             session=session,
             id_user=user.id_user,

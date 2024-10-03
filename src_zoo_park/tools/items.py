@@ -486,7 +486,7 @@ async def merge_items(session: AsyncSession, id_item_1: str, id_item_2: str):
     weight_true, weight_false = await calculate_weight_merge(
         session=session, count_props=count_props
     )
-    max_len = min(len(prop_1), len(prop_2))
+    max_len = max(len(prop_1), len(prop_2))
     new_props = defaultdict(int)
     for _ in range(max_len):
         if random.choices([True, False], [weight_true, weight_false])[0]:
