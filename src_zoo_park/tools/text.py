@@ -414,8 +414,8 @@ async def ft_bank_exchange_info(
         "pattern_bank_exchange_info",
         t_rate=t_rate,
         t_you_change=t_you_change,
-        t_bank_got=t_bank_got,
-        t_referrer_got=t_referrer_got,
+        t_bank_got=f"{t_bank_got}\n",
+        t_referrer_got=f"{t_referrer_got}\n",
         t_you_got=t_you_got,
     )
     return text
