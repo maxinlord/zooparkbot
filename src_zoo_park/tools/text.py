@@ -142,8 +142,10 @@ async def factory_text_main_top(session: AsyncSession, idpk_user: int) -> str:
     users_and_incomes = [
         (user, await tools.income_(session=session, user=user)) for user in users
     ]
+
     def func_sort_by_income(x):
         return x[1]
+
     users_and_incomes.sort(key=func_sort_by_income, reverse=True)
 
     async def format_text(user, income, counter, unity_name):
@@ -394,16 +396,28 @@ async def ft_bank_exchange_info(
     bank_got: int = None,
     referrer_got: int = None,
 ):  # ft - factory text
-    text = ""
-    text += await get_text_message("pattern_bank_you_change", you_change=you_change)
+    t_bank_got = ""
+    t_referrer_got = ""
+    t_rate = await get_text_message("pattern_bank_rate", rate=rate)
+    t_you_change = await get_text_message(
+        "pattern_bank_you_change", you_change=you_change
+    )
     if bank_got:
-        text += await get_text_message("pattern_bank_bank_got", bank_got=bank_got)
+        t_bank_got = await get_text_message("pattern_bank_bank_got", bank_got=bank_got)
     if referrer_got:
-        text += await get_text_message(
+        t_referrer_got = await get_text_message(
             "pattern_bank_referrer_got", referrer_got=referrer_got
         )
-    text += await get_text_message("pattern_bank_you_got", you_got=you_got)
-    text += await get_text_message("pattern_bank_rate", rate=rate)
+
+    t_you_got = await get_text_message("pattern_bank_you_got", you_got=you_got)
+    text = await get_text_message(
+        "pattern_bank_exchange_info",
+        t_rate=t_rate,
+        t_you_change=t_you_change,
+        t_bank_got=t_bank_got,
+        t_referrer_got=t_referrer_got,
+        t_you_got=t_you_got,
+    )
     return text
 
 
