@@ -17,7 +17,6 @@ from .options_menu import (
     ik_choice_animal_rmerchant,
     ik_choice_animal_rshop,
     ik_choice_aviary,
-    ik_choice_item,
     ik_choice_items_to_merge,
     ik_choice_quantity_animals_rmerchant,
     ik_choice_quantity_animals_rshop,
