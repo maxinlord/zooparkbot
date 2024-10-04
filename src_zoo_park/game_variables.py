@@ -14,6 +14,15 @@ colors_rarities_item = {
     "mythical": "🔴",
     "leg": "🟡",
 }
+
+num_for_sort_rarity = {
+    "common": 1,
+    "rare": 2,
+    "epic": 3,
+    "mythical": 4,
+    "leg": 5,
+}
+
 games = {
     "🎯": "dart",
     "🎳": "bowling",

@@ -10,6 +10,7 @@ from game_variables import (
     prop_quantity_by_rarity,
     rarities,
     rarity_by_prop_quantity,
+    num_for_sort_rarity,
 )
 from init_db import _sessionmaker_for_func
 from sqlalchemy import and_, func, select
@@ -28,8 +29,10 @@ async def get_items_data_to_kb(
         value_type="str",
     )
     items = await session.scalars(select(Item).where(and_(Item.id_user == id_user)))
+    items = items.all()
+    items = sorted(items, key=sorted_by_rarity, reverse=True)
     data = []
-    for item in items.all():
+    for item in items:
         name_with_emoji = await tools.get_text_button(
             "pattern_for_item_button_attrs",
             lvl=item.lvl,
@@ -54,8 +57,10 @@ async def get_items_data_for_up_to_kb(
         value_type="str",
     )
     items = await session.scalars(select(Item).where(and_(Item.id_user == id_user)))
+    items = items.all()
+    items = sorted(items)
     data = []
-    for item in items.all():
+    for item in items:
         name_with_emoji = await tools.get_text_button(
             "pattern_for_item_button_attrs",
             lvl=item.lvl,
@@ -76,6 +81,10 @@ async def get_items_data_for_up_to_kb(
     return data
 
 
+def sorted_by_rarity(item: Item):
+    return num_for_sort_rarity[item.rarity]
+
+
 async def get_items_data_for_merge_to_kb(
     session: AsyncSession, id_user: int, id_items: list[str]
 ) -> list[tuple[str, str, str]]:
@@ -90,8 +99,10 @@ async def get_items_data_for_merge_to_kb(
         value_type="str",
     )
     items = await session.scalars(select(Item).where(and_(Item.id_user == id_user)))
+    items = items.all()
+    items = sorted(items)
     data = []
-    for item in items.all():
+    for item in items:
         name_with_emoji = await tools.get_text_button(
             "pattern_for_item_button_attrs",
             lvl=item.lvl,
