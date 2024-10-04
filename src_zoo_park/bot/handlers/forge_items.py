@@ -213,7 +213,7 @@ async def fi_choice_item_for_upgrade(
     q_page = await count_page_items(session=session, amount_items=amount_items)
     await state.update_data(page=1, q_page=q_page)
     await query.message.edit_text(
-        text=await get_text_message("menu_items"),
+        text=await get_text_message("up_menu_items"),
         reply_markup=await ik_menu_items_for_up(
             session=session,
             id_user=user.id_user,
