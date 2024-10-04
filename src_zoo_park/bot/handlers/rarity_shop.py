@@ -115,7 +115,6 @@ async def get_rarity_rshop(
         caption=await get_text_message(
             "choice_quantity_rarity_shop_menu",
             name_=animal.name,
-            description=animal.description,
             price=animal_price,
             income=animal_income,
             usd=user.usd,
@@ -182,7 +181,6 @@ async def rshop_switch_rarity(
             caption=await get_text_message(
                 "choice_quantity_rarity_shop_menu",
                 name_=animal.name,
-                description=animal.description,
                 price=animal_price,
                 income=animal_income,
                 usd=user.usd,
@@ -262,7 +260,6 @@ async def get_quantity_rshop(
         caption=await get_text_message(
             "choice_quantity_rarity_shop_menu",
             name_=animal.name,
-            description=animal.description,
             price=data["animal_price"],
             income=await get_income_animal(
                 session=session,
@@ -331,7 +328,6 @@ async def back_to_choice_quantity_rshop(
         caption=await get_text_message(
             "choice_quantity_rarity_shop_menu",
             name_=animal.name,
-            description=animal.description,
             price=data["animal_price"],
             income=animal_income,
             usd=user.usd,
