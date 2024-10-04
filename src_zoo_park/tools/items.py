@@ -58,7 +58,7 @@ async def get_items_data_for_up_to_kb(
     )
     items = await session.scalars(select(Item).where(and_(Item.id_user == id_user)))
     items = items.all()
-    items = sorted(items)
+    items = sorted(items, key=sorted_by_rarity, reverse=True)
     data = []
     for item in items:
         name_with_emoji = await tools.get_text_button(
@@ -100,7 +100,7 @@ async def get_items_data_for_merge_to_kb(
     )
     items = await session.scalars(select(Item).where(and_(Item.id_user == id_user)))
     items = items.all()
-    items = sorted(items)
+    items = sorted(items, key=sorted_by_rarity, reverse=True)
     data = []
     for item in items:
         name_with_emoji = await tools.get_text_button(
