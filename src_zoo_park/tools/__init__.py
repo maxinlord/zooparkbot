@@ -43,6 +43,7 @@ from .bonus import (
     referrer_bonus,
 )
 from .deep_link import validate_command_arg
+from .format_num import formatter
 from .game import (
     gamer_have_active_game,
     get_amount_gamers,

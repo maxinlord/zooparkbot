@@ -157,7 +157,7 @@ async def factory_text_main_top(session: AsyncSession, idpk_user: int) -> str:
         return await tools.get_text_message(
             pattern,
             n=await tools.view_nickname(session=session, user=user),
-            i=income,
+            i=tools.formatter.format_large_number(income),
             c=counter,
             u=unity_name,
         )
@@ -202,7 +202,7 @@ async def factory_text_main_top_by_money(session: AsyncSession, idpk_user: int) 
         return await tools.get_text_message(
             pattern,
             n=await tools.view_nickname(session=session, user=user),
-            m=money,
+            m=tools.formatter.format_large_number(money),
             c=counter,
             u=unity_name,
         )
