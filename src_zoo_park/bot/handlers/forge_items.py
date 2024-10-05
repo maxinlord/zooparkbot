@@ -13,6 +13,7 @@ from bot.keyboards import (
     ik_menu_items_for_up,
     ik_up_lvl_item,
     ik_upgrade_item,
+    ik_yes_or_not_sell_item,
 )
 from bot.states import UserState
 from db import Item, User
@@ -113,7 +114,9 @@ async def fi_create_item(
     USD_TO_CREATE_ITEM = await gen_price_to_create_item(
         session=session, id_user=user.id_user
     )
-    await state.update_data(USD_TO_CREATE_ITEM=USD_TO_CREATE_ITEM)
+    await state.update_data(
+        USD_TO_CREATE_ITEM=USD_TO_CREATE_ITEM, id_item=item_info["key"]
+    )
     text_props = await ft_item_props(item_props=item_props)
     await query.message.edit_text(
         text=await get_text_message(
@@ -123,6 +126,62 @@ async def fi_create_item(
             rarity=translated_rarities[item_info["rarity"]],
             text_props=text_props,
         ),
+        reply_markup=await ik_create_item(uci=USD_TO_CREATE_ITEM, is_sell=True),
+    )
+
+
+@router.callback_query(UserState.zoomarket_menu, F.data == "sell_item")
+async def sell_item_in_create(
+    query: CallbackQuery,
+    session: AsyncSession,
+    state: FSMContext,
+    user: User,
+):
+    await query.message.edit_reply_markup(
+        reply_markup=await ik_yes_or_not_sell_item(),
+    )
+
+
+@router.callback_query(UserState.zoomarket_menu, F.data == "sell_item_no")
+async def sell_item_no_in_create(
+    query: CallbackQuery,
+    session: AsyncSession,
+    state: FSMContext,
+    user: User,
+):
+    data = await state.get_data()
+    await query.message.edit_reply_markup(
+        reply_markup=await ik_create_item(uci=data["USD_TO_CREATE_ITEM"], is_sell=True),
+    )
+
+
+@router.callback_query(UserState.zoomarket_menu, F.data == "sell_item_yes")
+async def sell_item_yes_in_create(
+    query: CallbackQuery,
+    session: AsyncSession,
+    state: FSMContext,
+    user: User,
+):
+    data = await state.get_data()
+    item: Item = await session.scalar(
+        select(Item).where(Item.id_item == data["id_item"])
+    )
+    item.id_user = 0
+    USD_TO_CREATE_ITEM = await get_value(
+        session=session, value_name="USD_TO_CREATE_ITEM"
+    )
+    PERCENT_MARKDOWN_ITEM = await get_value(
+        session=session, value_name="PERCENT_MARKDOWN_ITEM"
+    )
+    sell_price = int(USD_TO_CREATE_ITEM * (PERCENT_MARKDOWN_ITEM / 100))
+    user.usd += sell_price
+    await session.commit()
+    USD_TO_CREATE_ITEM = await gen_price_to_create_item(
+        session=session, id_user=user.id_user
+    )
+    await state.update_data(USD_TO_CREATE_ITEM=USD_TO_CREATE_ITEM)
+    await query.message.edit_text(
+        text=await get_text_message("item_sold", sell_price=sell_price),
         reply_markup=await ik_create_item(uci=USD_TO_CREATE_ITEM),
     )
 
@@ -157,7 +216,7 @@ async def process_back_forge_items(
             data = await state.get_data()
             page = data["page"]
             await query.message.edit_text(
-                text=await get_text_message("menu_items"),
+                text=await get_text_message("up_menu_items"),
                 reply_markup=await ik_menu_items_for_up(
                     session=session,
                     id_user=user.id_user,

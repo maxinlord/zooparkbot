@@ -733,8 +733,13 @@ async def ik_confirm_or_change_bonus(number_attempts_item: int):
     return builder.as_markup()
 
 
-async def ik_create_item(uci: int = None):
+async def ik_create_item(uci: int = None, is_sell: bool = False):
     builder = InlineKeyboardBuilder()
+    if is_sell:
+        builder.button(
+            text=await tools.get_text_button("sell_item"),
+            callback_data="sell_item",
+        )
     if uci:
         builder.button(
             text=await tools.get_text_button("create_item_with_price", uci=uci),

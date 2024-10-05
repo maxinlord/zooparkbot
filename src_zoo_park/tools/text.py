@@ -462,7 +462,8 @@ async def ft_item_props(item_props: dict | str):
     if isinstance(item_props, str):
         item_props = json.loads(item_props)
     t = []
-    for k, v in item_props.items():
+    item_props = sorted(item_props.items(), key=lambda x: x[1], reverse=True)
+    for k, v in item_props:
         name_prop = await get_text_message(name=k)
         value = await get_text_message(name=f"{k}_value_pattern", v=v)
         pattern_item_prop_line = await get_text_message(

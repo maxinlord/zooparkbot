@@ -453,6 +453,12 @@ async def random_up_property_item(session: AsyncSession, item_properties: dict |
     return item_properties, property, parameter
 
 
+def name_property_processing(name_prop: str):
+    if ":" in name_prop:
+        name_prop = name_prop.split(":")[1]
+    return name_prop
+
+
 async def synchronize_info_about_items(items: list[Item]):
     info_about_items = {}
     properties_to_limit = [
@@ -468,7 +474,8 @@ async def synchronize_info_about_items(items: list[Item]):
                 info_about_items[prop] += value
             else:
                 info_about_items[prop] = value
-            if prop in properties_to_limit and info_about_items[prop] > limit:
+            clean_prop = name_property_processing(prop)
+            if clean_prop in properties_to_limit and info_about_items[prop] > limit:
                 info_about_items[prop] = limit
     return json.dumps(info_about_items)
 
