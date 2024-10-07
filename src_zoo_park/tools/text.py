@@ -63,7 +63,6 @@ async def _format_text(text_obj: Text, kw: dict, debug_text: int = 0):
         if k not in text_obj.text:
             key = f"{{{k}:,d}}" if str(v).isdigit() else f"{{{k}}}"
             text_obj.text += f"\n{k}: {key}"
-    print(text_obj.text, prefix, kw)
     return f"{prefix}{text_obj.text.format(**kw)}"
 
 

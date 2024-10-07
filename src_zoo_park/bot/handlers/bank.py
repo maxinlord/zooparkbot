@@ -142,7 +142,7 @@ async def exchange_all_amount(
     you_change, bank_fee, you_got = await exchange(
         session=session,
         user=user,
-        amount=user.rub,
+        amount=int(user.rub),
         rate=data["rate"],
     )
 
