@@ -283,7 +283,7 @@ async def award_winners(session: AsyncSession, game: Game):
     users = [await session.get(User, gamer.idpk_gamer) for gamer in gamers_winer]
 
     for user in users:
-        award = game.amount_award * (next(award_percent) / 100)
+        award = int(game.amount_award) * (next(award_percent) / 100)
         await add_to_currency(
             self=user,
             currency=game.currency_award,
@@ -394,7 +394,7 @@ async def gen_text_winners(session: AsyncSession, game: Game):
     emoji_places = iter(["🏆", "🥈", "🥉"])
     for gamer in gamers_winer:
         gamer: User = await session.get(User, gamer.idpk_gamer)
-        award = game.amount_award * (next(award_percent) / 100)
+        award = int(game.amount_award) * (next(award_percent) / 100)
         award = f"{int(award):,d}{translated_currencies.get(game.currency_award)}"
         additional_text += f"\n\n{await get_text_message('game_pattern_winer', nickname=gamer.nickname, emoji_places=next(emoji_places))}"
     with contextlib.suppress(Exception):
