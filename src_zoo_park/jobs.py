@@ -384,7 +384,7 @@ async def gen_text_winners(session: AsyncSession, game: Game):
                 disable_web_page_preview=True,
                 **mess_data,
             )
-            return
+        return
     additional_text = ""
     award_percent = iter(
         await fetch_and_parse_str_value(

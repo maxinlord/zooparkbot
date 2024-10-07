@@ -1,11 +1,13 @@
+from decimal import Decimal
+
 from db import User
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-async def add_to_currency(self: User, currency: str, amount: int) -> None:
+async def add_to_currency(self: User, currency: str, amount: Decimal) -> None:
     if hasattr(self, currency):
-        setattr(self, currency, getattr(self, currency) + amount)
+        setattr(self, currency, getattr(self, currency) + int(amount))
 
 
 async def get_currency(self: User, currency: str) -> int:
