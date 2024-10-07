@@ -1,11 +1,7 @@
 import json
 
-from sqlalchemy import (
-    BigInteger,
-    DateTime,
-    String,
-    Text,
-)
+from sqlalchemy import BigInteger, DateTime, Numeric, String, Text
+from sqlalchemy.dialects.mysql import MEDIUMTEXT
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
@@ -21,13 +17,17 @@ class User(Base):
     id_referrer: Mapped[int] = mapped_column(BigInteger, nullable=True)
     referral_verification: Mapped[bool] = mapped_column(default=False)
     moves: Mapped[int] = mapped_column(default=0)
-    history_moves: Mapped[str] = mapped_column(Text, default="{}")
+    history_moves: Mapped[str] = mapped_column(MEDIUMTEXT, default="{}")
     paw_coins: Mapped[int] = mapped_column(default=0)
     amount_expenses_paw_coins: Mapped[int] = mapped_column(default=0)
-    rub: Mapped[int] = mapped_column(BigInteger, default=0)
-    amount_expenses_rub: Mapped[int] = mapped_column(BigInteger, default=0)
-    usd: Mapped[int] = mapped_column(BigInteger, default=0)
-    amount_expenses_usd: Mapped[int] = mapped_column(BigInteger, default=0)
+    rub: Mapped[int] = mapped_column(Numeric(precision=65, scale=0), default=0)
+    amount_expenses_rub: Mapped[int] = mapped_column(
+        Numeric(precision=65, scale=0), default=0
+    )
+    usd: Mapped[int] = mapped_column(Numeric(precision=65, scale=0), default=0)
+    amount_expenses_usd: Mapped[int] = mapped_column(
+        Numeric(precision=65, scale=0), default=0
+    )
     animals: Mapped[str] = mapped_column(Text, default="{}")
     info_about_items: Mapped[str] = mapped_column(Text, default="{}")
     aviaries: Mapped[str] = mapped_column(Text, default="{}")
@@ -168,7 +168,7 @@ class Game(Base):
     idpk_user: Mapped[int] = mapped_column()
     type_game: Mapped[str] = mapped_column(String(length=64))
     amount_gamers: Mapped[int] = mapped_column()
-    amount_award: Mapped[int] = mapped_column(BigInteger)
+    amount_award: Mapped[int] = mapped_column(Numeric(precision=65, scale=0))
     currency_award: Mapped[str] = mapped_column(String(length=10))
     amount_moves: Mapped[int] = mapped_column(default=7)
     id_mess: Mapped[str] = mapped_column(String(length=64), nullable=True)
