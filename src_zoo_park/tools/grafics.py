@@ -82,7 +82,7 @@ async def gen_plot(
         plt.text(
             label_x_pos,
             bar.get_y() + bar.get_height() / 2,
-            f"{width:,d}",
+            f"{width:,.0f}",
             ha=alignment,
             va="center",
             color=color,
