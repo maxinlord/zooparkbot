@@ -1,4 +1,5 @@
 import json
+from decimal import Decimal
 
 import ahocorasick
 from cache import button_cache, text_cache
@@ -57,9 +58,12 @@ async def _format_text(text_obj: Text, kw: dict, debug_text: int = 0):
     if not kw:
         return f"{prefix}{text_obj.text}"
     for k, v in kw.items():
+        if isinstance(v, Decimal):
+            kw[k] = int(v)
         if k not in text_obj.text:
             key = f"{{{k}:,d}}" if str(v).isdigit() else f"{{{k}}}"
             text_obj.text += f"\n{k}: {key}"
+    print(text_obj.text, prefix, kw)
     return f"{prefix}{text_obj.text.format(**kw)}"
 
 
@@ -68,6 +72,8 @@ async def _format_button(bttn_obj: Text, kw: dict, debug_button: int = 0):
     if not kw:
         return f"{prefix}{bttn_obj.text}"
     for k, v in kw.items():
+        if isinstance(v, Decimal):
+            kw[k] = int(v)
         if k not in bttn_obj.text:
             key = f"{{{k}:,d}}" if str(v).isdigit() else f"{{{k}}}"
             bttn_obj.text += f"|{key}"
