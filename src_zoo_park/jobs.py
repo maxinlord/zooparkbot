@@ -20,6 +20,7 @@ from tools import (
     add_to_currency,
     factory_text_top_mini_game,
     fetch_and_parse_str_value,
+    formatter,
     gen_key,
     get_amount_gamers,
     get_first_three_places,
@@ -179,7 +180,8 @@ async def create_game_for_chat():
         await session.execute(
             update(Value).where(Value.name == "BANK_STORAGE").values(value_int=0)
         )
-        award = f"{award:,d}{translated_currencies.get(game.currency_award)}"
+        award = formatter.format_large_number(award)
+        award = f"{award}{translated_currencies.get(game.currency_award)}"
         msg = await bot.send_message(
             chat_id=CHAT_ID,
             text=await get_text_message(

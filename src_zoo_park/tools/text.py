@@ -118,7 +118,7 @@ async def factory_text_unity_top(session: AsyncSession) -> str:
     text = ""
     for counter, ls_obj in enumerate(ls, start=1):
         unity = ls_obj[0]
-        i = ls_obj[1]
+        i = tools.formatter.format_large_number(ls_obj[1])
         text += (
             await tools.get_text_message(
                 "pattern_line_top_unity",
