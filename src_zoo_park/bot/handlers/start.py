@@ -15,6 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from tools import (
     factory_text_top_mini_game,
+    formatter,
     gamer_have_active_game,
     get_amount_gamers,
     get_gamer,
@@ -81,7 +82,8 @@ async def command_start_game(
     nickname = await get_nickname_owner_game(
         session=session, game=game, bot=message.bot
     )
-    award = f"{game.amount_award:,d}{translated_currencies.get(game.currency_award)}"
+    award = formatter.format_large_number(int(game.amount_award))
+    award = f"{award}{translated_currencies.get(game.currency_award)}"
     mess_data = (
         {"chat_id": CHAT_ID, "message_id": game.id_mess}
         if game.id_mess.isdigit()
