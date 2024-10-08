@@ -259,7 +259,7 @@ async def award_winner(session: AsyncSession, game: Game):
         amount=game.amount_award,
     )
     currency_translation = translated_currencies[game.currency_award]
-    award = f"{game.amount_award:,d}{currency_translation}"
+    award = f"{int(game.amount_award):,d}{currency_translation}"
     await bot.send_message(
         chat_id=winner.id_user,
         text=await get_text_message(
@@ -311,6 +311,8 @@ async def gen_text_winner(session: AsyncSession, game: Game):
         if owner_game.nickname
         else owner_game.nickname
     )
+    award = formatter.format_large_number(int(game.amount_award))
+    award = f"{award}{translated_currencies[game.currency_award]}"
     if not idpk_gamer:
         text_top_mini_game = await factory_text_top_mini_game(
             session=session, game=game
@@ -324,7 +326,7 @@ async def gen_text_winner(session: AsyncSession, game: Game):
                     game_type=game.type_game,
                     amount_gamers=game.amount_gamers,
                     amount_moves=game.amount_moves,
-                    award=f"{game.amount_award:,d}{translated_currencies[game.currency_award]}",
+                    award=award,
                 )
                 + await get_text_message("no_result_game"),
                 inline_message_id=game.id_mess,
@@ -347,7 +349,7 @@ async def gen_text_winner(session: AsyncSession, game: Game):
                 game_type=game.type_game,
                 amount_gamers=game.amount_gamers,
                 amount_moves=game.amount_moves,
-                award=f"{game.amount_award:,d}{translated_currencies[game.currency_award]}",
+                award=award,
             )
             + additional_text,
             inline_message_id=game.id_mess,
@@ -364,6 +366,8 @@ async def gen_text_winners(session: AsyncSession, game: Game):
         if game.id_mess.isdigit()
         else {"inline_message_id": game.id_mess}
     )
+    award = formatter.format_large_number(int(game.amount_award))
+    award = f"{award}{translated_currencies[game.currency_award]}"
     if not gamers_winer:
         text_top_mini_game = await factory_text_top_mini_game(
             session=session, game=game
@@ -377,7 +381,7 @@ async def gen_text_winners(session: AsyncSession, game: Game):
                     game_type=game.type_game,
                     amount_gamers=game.amount_gamers,
                     amount_moves=game.amount_moves,
-                    award=f"{game.amount_award:,d}{translated_currencies[game.currency_award]}",
+                    award=award,
                 )
                 + await get_text_message("no_result_game"),
                 reply_markup=None,
@@ -386,16 +390,11 @@ async def gen_text_winners(session: AsyncSession, game: Game):
             )
         return
     additional_text = ""
-    award_percent = iter(
-        await fetch_and_parse_str_value(
-            session=session, value_name="PERCENT_PLACES_AWARD"
-        )
-    )
     emoji_places = iter(["🏆", "🥈", "🥉"])
     for gamer in gamers_winer:
         gamer: User = await session.get(User, gamer.idpk_gamer)
-        award = int(game.amount_award) * (next(award_percent) / 100)
-        award = f"{int(award):,d}{translated_currencies.get(game.currency_award)}"
+        # award_user = int(game.amount_award) * (next(award_percent) / 100)
+        # award_user = f"{int(award_user):,d}{translated_currencies.get(game.currency_award)}"
         additional_text += f"\n\n{await get_text_message('game_pattern_winer', nickname=gamer.nickname, emoji_places=next(emoji_places))}"
     with contextlib.suppress(Exception):
         t = await factory_text_top_mini_game(session=session, game=game)
@@ -407,7 +406,7 @@ async def gen_text_winners(session: AsyncSession, game: Game):
                 game_type=game.type_game,
                 amount_gamers=game.amount_gamers,
                 amount_moves=game.amount_moves,
-                award=f"{game.amount_award:,d}{translated_currencies[game.currency_award]}",
+                award=award,
             )
             + additional_text,
             reply_markup=None,
