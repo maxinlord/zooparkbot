@@ -85,7 +85,9 @@ class LargeNumberFormatter:
 
     def __init__(self):
         self.formatters = [
-            KwadrillionFormatter(),
+            SextillionFormatter(),
+            QuintillionFormatter(),
+            QuadrillionFormatter(),
             TrillionFormatter(),
             BillionFormatter(),
             MillionFormatter(),
