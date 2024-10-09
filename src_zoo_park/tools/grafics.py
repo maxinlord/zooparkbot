@@ -67,7 +67,8 @@ async def gen_plot(
     plt.ylabel(ylabel)
     plt.title("Топ")
     plt.grid(True, axis="x", linestyle="--", alpha=0.7)
-    max_width = int(max(values))
+    values = [float(value) for value in values]
+    max_width = max(values)
     for bar in bars:
         width = bar.get_width()
         if width > 0:
