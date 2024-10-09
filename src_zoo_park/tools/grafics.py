@@ -62,12 +62,12 @@ async def gen_plot(
     type: str,
 ):
     plt.figure(figsize=(12, 5))
+    values = [float(value) for value in values]
     bars = plt.barh(nicks, values, color=color)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title("Топ")
     plt.grid(True, axis="x", linestyle="--", alpha=0.7)
-    values = [float(value) for value in values]
     max_width = max(values)
     for bar in bars:
         width = bar.get_width()
