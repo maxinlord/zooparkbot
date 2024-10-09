@@ -265,7 +265,7 @@ async def add_award_and_send_message(session: AsyncSession, game: Game):
             currency=game.currency_award,
             amount=award,
         )
-        award_text = format_award_game(award=award, award_currency=game.currency_award)
+        award_text = int(award)
         await bot.send_message(
             chat_id=user.id_user,
             text=await get_text_message(
