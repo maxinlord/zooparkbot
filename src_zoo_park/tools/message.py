@@ -2,6 +2,7 @@ import contextlib
 
 import bot.keyboards as kb
 from aiogram.types import CallbackQuery, Message
+from config import CHAT_ID
 from db import User
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -36,3 +37,9 @@ async def m_choice_quantity_avi(
             session=session, aviary_price=aviary_price
         ),
     )
+
+
+def get_id_for_edit_message(id_message: str) -> dict:
+    if id_message.isdigit():
+        return {"chat_id": CHAT_ID, "message_id": id_message}
+    return {"inline_message_id": id_message}

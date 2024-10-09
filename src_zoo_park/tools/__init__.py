@@ -46,12 +46,13 @@ from .deep_link import validate_command_arg
 from .format_num import formatter
 from .game import (
     gamer_have_active_game,
-    get_amount_gamers,
-    get_first_three_places,
+    get_current_amount_gamers,
     get_gamer,
-    get_nickname_owner_game,
+    get_nickname_game_owner,
+    get_top_places_game,
     get_total_moves_game,
     get_user_where_max_score,
+    format_award_game
 )
 from .grafics import get_plot
 from .income import income_
@@ -82,7 +83,11 @@ from .items import (
     synchronize_info_about_items,
     update_prop_iai,
 )
-from .message import disable_not_main_window, m_choice_quantity_avi
+from .message import (
+    disable_not_main_window,
+    get_id_for_edit_message,
+    m_choice_quantity_avi,
+)
 from .nickname import (
     has_special_characters_nickname,
     is_unique_nickname,
@@ -107,6 +112,7 @@ from .text import (
     ft_bonus_info,
     ft_item_props,
     ft_item_props_for_update,
+    ft_place_winning_gamers,
     get_text_button,
     get_text_message,
     mention_html,

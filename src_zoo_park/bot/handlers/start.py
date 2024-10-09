@@ -17,9 +17,9 @@ from tools import (
     factory_text_top_mini_game,
     formatter,
     gamer_have_active_game,
-    get_amount_gamers,
+    get_current_amount_gamers,
     get_gamer,
-    get_nickname_owner_game,
+    get_nickname_game_owner,
     get_text_message,
     get_value,
     get_value_prop_from_iai,
@@ -28,6 +28,8 @@ from tools import (
     mention_html,
     shorten_whitespace_nickname,
     validate_command_arg,
+    format_award_game,
+    get_id_for_edit_message,
 )
 
 router = Router()
@@ -65,7 +67,9 @@ async def command_start_game(
     if await gamer_have_active_game(session=session, idpk_gamer=user.idpk):
         await message.answer(text=await get_text_message("finished_active_game"))
         return
-    if game.amount_gamers == await get_amount_gamers(session=session, game=game):
+    if game.amount_gamers == await get_current_amount_gamers(
+        session=session, id_game=game.id_game
+    ):
         await message.answer(text=await get_text_message("game_full"))
         return
     gamer = Gamer(
@@ -79,41 +83,40 @@ async def command_start_game(
         gamer.moves += v
     session.add(gamer)
     await session.commit()
-    nickname = await get_nickname_owner_game(
-        session=session, game=game, bot=message.bot
+    nickname = await get_nickname_game_owner(
+        session=session, idpk_game_owner=game.idpk_user, bot=message.bot
     )
-    award = formatter.format_large_number(int(game.amount_award))
-    award = f"{award}{translated_currencies.get(game.currency_award)}"
-    mess_data = (
-        {"chat_id": CHAT_ID, "message_id": game.id_mess}
-        if game.id_mess.isdigit()
-        else {"inline_message_id": game.id_mess}
+    award_text = format_award_game(game.amount_award, game.currency_award)
+    additional_message_parameters = get_id_for_edit_message(id_message=game.id_mess)
+    text_for_top_mini_game = await factory_text_top_mini_game(
+        session=session, id_game=game.id_game
     )
     with contextlib.suppress(Exception):
-        t = await factory_text_top_mini_game(session=session, game=game)
         await message.bot.edit_message_text(
             text=await get_text_message(
                 "game_start",
-                t=t,
+                t=text_for_top_mini_game,
                 nickname=nickname,
                 game_type=game.type_game,
                 amount_gamers=game.amount_gamers,
                 amount_moves=game.amount_moves,
-                award=award,
+                award=award_text,
             ),
             reply_markup=await ik_start_created_game(
                 link=await create_start_link(bot=message.bot, payload=game.id_game),
                 total_gamers=game.amount_gamers,
-                current_gamers=await get_amount_gamers(session=session, game=game),
+                current_gamers=await get_current_amount_gamers(
+                    session=session, id_game=game.id_game
+                ),
             ),
             disable_web_page_preview=True,
-            **mess_data,
+            **additional_message_parameters,
         )
     await state.set_state(UserState.game)
     await state.update_data(
         idpk_game=game.idpk,
         nickname=nickname,
-        award=award,
+        award=award_text,
         type_game=game.type_game,
         amount_gamers=game.amount_gamers,
         amount_moves=game.amount_moves,
@@ -126,10 +129,6 @@ async def command_start_game(
         "total_moves": game.amount_moves,
         "remain_moves": gamer.moves,
     }
-    # if await get_status_item(info_about_items=user.info_about_items, code_name_item="item_8"):
-    #     item = await session.scalar(select(Item).where(Item.code_name == "item_8"))
-    #     keyboard_data["autopilot"] = True
-    #     await state.update_data(delay_autopilot=item.value)
     await message.answer(
         text=await get_text_message("play_game", score=gamer.score),
         reply_markup=await ik_button_play(**keyboard_data),

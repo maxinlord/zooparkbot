@@ -19,9 +19,10 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from tools import (
     factory_text_top_mini_game,
-    get_amount_gamers,
+    get_current_amount_gamers,
     get_text_message,
     get_value_prop_from_iai,
+    get_id_for_edit_message,
 )
 
 router = Router()
@@ -103,17 +104,15 @@ async def play_game(
             ),
         )
 
-    mess_data = (
-        {"chat_id": CHAT_ID, "message_id": game.id_mess}
-        if game.id_mess.isdigit()
-        else {"inline_message_id": game.id_mess}
+    additional_message_parameters = get_id_for_edit_message(id_message=game.id_mess)
+    text_for_top_mini_game = await factory_text_top_mini_game(
+        session=session, id_game=game.id_game
     )
     with contextlib.suppress(Exception):
-        t = await factory_text_top_mini_game(session=session, game=game)
         await query.message.bot.edit_message_text(
             text=await get_text_message(
                 "game_start",
-                t=t,
+                t=text_for_top_mini_game,
                 nickname=data["nickname"],
                 game_type=data["type_game"],
                 amount_gamers=data["amount_gamers"],
@@ -123,10 +122,12 @@ async def play_game(
             reply_markup=await ik_start_created_game(
                 link=await create_start_link(bot=query.bot, payload=game.id_game),
                 total_gamers=data["amount_gamers"],
-                current_gamers=await get_amount_gamers(session=session, game=game),
+                current_gamers=await get_current_amount_gamers(
+                    session=session, id_game=game.id_game
+                ),
             ),
             disable_web_page_preview=True,
-            **mess_data,
+            **additional_message_parameters,
         )
     await session.commit()
 
@@ -187,7 +188,9 @@ async def play_game_autopilot(
                 reply_markup=await ik_start_created_game(
                     link=await create_start_link(bot=query.bot, payload=game.id_game),
                     total_gamers=data["amount_gamers"],
-                    current_gamers=await get_amount_gamers(session=session, game=game),
+                    current_gamers=await get_current_amount_gamers(
+                        session=session, game=game
+                    ),
                 ),
                 disable_web_page_preview=True,
                 **mess_data,

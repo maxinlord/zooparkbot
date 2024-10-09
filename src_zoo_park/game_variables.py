@@ -30,9 +30,11 @@ games = {
     "⚽️": "football",
     "🏀": "basketball",
 }
+emoji_places_winner_in_mini_game = {1: "🏆", 2: "🥈", 3: "🥉"}
 petard_emoji_effect = "5046509860389126442"
 types_bonus = ["rub", "usd", "aviary", "animal", "paw_coins"]
 MAX_AMOUNT_GAMERS = 80
+ID_AUTOGENERATE_MINI_GAME = 0
 prop_quantity_by_rarity = {
     "common": 1,
     "rare": 2,

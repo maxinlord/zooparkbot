@@ -4,6 +4,7 @@ from decimal import Decimal
 import ahocorasick
 from cache import button_cache, text_cache
 from db import Animal, Aviary, Button, Game, Gamer, Text, Unity, User, Value
+from game_variables import emoji_places_winner_in_mini_game
 from init_db import _sessionmaker_for_func
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -337,8 +338,8 @@ async def factory_text_main_top_by_referrals(
     return text
 
 
-async def factory_text_top_mini_game(session: AsyncSession, game: Game):
-    gamers = await session.scalars(select(Gamer).where(Gamer.id_game == game.id_game))
+async def factory_text_top_mini_game(session: AsyncSession, id_game: str):
+    gamers = await session.scalars(select(Gamer).where(Gamer.id_game == id_game))
     gamers = list(gamers)
     gamers_sorted = sorted(gamers, key=lambda x: x.score, reverse=True)
     text = ""
@@ -503,7 +504,6 @@ async def ft_item_props_for_update(
 
 
 def contains_any_pattern(text, patterns):
-
     if not isinstance(text, str):
         return False
 
@@ -522,3 +522,15 @@ def contains_any_pattern(text, patterns):
         return True  # Нашли хотя бы одно вхождение
 
     return False  # Ничего не нашли
+
+
+async def ft_place_winning_gamers(session: AsyncSession, winning_gamers: list[Gamer]):
+    text = ""
+    for place_in_top, gamer in enumerate(winning_gamers, start=1):
+        user = await session.get(User, gamer.idpk_gamer)
+        text += await get_text_message(
+            "game_pattern_winer",
+            nickname=user.nickname,
+            emoji_places=emoji_places_winner_in_mini_game[place_in_top],
+        )
+    return text

@@ -1,18 +1,21 @@
+from decimal import Decimal
+
 from aiogram import Bot
 from db import Game, Gamer, User
+from game_variables import ID_AUTOGENERATE_MINI_GAME, translated_currencies
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import tools
 
 
-async def get_amount_gamers(session: AsyncSession, game: Game):
-    gamers = await session.scalars(select(Gamer).where(Gamer.id_game == game.id_game))
+async def get_current_amount_gamers(session: AsyncSession, id_game: str):
+    gamers = await session.scalars(select(Gamer).where(Gamer.id_game == id_game))
     return len(gamers.all())
 
 
-async def get_total_moves_game(session: AsyncSession, game: Game):
-    gamers = await session.scalars(select(Gamer).where(Gamer.id_game == game.id_game))
+async def get_total_moves_game(session: AsyncSession, id_game: str):
+    gamers = await session.scalars(select(Gamer).where(Gamer.id_game == id_game))
     return sum(gamer.moves for gamer in gamers)
 
 
@@ -22,25 +25,24 @@ async def get_user_where_max_score(session: AsyncSession, game: Game):
     return gamers_sorted[0].idpk_gamer if gamers_sorted else None
 
 
-async def get_first_three_places(session: AsyncSession, game: Game):
-    gamers = await session.scalars(select(Gamer).where(Gamer.id_game == game.id_game))
+async def get_top_places_game(session: AsyncSession, id_game: str, num_places: int = 3):
+    gamers = await session.scalars(select(Gamer).where(Gamer.id_game == id_game))
     gamers_sorted = sorted(gamers, key=lambda gamer: gamer.score, reverse=True)
-    return gamers_sorted[:3] if gamers_sorted else None
+    return gamers_sorted[:3] if gamers else None
 
 
-async def get_nickname_owner_game(session: AsyncSession, game: Game, bot: Bot):
-    if not game.idpk_user:
+async def get_nickname_game_owner(
+    session: AsyncSession, idpk_game_owner: int, bot: Bot
+):
+    if idpk_game_owner == ID_AUTOGENERATE_MINI_GAME:
         return (await bot.get_my_name()).name
-    owner_game = await session.get(User, game.idpk_user)
-    nickname = (
-        tools.mention_html_by_username(
-            username=owner_game.username, name=owner_game.nickname
-        )
-        if owner_game.nickname
-        else owner_game.nickname
+    game_owner = await session.get(User, idpk_game_owner)
+    if not game_owner.username:
+        return game_owner.nickname
+    nickname = tools.mention_html_by_username(
+        username=game_owner.username, name=game_owner.nickname
     )
     return nickname
-
 
 
 async def get_gamer(session: AsyncSession, idpk_gamer: int, id_game: str):
@@ -59,3 +61,10 @@ async def gamer_have_active_game(session: AsyncSession, idpk_gamer: int):
         )
     )
     return bool(gamer)
+
+
+def format_award_game(award: Decimal, award_currency: str):
+    award = tools.formatter.format_large_number(int(award))
+    return f"{award}{translated_currencies[award_currency]}"
+
+
