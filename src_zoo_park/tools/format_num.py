@@ -10,13 +10,29 @@ class NumberFormatter(ABC):
         pass
 
 
-class KwadrillionFormatter(NumberFormatter):
-    """Форматировщик для триллионов."""
+class SextillionFormatter(NumberFormatter):
+    """Форматировщик для секстиллионов."""
+
+    threshold = 1_000_000_000_000_000_000_000
+
+    def format_number(self, number: int) -> str:
+        return f"{number / 1_000_000_000_000_000_000_000:,.1f}Sx"
+
+
+class QuintillionFormatter(NumberFormatter):
+
+    threshold = 1_000_000_000_000_000_000
+
+    def format_number(self, number: int) -> str:
+        return f"{number / 1_000_000_000_000_000_000:,.1f}Qn"
+
+
+class QuadrillionFormatter(NumberFormatter):
 
     threshold = 1_000_000_000_000_000
 
     def format_number(self, number: int) -> str:
-        return f"{number / 1_000_000_000_000_000:,.1f}kwd"
+        return f"{number / 1_000_000_000_000_000:,.1f}Qd"
 
 
 class TrillionFormatter(NumberFormatter):
