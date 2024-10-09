@@ -10,6 +10,15 @@ class NumberFormatter(ABC):
         pass
 
 
+class KwadrillionFormatter(NumberFormatter):
+    """Форматировщик для триллионов."""
+
+    threshold = 1_000_000_000_000_000
+
+    def format_number(self, number: int) -> str:
+        return f"{number / 1_000_000_000_000_000:,.1f}kwd"
+
+
 class TrillionFormatter(NumberFormatter):
     """Форматировщик для триллионов."""
 
@@ -60,6 +69,7 @@ class LargeNumberFormatter:
 
     def __init__(self):
         self.formatters = [
+            KwadrillionFormatter(),
             TrillionFormatter(),
             BillionFormatter(),
             MillionFormatter(),
