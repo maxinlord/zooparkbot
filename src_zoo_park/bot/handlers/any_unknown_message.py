@@ -8,15 +8,16 @@ from aiogram.fsm.state import any_state
 from aiogram.types import CallbackQuery, Message
 from bot.filters import CompareDataByIndex
 from bot.keyboards import ik_update_inline_rate
-from config import CHAT_ID
+from config import CHAT_ID, ADMIN_ID
 from db import Photo, User
+from jobs import create_game_for_chat
 from sqlalchemy.ext.asyncio import AsyncSession
 from tools import (
     contains_any_pattern,
     fetch_and_parse_str_value,
+    formatter,
     get_text_message,
     get_value,
-    formatter
 )
 
 router = Router()
@@ -34,6 +35,20 @@ async def reset(
 ):
     await state.clear()
     await message.answer(text=await get_text_message("reset_done"))
+
+
+@router.message(
+    Command(commands="cg"),
+    StateFilter(any_state),
+    flags=flags,
+)
+async def create_game_(
+    message: Message,
+    state: FSMContext,
+):
+    if message.from_user.id != ADMIN_ID:
+        return
+    await create_game_for_chat()
 
 
 @router.message(F.content_type == "photo")
@@ -80,7 +95,7 @@ async def update_inline_rate(
     rate = await get_value(session=session, value_name="RATE_RUB_USD", cache_=False)
     time_to_update_bank = 60 - datetime.now().second
     bank_storage = await get_value(
-        session=session, value_name="BANK_STORAGE", cache_=False, value_type='str'
+        session=session, value_name="BANK_STORAGE", cache_=False, value_type="str"
     )
     bank_storage = formatter.format_large_number(float(bank_storage))
     inline_message_id = query.data.split(":")[0]
