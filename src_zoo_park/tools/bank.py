@@ -19,7 +19,7 @@ async def get_rate(session: AsyncSession, user: User):
 
 
 async def update_bank_storage(session: AsyncSession, amount: int):
-    old_storage = tools.get_value(
+    old_storage = await tools.get_value(
         session=session, value_name="BANK_STORAGE", value_type="str", cache_=False
     )
     old_storage = float(old_storage)
