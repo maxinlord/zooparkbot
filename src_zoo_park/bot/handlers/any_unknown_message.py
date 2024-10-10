@@ -16,6 +16,7 @@ from tools import (
     fetch_and_parse_str_value,
     get_text_message,
     get_value,
+    formatter
 )
 
 router = Router()
@@ -79,8 +80,9 @@ async def update_inline_rate(
     rate = await get_value(session=session, value_name="RATE_RUB_USD", cache_=False)
     time_to_update_bank = 60 - datetime.now().second
     bank_storage = await get_value(
-        session=session, value_name="BANK_STORAGE", cache_=False
+        session=session, value_name="BANK_STORAGE", cache_=False, value_type='str'
     )
+    bank_storage = formatter.format_large_number(float(bank_storage))
     inline_message_id = query.data.split(":")[0]
     with contextlib.suppress(Exception):
         await query.bot.edit_message_text(

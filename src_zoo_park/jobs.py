@@ -159,8 +159,9 @@ async def create_game_for_chat():
     async with _sessionmaker_for_func() as session:
         members = await bot.get_chat_member_count(chat_id=CHAT_ID)
         award = await get_value(
-            session=session, value_name="BANK_STORAGE", cache_=False
+            session=session, value_name="BANK_STORAGE", cache_=False, value_type='str'
         )
+        award = int(award)
         if award == 0:
             return
         SEC_TO_EXPIRE_GAME = await get_value(
@@ -178,7 +179,7 @@ async def create_game_for_chat():
         )
         session.add(game)
         await session.execute(
-            update(Value).where(Value.name == "BANK_STORAGE").values(value_int=0)
+            update(Value).where(Value.name == "BANK_STORAGE").values(value_str=0)
         )
         award_text = format_award_game(award=award, award_currency="usd")
         msg = await bot.send_message(

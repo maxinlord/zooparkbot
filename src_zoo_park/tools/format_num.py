@@ -95,7 +95,7 @@ class LargeNumberFormatter:
             DefaultFormatter(),
         ]
 
-    def format_large_number(self, number: int) -> str:
+    def format_large_number(self, number: int | float) -> str:
         """Выбор форматировщика и форматирование числа."""
         for formatter in self.formatters:
             if number < formatter.threshold:

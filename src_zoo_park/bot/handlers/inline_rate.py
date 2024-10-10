@@ -11,7 +11,7 @@ from aiogram.types import (
 from bot.keyboards import ik_update_inline_rate
 from db import User
 from sqlalchemy.ext.asyncio import AsyncSession
-from tools import get_text_message, get_value
+from tools import formatter, get_text_message, get_value
 
 router = Router()
 
@@ -39,8 +39,9 @@ async def rate_edit(chosen_result: ChosenInlineResult, session: AsyncSession):
     rate = await get_value(session=session, value_name="RATE_RUB_USD", cache_=False)
     time_to_update_bank = 60 - datetime.now().second
     bank_storage = await get_value(
-        session=session, value_name="BANK_STORAGE", cache_=False
+        session=session, value_name="BANK_STORAGE", cache_=False, value_type='str'
     )
+    bank_storage = formatter.format_large_number(float(bank_storage))
     keyboard = await ik_update_inline_rate(chosen_result.inline_message_id)
     await chosen_result.bot.edit_message_text(
         text=await get_text_message(

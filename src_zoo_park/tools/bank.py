@@ -19,10 +19,15 @@ async def get_rate(session: AsyncSession, user: User):
 
 
 async def update_bank_storage(session: AsyncSession, amount: int):
+    old_storage = tools.get_value(
+        session=session, value_name="BANK_STORAGE", value_type="str", cache_=False
+    )
+    old_storage = float(old_storage)
+    new_storage = amount + old_storage
     await session.execute(
         update(Value)
         .where(Value.name == "BANK_STORAGE")
-        .values(value_int=Value.value_int + amount)
+        .values(value_str=str(new_storage))
     )
 
 

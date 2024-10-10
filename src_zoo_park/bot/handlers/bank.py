@@ -16,6 +16,7 @@ from tools import (
     get_text_message,
     get_value,
     mention_html_by_username,
+    formatter
 )
 
 flags = {"throttling_key": "default"}
@@ -37,8 +38,9 @@ async def bank(
         False: message.answer,
     }
     bank_storage = await get_value(
-        session=session, value_name="BANK_STORAGE", cache_=False
+        session=session, value_name="BANK_STORAGE", cache_=False, value_type='str'
     )
+    bank_storage = formatter.format_large_number(float(bank_storage))
     keyboard = await ik_bank()
     # if d := await get_values_from_item(info_about_items=user.info_about_items, code_name_item="item_6"):
     #     if d["is_activate"] and not d.get("date_end"):
