@@ -77,7 +77,7 @@ class DefaultFormatter(NumberFormatter):
     threshold = 0
 
     def format_number(self, number: int) -> str:
-        return str(number)
+        return f"{number:,.0f}"
 
 
 class LargeNumberFormatter:
