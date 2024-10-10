@@ -259,7 +259,7 @@ async def factory_text_main_top_by_animals(
         return await tools.get_text_message(
             pattern,
             n=await tools.view_nickname(session=session, user=user),
-            a=animals,
+            a=tools.formatter.format_large_number(animals),
             c=counter,
             u=unity_name,
         )
