@@ -54,7 +54,6 @@ async def job_minute() -> None:
     now = datetime.now()
     second = now.second
     async with _sessionmaker_for_func() as session:
-        await check_inaction(session=session)
         if second == 30:
             await updater_message_minigame(session=session)
         elif second == 50:
@@ -62,6 +61,7 @@ async def job_minute() -> None:
         elif second == 00:
             await accrual_of_income(session=session)
             await update_rate_bank(session=session)
+            await check_inaction(session=session)
             await deleter_request_to_unity(session=session)
             await session.commit()
 
