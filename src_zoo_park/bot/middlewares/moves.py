@@ -4,6 +4,7 @@ from typing import Any, Awaitable, Callable
 
 from aiogram import BaseMiddleware
 from aiogram.types import Message
+from config import CHAT_ID
 from db import User
 from sqlalchemy.ext.asyncio import AsyncSession
 from tools import get_value
@@ -18,7 +19,7 @@ class RegMove(BaseMiddleware):
         data: dict[str, Any],
     ) -> Any:
         user: User = data["user"]
-        if user:
+        if user and event.chat.id != CHAT_ID:
             session: AsyncSession = data["session"]
             LIMIT_ON_WRITE_MOVES = await get_value(
                 session=session, value_name="LIMIT_ON_WRITE_MOVES"
