@@ -98,10 +98,7 @@ async def sort_events_batch(events_list, time: int):
         mention_user = events_dict.pop("mention_user")
         for timestamp, event in events_dict.items():
             # Преобразуем строку временной метки в объект datetime
-            try:
-                dt = datetime.strptime(timestamp, "%d.%m.%Y %H:%M:%S")
-            except Exception:
-                dt = datetime.strptime(timestamp, "%d.%m.%Y %H:%M:%S.%f")
+            dt = datetime.strptime(timestamp, "%d.%m.%Y %H:%M:%S.%f")
             # Фильтруем события по временному промежутку
             if dt >= threshold_time:
                 # Если временная метка уже существует, добавляем миллисекунды, пока не станет уникальной

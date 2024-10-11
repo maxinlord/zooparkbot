@@ -2,6 +2,8 @@ import datetime
 import os
 from pathlib import Path
 
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 from db import User
 from sqlalchemy import select
@@ -61,13 +63,11 @@ async def gen_plot(
     ylabel: str,
     type: str,
 ):
-    plt.figure(figsize=(12, 5))
+    fig, ax = plt.subplots(figsize=(12, 5))
     values = [float(value) for value in values]
-    bars = plt.barh(nicks, values, color=color)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.title("Топ")
-    plt.grid(True, axis="x", linestyle="--", alpha=0.7)
+    plt.grid(True, axis="x", linestyle="--", alpha=0.5)
+    bars = ax.barh(nicks, values, color=color)
+    ax.set(xlabel=xlabel, ylabel=ylabel, title="ТОП")
     max_width = max(values)
     for bar in bars:
         width = bar.get_width()

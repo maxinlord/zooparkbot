@@ -363,9 +363,12 @@ async def factory_text_top_mini_game(session: AsyncSession, id_game: str):
     return text
 
 
-async def factory_text_account_animals(session: AsyncSession, animals: str) -> str:
+async def factory_text_account_animals(
+    session: AsyncSession, animals: str | dict
+) -> str:
     text = ""
-    animals = json.loads(animals)
+    if isinstance(animals, str):
+        animals = json.loads(animals)
     sorted_keys = sorted(animals, key=lambda x: animals[x], reverse=True)
     for animal in sorted_keys:
         name = await session.scalar(
@@ -532,5 +535,32 @@ async def ft_place_winning_gamers(session: AsyncSession, winning_gamers: list[Ga
             "game_pattern_winer",
             nickname=user.nickname,
             emoji_places=emoji_places_winner_in_mini_game[place_in_top],
+        )
+    return text
+
+
+async def ft_inaction(
+    session: AsyncSession, dict_of_dead_animal: dict, usd_burned: int, rub_burned: int
+):
+    text = ""
+    if dict_of_dead_animal:
+        text_of_dead_animal = await factory_text_account_animals(
+            session=session, animals=dict_of_dead_animal
+        )
+        text += await get_text_message(
+            "pattern_inaction_have_dead_animal",
+            text_of_dead_animal=text_of_dead_animal,
+        )
+    if usd_burned:
+        text_usd = tools.formatter.format_large_number(usd_burned)
+        text += await get_text_message(
+            "pattern_inaction_usd_burned",
+            text_usd=text_usd,
+        )
+    if rub_burned:
+        text_rub = tools.formatter.format_large_number(rub_burned)
+        text += await get_text_message(
+            "pattern_inaction_rub_burned",
+            text_rub=text_rub,
         )
     return text

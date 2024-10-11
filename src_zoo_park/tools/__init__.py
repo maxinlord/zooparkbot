@@ -113,6 +113,7 @@ from .text import (
     ft_item_props,
     ft_item_props_for_update,
     ft_place_winning_gamers,
+    ft_inaction,
     get_text_button,
     get_text_message,
     mention_html,

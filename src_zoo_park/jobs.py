@@ -1,4 +1,6 @@
 import contextlib
+from decimal import Decimal
+import json
 import random
 from datetime import datetime, timedelta
 
@@ -35,6 +37,9 @@ from tools import (
     referral_bonus,
     referrer_bonus,
     get_id_for_edit_message,
+    factory_text_account_animals,
+    formatter,
+    ft_inaction,
 )
 
 
@@ -49,6 +54,7 @@ async def job_minute() -> None:
     now = datetime.now()
     second = now.second
     async with _sessionmaker_for_func() as session:
+        await check_inaction(session=session)
         if second == 30:
             await updater_message_minigame(session=session)
         elif second == 50:
@@ -159,9 +165,9 @@ async def create_game_for_chat():
     async with _sessionmaker_for_func() as session:
         members = await bot.get_chat_member_count(chat_id=CHAT_ID)
         award = await get_value(
-            session=session, value_name="BANK_STORAGE", cache_=False, value_type='str'
+            session=session, value_name="BANK_STORAGE", cache_=False, value_type="str"
         )
-        award = int(float('3.1970882055134097e+19'))
+        award = int(float("3.1970882055134097e+19"))
         if award == 0:
             return
         SEC_TO_EXPIRE_GAME = await get_value(
@@ -325,8 +331,116 @@ async def edit_text_game_in_chat(session: AsyncSession, game: Game):
         )
 
 
-# async def test_job() -> None:
-#     from db import Animal
-#     async with _sessionmaker_for_func() as session:
-#         r = await session.scalars(select(Animal.code_name))
-#         print(r.all())
+async def check_inaction(session: AsyncSession):
+    now_hour = datetime.now().hour
+    if now_hour < 10 and now_hour > 0:
+        return
+    users = await session.scalars(select(User).where(User.history_moves != "{}"))
+    for user in users.all():
+        last_online = get_last_online(user.history_moves)
+        if not_time_yet(last_online=last_online):
+            continue
+        user.history_moves = gen_online(user.history_moves)
+        updated_animals, dict_of_dead_animal = process_of_dead_animal(user.animals)
+        user.animals = updated_animals
+        usd, usd_burned = process_of_burning_usd(user.usd)
+        rub, rub_burned = process_of_burning_rub(user.rub)
+        user.usd = usd
+        user.rub = rub
+        await session.commit()
+        await send_info_about_inaction(
+            session=session,
+            dict_of_dead_animal=dict_of_dead_animal,
+            usd_burned=usd_burned,
+            rub_burned=rub_burned,
+            id_user=user.id_user,
+        )
+
+
+def process_of_dead_animal(user_animals: str):
+    percent_of_dead_animal = 0.2
+    dict_of_dead_animal = {}
+
+    animals_dict: dict = json.loads(user_animals)
+    count_num_of_dead_animal = int(sum(animals_dict.values()) * percent_of_dead_animal)
+    count_num_of_dead_animal = max(count_num_of_dead_animal, 1)
+    for animal, count in animals_dict.items():
+        if count_num_of_dead_animal == 0:
+            break
+        if count == 0:
+            continue
+        count = min(count, count_num_of_dead_animal)
+        count_num_of_dead_animal -= count
+        dict_of_dead_animal[animal] = count
+        animals_dict[animal] -= count
+    return json.dumps(animals_dict), dict_of_dead_animal
+
+
+def process_of_burning_usd(usd: Decimal):
+    usd = int(usd)
+    if not usd:
+        return 0, 0
+    percent_of_burning_usd = 0.3
+    usd_burned = usd * percent_of_burning_usd
+    usd_burned = max(usd_burned, 1)
+    return int(usd - usd_burned), int(usd_burned)
+
+
+def process_of_burning_rub(rub: Decimal):
+    rub = int(rub)
+    if not rub:
+        return 0, 0
+    percent_of_burning_rub = 0.5
+    rub_burned = rub * percent_of_burning_rub
+    rub_burned = max(rub_burned, 1)
+    return int(rub - rub_burned), int(rub_burned)
+
+
+async def send_info_about_inaction(
+    session: AsyncSession,
+    dict_of_dead_animal: dict,
+    usd_burned: int,
+    rub_burned: int,
+    id_user: int,
+):
+    text = await ft_inaction(
+        session=session,
+        dict_of_dead_animal=dict_of_dead_animal,
+        usd_burned=usd_burned,
+        rub_burned=rub_burned,
+    )
+    if not text:
+        return
+    with contextlib.suppress(Exception):
+        await bot.send_message(
+            chat_id=id_user,
+            text=await get_text_message(
+                "info_about_inaction",
+                t=text,
+            ),
+        )
+
+
+def get_last_online(user_history_moves: str):
+    history_moves_dict: dict = json.loads(user_history_moves)
+    last_online = sorted(
+        list(history_moves_dict.keys()),
+        key=lambda x: datetime.strptime(x, "%d.%m.%Y %H:%M:%S.%f"),
+    )[-1]
+    return last_online
+
+
+def not_time_yet(last_online: str):
+    hour_inaction = 4
+    min_ = 60
+    r = (
+        datetime.now() - datetime.strptime(last_online, "%d.%m.%Y %H:%M:%S.%f")
+    ) < timedelta(minutes=hour_inaction * min_)
+    return r
+
+
+def gen_online(user_history_moves: str):
+    history_moves = json.loads(user_history_moves)
+    time_inaction = datetime.now().strftime("%d.%m.%Y %H:%M:%S.%f")
+    history_moves[time_inaction] = "__inaction__"
+    return json.dumps(history_moves)

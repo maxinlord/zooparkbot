@@ -8,7 +8,7 @@ from aiogram.fsm.state import any_state
 from aiogram.types import CallbackQuery, Message
 from bot.filters import CompareDataByIndex
 from bot.keyboards import ik_update_inline_rate
-from config import CHAT_ID, ADMIN_ID
+from config import ADMIN_ID, CHAT_ID
 from db import Photo, User
 from jobs import create_game_for_chat
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -51,11 +51,13 @@ async def create_game_(
     await create_game_for_chat()
 
 
-@router.message(F.content_type == "photo")
+@router.message(F.content_type == "photo", F.chat.id != CHAT_ID)
 async def photo_catch(message: Message, session: AsyncSession) -> None:
     photo_id = message.photo[-1].file_id
     session.add(Photo(name=f"new_photo_{message.message_id}", photo_id=photo_id))
     await session.commit()
+    if message.from_user.id != ADMIN_ID:
+        return
     await message.answer(text=await get_text_message("photo_saved"))
 
 
@@ -75,14 +77,6 @@ async def any_unknown_message(message: Message, state: FSMContext) -> None:
     await message.answer(text=await get_text_message("answer_on_unknown_message"))
     # print(message.effect_id)
 
-
-# @router.channel_post()
-# async def any_unknown_channel_post(message: Message) -> None:
-#     print(message.chat.id)
-
-# @router.message(F.text == 'test')
-# async def test(message: Message, session: AsyncSession) -> None:
-#     await message.answer_game()
 
 
 @router.callback_query(CompareDataByIndex("update_inline_rate"))
