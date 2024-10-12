@@ -1,3 +1,4 @@
+import contextlib
 from aiogram import Router
 from aiogram.filters import Command, CommandObject, StateFilter
 from aiogram.fsm.context import FSMContext
@@ -31,4 +32,6 @@ async def command_history(
     if not sev:
         await message.answer(text="Нет событий")
         return
-    await message.answer(text=sev)
+    for text_event in sev:
+        with contextlib.suppress(Exception):
+            await message.answer(text=text_event)

@@ -114,9 +114,13 @@ async def sort_events_batch(events_list, time: int):
     sorted_events = sorted(combined_events.items())
 
     # Формируем текст на основе отсортированных событий
-    sorted_text = "\n".join(
-        [f"{timestamp.split('.')[0]}: {event}" for timestamp, event in sorted_events]
-    )
-    if len(sorted_text) > MESSAGE_LENGTH:
-        return "Необходимо уменьшить время"
-    return sorted_text
+    text_container = []
+    text = ""
+    for timestamp, event in sorted_events:
+        text_to_append = f"{timestamp.split('.')[0]}: {event}\n"
+        if len(text) + len(text_to_append) > MESSAGE_LENGTH:
+            text_container.append(text)
+            text = ""
+        text += text_to_append
+
+    return text_container
