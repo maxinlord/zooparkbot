@@ -111,7 +111,7 @@ async def sort_events_batch(events_list, time: int):
                 )
 
     # Сортируем объединённый словарь по ключам (временным меткам)
-    sorted_events = sorted(combined_events.items())
+    sorted_events = sorted(combined_events.items(), key=lambda x: x[0])
 
     # Формируем текст на основе отсортированных событий
     text_container = []
