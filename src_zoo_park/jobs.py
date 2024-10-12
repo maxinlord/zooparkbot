@@ -167,7 +167,7 @@ async def create_game_for_chat():
         award = await get_value(
             session=session, value_name="BANK_STORAGE", cache_=False, value_type="str"
         )
-        award = int(float("3.1970882055134097e+19"))
+        award = int(float(award))
         if award == 0:
             return
         SEC_TO_EXPIRE_GAME = await get_value(
