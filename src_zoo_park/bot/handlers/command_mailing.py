@@ -5,7 +5,7 @@ from aiogram.filters import Command, CommandObject, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import any_state
 from aiogram.types import Message
-from bot.states import AdminState
+from bot.states import AdminState, UserState
 from config import ADMIN_ID
 from db import User
 from sqlalchemy import select
@@ -49,6 +49,7 @@ async def get_mess_mailing(
     amount_got_message = len(users) - len(not_sended)
     amount_not_got_message = len(not_sended)
     not_sended = ", ".join(not_sended) if not_sended else "Нет"
+    await state.set_state(UserState.zoomarket_menu)
     await message.answer(
         text=await get_text_message(
             "mess_mailing_finish",
