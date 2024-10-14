@@ -28,7 +28,7 @@ async def command_history(
         return
     mins = command.args
     events_list = await get_events_list(session, user.id_user)
-    sev = await sort_events_by_time(events_list=events_list, time=int(mins))
+    sev = sort_events_by_time(events_list=events_list, time=int(mins))
     if not sev:
         await message.answer(text="Нет событий")
         return
