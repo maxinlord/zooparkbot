@@ -31,7 +31,7 @@ from .base import (
     find_integers,
     gen_key,
     get_events_list,
-    sort_events_batch,
+    sort_events_by_time,
 )
 from .bonus import (
     DataBonus,
@@ -45,6 +45,7 @@ from .bonus import (
 from .deep_link import validate_command_arg
 from .format_num import formatter
 from .game import (
+    format_award_game,
     gamer_have_active_game,
     get_current_amount_gamers,
     get_gamer,
@@ -52,7 +53,6 @@ from .game import (
     get_top_places_game,
     get_total_moves_game,
     get_user_where_max_score,
-    format_award_game
 )
 from .grafics import get_plot
 from .income import income_
@@ -110,10 +110,10 @@ from .text import (
     factory_text_unity_top,
     ft_bank_exchange_info,
     ft_bonus_info,
+    ft_inaction,
     ft_item_props,
     ft_item_props_for_update,
     ft_place_winning_gamers,
-    ft_inaction,
     get_text_button,
     get_text_message,
     mention_html,

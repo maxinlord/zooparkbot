@@ -76,51 +76,45 @@ async def get_events_list(session: AsyncSession, id_user: int):
     )
     for id_user, nickname, history_moves in events.all():
         d: dict = json.loads(history_moves)
-        d["mention_user"] = tools.mention_html(id_user, nickname)
-        events_list.append(d)
+        mention_user = tools.mention_html(id_user, nickname)
+        events_list.append((d.items(), mention_user))
     return events_list
 
 
 MESSAGE_LENGTH = 4096
 
 
-async def sort_events_batch(events_list, time: int):
-    combined_events = {}
-    microseconds_ = 1
-    # Текущее время
-    now = datetime.now()
+def sort_events_by_time(events_list: list[tuple], time: int):
+    combined_events = []
 
     # Пороговое время, до которого нужно отобрать события
-    threshold_time = now - timedelta(minutes=time)
+    start_time = datetime.now() - timedelta(minutes=time)
 
     # Объединяем все словари в один и обрабатываем коллизии
-    for events_dict in events_list:
-        mention_user = events_dict.pop("mention_user")
-        for timestamp, event in events_dict.items():
+    for events, mention_user in events_list:
+        for str_time, event in events:
             # Преобразуем строку временной метки в объект datetime
-            dt = datetime.strptime(timestamp, "%d.%m.%Y %H:%M:%S.%f")
+            t_time = datetime.strptime(str_time, "%d.%m.%Y %H:%M:%S.%f")
             # Фильтруем события по временному промежутку
-            if dt >= threshold_time:
-                # Если временная метка уже существует, добавляем миллисекунды, пока не станет уникальной
-                while dt.strftime("%H:%M:%S.%f") in combined_events:
-                    dt += timedelta(microseconds=microseconds_)
-
-                # Добавляем событие в объединённый словарь
-                combined_events[dt.strftime("%H:%M:%S.%f")] = (
-                    f"{event} | {mention_user}"
-                )
-
+            if t_time < start_time:
+                continue
+            combined_events.append(
+                [t_time.strftime("%H:%M:%S.%f"), f"{event} | {mention_user}"]
+            )
     # Сортируем объединённый словарь по ключам (временным меткам)
-    sorted_events = sorted(combined_events.items(), key=lambda x: x[0])
+    sorted_events = sorted(
+        combined_events, key=lambda x: datetime.strptime(x[0], "%H:%M:%S.%f")
+    )
 
     # Формируем текст на основе отсортированных событий
     text_container = []
     text = ""
-    for timestamp, event in sorted_events:
-        text_to_append = f"{timestamp.split('.')[0]}: {event}\n"
+    for str_time, event in sorted_events:
+        text_to_append = f"{str_time.split('.')[0]}: {event}\n"
         if len(text) + len(text_to_append) > MESSAGE_LENGTH:
             text_container.append(text)
             text = ""
         text += text_to_append
+    text_container.append(text) if text else None
 
     return text_container

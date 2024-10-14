@@ -7,7 +7,7 @@ from aiogram.types import Message
 from config import ADMIN_ID
 from db import User
 from sqlalchemy.ext.asyncio import AsyncSession
-from tools import get_events_list, sort_events_batch
+from tools import get_events_list, sort_events_by_time
 
 router = Router()
 flags = {"throttling_key": "default"}
@@ -28,7 +28,7 @@ async def command_history(
         return
     mins = command.args
     events_list = await get_events_list(session, user.id_user)
-    sev = await sort_events_batch(events_list=events_list, time=int(mins))
+    sev = await sort_events_by_time(events_list=events_list, time=int(mins))
     if not sev:
         await message.answer(text="Нет событий")
         return
