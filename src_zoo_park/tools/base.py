@@ -99,11 +99,11 @@ def sort_events_by_time(events_list: list[tuple], time: int):
             if t_time < start_time:
                 continue
             combined_events.append(
-                [t_time.strftime("%H:%M:%S.%f"), f"{event} | {mention_user}"]
+                [t_time.strftime("%d/%m/%Y %H:%M:%S.%f"), f"{event} | {mention_user}"]
             )
     # Сортируем объединённый словарь по ключам (временным меткам)
     sorted_events = sorted(
-        combined_events, key=lambda x: datetime.strptime(x[0], "%H:%M:%S.%f")
+        combined_events, key=lambda x: datetime.strptime(x[0], "%d/%m/%Y %H:%M:%S.%f")
     )
 
     # Формируем текст на основе отсортированных событий
