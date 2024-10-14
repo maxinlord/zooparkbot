@@ -110,6 +110,8 @@ def sort_events_by_time(events_list: list[tuple], time: int):
     text_container = []
     text = ""
     for str_time, event in sorted_events:
+        _ = str_time.split(".")[0]
+        str_time = _.split(" ")[1]
         text_to_append = f"{str_time.split('.')[0]}: {event}\n"
         if len(text) + len(text_to_append) > MESSAGE_LENGTH:
             text_container.append(text)
