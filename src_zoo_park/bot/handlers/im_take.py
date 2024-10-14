@@ -17,6 +17,7 @@ from tools import (
     get_text_message,
     mention_html,
 )
+from aiogram.exceptions import TelegramBadRequest
 
 flags = {"throttling_key": "default"}
 router = Router()
@@ -131,10 +132,19 @@ async def get_answer_on_question(
     )
     message_to_support.id_message_answer = message.message_id
     await session.commit()
-    await message.bot.delete_message(
-        chat_id=CHAT_SUPPORT_ID,
-        message_id=message_to_support.id_message,
-    )
+    try:
+        await message.bot.delete_message(
+            chat_id=CHAT_SUPPORT_ID,
+            message_id=message_to_support.id_message,
+        )
+    except TelegramBadRequest:
+        await message.bot.edit_message_text(
+            chat_id=CHAT_SUPPORT_ID,
+            message_id=message_to_support.id_message,
+            text='[...]'
+        )
+    except Exception as e:
+        await message.answer(text=str(e))
     msg = await message.bot.copy_message(
         chat_id=CHAT_SUPPORT_ID,
         from_chat_id=user.id_user,
